@@ -4,7 +4,7 @@
 
 Separar hechos base de resultados derivados.
 
-- Hechos base: registros ingresados por usuarios/admin, como check-ins, fichas, recuperaciones, lago y evidencia.
+- Hechos base: registros ingresados por usuarios/admin, como check-ins, fichas, recuperaciones, lago, premios y evidencia opcional.
 - Derivados: daily scores, weekly scores, rankings, rachas e insignias calculadas.
 
 Los derivados pueden guardarse por performance, pero siempre deben poder regenerarse.
@@ -42,7 +42,12 @@ Los derivados pueden guardarse por performance, pero siempre deben poder regener
 - gymMinimumMinutes
 - morningWindowStart
 - morningWindowEnd
-- dailyBonusPolicy
+- dailyBonusPolicy: morning_or_valid_token_only
+- periodTokenPolicy: calendar_month
+- partialWeekPolicy: business_days_within_challenge
+- checkInValidationPolicy: trust_auto_valid
+- prizeChangePolicy: editable_with_audit
+- coupleChangePolicy: add_new_couples_only
 - createdAt
 - updatedAt
 
@@ -69,7 +74,7 @@ Los derivados pueden guardarse por performance, pero siempre deben poder regener
 
 ### CoupleMembership
 
-Usar membresia en vez de participantAId/participantBId fijo permite cambios historicos.
+Aunque no se planean cambios de pareja, usar membresia permite agregar parejas nuevas y conservar historial si el dominio crece.
 
 - id
 - coupleId
@@ -81,17 +86,19 @@ Usar membresia en vez de participantAId/participantBId fijo permite cambios hist
 
 ### CheckIn
 
+Los check-ins son auto-validos por confianza. El admin puede corregirlos despues.
+
 - id
 - challengeId
 - participantId
 - occurredAt
 - activityDate
-- type: gym_morning | gym_same_day_recovery | gym_weekend_recovery | lake
-- status: pending | valid | rejected
+- type: gym_morning | gym_same_day_recovery | gym_weekend_recovery
+- status: valid | corrected | rejected
 - durationMinutes
-- notes
+- notes nullable
 - createdByParticipantId
-- validatedByParticipantId nullable
+- correctedByParticipantId nullable
 - createdAt
 - updatedAt
 
@@ -103,7 +110,7 @@ Usar membresia en vez de participantAId/participantBId fijo permite cambios hist
 - missedDate
 - recoveryCheckInId
 - recoveryType: same_day | weekend
-- status: pending | valid | rejected
+- status: valid | corrected | rejected
 - createdAt
 - updatedAt
 
@@ -118,6 +125,7 @@ Usar membresia en vez de participantAId/participantBId fijo permite cambios hist
 - status: pending | applied | fulfilled | rejected | expired
 - assignedWindowStart nullable
 - assignedWindowEnd nullable
+- assignedDate nullable
 - requiresGroupApproval
 - approvedByGroup
 - assignedByAdminId nullable
@@ -127,21 +135,35 @@ Usar membresia en vez de participantAId/participantBId fijo permite cambios hist
 
 ### LakeActivity
 
-Separar lago de CheckIn evita mezclar el extra con gym base.
+El lago se modela como actividad separada. Para que cuente como pareja, ambos deben pertenecer a la misma LakeActivity.
 
 - id
 - challengeId
 - coupleId
 - activityDate
 - mode: solo | couple
-- participantId nullable
 - associatedCheckInId nullable
-- status: pending | valid | rejected
+- status: valid | corrected | rejected
 - scoringOrder nullable
+- notes nullable
 - createdAt
 - updatedAt
 
+### LakeActivityParticipant
+
+- id
+- lakeActivityId
+- participantId
+- createdAt
+
+Reglas:
+
+- mode = solo exige 1 participante.
+- mode = couple exige 2 participantes de la misma pareja.
+
 ### Evidence
+
+La evidencia es opcional en el MVP.
 
 - id
 - challengeId
@@ -150,7 +172,7 @@ Separar lago de CheckIn evita mezclar el extra con gym base.
 - lakeActivityId nullable
 - uploadedByParticipantId
 - type: photo | location | route_screenshot | manual_note
-- url
+- url nullable
 - notes nullable
 - createdAt
 
@@ -164,6 +186,8 @@ Separar lago de CheckIn evita mezclar el extra con gym base.
 - active
 - createdAt
 - updatedAt
+
+Los cambios de premios son permitidos y deben auditarse.
 
 ### AuditLog
 
@@ -208,6 +232,8 @@ Separar lago de CheckIn evita mezclar el extra con gym base.
 - isMorning
 - hasValidToken
 - countsForDailyCoupleBonus
+- countsForMorningStreak
+- countsForGymStreak
 - countsForPerfectWeek
 - countsForCompleteWeek
 - countsForRescuedWeek
@@ -225,7 +251,8 @@ Separar lago de CheckIn evita mezclar el extra con gym base.
 - dailyBonusPoints
 - lakePoints
 - totalPoints
-- bothCovered
+- bothEligibleForDailyBonus
+- bothCoveredForWeeklyCount
 - createdAt
 
 ### WeeklyScore
@@ -236,6 +263,7 @@ Separar lago de CheckIn evita mezclar el extra con gym base.
 - coupleId
 - weekStartDate
 - weekEndDate
+- requiredBusinessDays
 - individualPoints
 - dailyBonusPoints
 - lakePoints
@@ -243,6 +271,18 @@ Separar lago de CheckIn evita mezclar el extra con gym base.
 - weeklyBonusPoints
 - totalPoints
 - createdAt
+
+### StreakSnapshot
+
+- id
+- scoreRunId
+- challengeId
+- ownerType: participant | couple
+- ownerId
+- streakType: morning_5am | gym_attendance
+- currentCount
+- bestCount
+- calculatedAt
 
 ### BadgeDefinition / BadgeAward
 
@@ -272,6 +312,8 @@ BadgeAward:
 - ExceptionToken(challengeId, participantId, targetDate).
 - RecoveryLink(challengeId, participantId, missedDate).
 - LakeActivity(challengeId, coupleId, activityDate).
+- LakeActivityParticipant(lakeActivityId, participantId).
 - DailyScore(scoreRunId, challengeId, participantId, date).
 - CoupleDailyScore(scoreRunId, challengeId, coupleId, date).
 - WeeklyScore(scoreRunId, challengeId, coupleId, weekStartDate).
+- StreakSnapshot(scoreRunId, challengeId, ownerType, ownerId, streakType).
