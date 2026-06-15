@@ -47,7 +47,7 @@ dotnet run --project src/GymChall.Api/GymChall.Api.csproj
 Health check:
 
 ```text
-GET http://localhost:5000/health
+GET http://localhost:5020/health
 ```
 
 ## Siguiente gate
