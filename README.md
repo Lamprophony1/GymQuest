@@ -2,7 +2,7 @@
 
 App para administrar el desafio fitness de parejas "Reto Parejas - Rumbo a Septiembre".
 
-Estado actual: planificacion inicial. Todavia no hay implementacion de codigo ni scaffold de app; primero se esta cerrando dominio, reglas, modelo de datos, motor de puntajes, MVP y arquitectura.
+Estado actual: base tecnica inicial implementada. Ya existe una solucion .NET con motor de puntajes de dominio, tests unitarios y API minima con health check. La UI mobile-first se disena y construye en una fase posterior.
 
 ## Objetivo
 
@@ -20,12 +20,36 @@ Gestionar un reto entre parejas donde el ranking principal es por pareja, los pu
 ## Estructura inicial
 
 ```text
+src/
+  GymChall.Api/             API HTTP minima
+  GymChall.Application/     Casos de uso futuros
+  GymChall.Domain/          Reglas puras de dominio y scoring
+  GymChall.Infrastructure/  Persistencia futura
+tests/
+  GymChall.Domain.Tests/    Tests unitarios del dominio
 docs/
   decisions/              Propuestas y decisiones de arquitectura
   planning/               Reglas, modelo, motor y fases
   superpowers/specs/      Specs formales cuando el diseno quede aprobado
 ```
 
+## Desarrollo local
+
+Comandos base:
+
+```powershell
+dotnet restore GymChall.sln
+dotnet build GymChall.sln
+dotnet test GymChall.sln
+dotnet run --project src/GymChall.Api/GymChall.Api.csproj
+```
+
+Health check:
+
+```text
+GET http://localhost:5000/health
+```
+
 ## Siguiente gate
 
-Antes de crear el backend/frontend, hay que aprobar el diseno funcional y cerrar las ambiguedades criticas en `docs/planning/open-questions.md`.
+La base del motor de puntajes ya esta lista. El siguiente bloque funcional deberia cubrir persistencia, casos de uso de aplicacion, endpoints reales y luego una pasada de diseno visual/UX antes del frontend.
