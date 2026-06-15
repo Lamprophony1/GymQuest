@@ -1,6 +1,6 @@
 ﻿# GymChall - Diseno funcional draft
 
-Estado: draft actualizado con decisiones de reglas, pendiente de aprobacion final para implementacion.
+Estado: aprobado para planificacion de implementacion. El diseno visual/UX se definira antes de construir el frontend real.
 Fecha: 2026-06-15.
 
 ## 1. Resumen del dominio
@@ -121,6 +121,6 @@ web/
 docs/
 ```
 
-## 12. Gate de aprobacion
+## 12. Gate de implementacion
 
-Antes de crear backend/frontend, falta confirmar aprobacion final de este draft y del stack recomendado. Despues corresponde escribir el plan de implementacion detallado.
+El diseno funcional y el stack recomendado quedan aprobados para escribir el plan de implementacion. Antes de construir pantallas finales, se hara una pasada especifica de diseno visual/UX mobile-first.
