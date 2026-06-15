@@ -33,6 +33,14 @@ public static class WeeklyScoreCalculator
             return new WeeklyScoreResult(input.RequiredBusinessDayScores.Count, WeeklyBonusType.Complete, settings.CompleteWeekBonus, individualPoints);
         }
 
-        return new WeeklyScoreResult(input.RequiredBusinessDayScores.Count, WeeklyBonusType.Perfect, settings.PerfectWeekBonus, individualPoints);
+        var everyonePerfectEligible = input.RequiredBusinessDayScores.All(pair =>
+            pair.First.CountsForPerfectWeek && pair.Second.CountsForPerfectWeek);
+
+        if (everyonePerfectEligible)
+        {
+            return new WeeklyScoreResult(input.RequiredBusinessDayScores.Count, WeeklyBonusType.Perfect, settings.PerfectWeekBonus, individualPoints);
+        }
+
+        return new WeeklyScoreResult(input.RequiredBusinessDayScores.Count, WeeklyBonusType.None, 0m, individualPoints);
     }
 }

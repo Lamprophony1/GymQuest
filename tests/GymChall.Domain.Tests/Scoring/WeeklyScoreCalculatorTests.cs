@@ -13,6 +13,7 @@ public sealed class WeeklyScoreCalculatorTests
 
         Assert.Equal(WeeklyBonusType.Perfect, result.WeeklyBonusType);
         Assert.Equal(12m, result.WeeklyBonusPoints);
+        Assert.Equal(32m, result.IndividualPoints);
     }
 
     [Fact]
@@ -24,6 +25,7 @@ public sealed class WeeklyScoreCalculatorTests
 
         Assert.Equal(WeeklyBonusType.Complete, result.WeeklyBonusType);
         Assert.Equal(7m, result.WeeklyBonusPoints);
+        Assert.Equal(31m, result.IndividualPoints);
     }
 
     [Fact]
@@ -35,6 +37,7 @@ public sealed class WeeklyScoreCalculatorTests
 
         Assert.Equal(WeeklyBonusType.Rescued, result.WeeklyBonusType);
         Assert.Equal(4m, result.WeeklyBonusPoints);
+        Assert.Equal(29.5m, result.IndividualPoints);
     }
 
     [Fact]
@@ -46,6 +49,37 @@ public sealed class WeeklyScoreCalculatorTests
 
         Assert.Equal(WeeklyBonusType.None, result.WeeklyBonusType);
         Assert.Equal(0m, result.WeeklyBonusPoints);
+        Assert.Equal(29m, result.IndividualPoints);
+    }
+
+    [Fact]
+    public void Covered_days_without_weekly_eligibility_get_no_weekly_bonus()
+    {
+        var date = new DateOnly(2026, 6, 15);
+        var scores = new[]
+        {
+            (
+                CoveredWithoutWeeklyEligibility(date, 4m),
+                CoveredWithoutWeeklyEligibility(date, 4m))
+        };
+
+        var result = WeeklyScoreCalculator.Calculate(new WeeklyScoreInput(scores), ChallengeSettings.Default);
+
+        Assert.Equal(WeeklyBonusType.None, result.WeeklyBonusType);
+        Assert.Equal(0m, result.WeeklyBonusPoints);
+    }
+
+    [Fact]
+    public void Empty_input_gets_no_weekly_bonus_or_individual_points()
+    {
+        var result = WeeklyScoreCalculator.Calculate(
+            new WeeklyScoreInput(Array.Empty<(DailyScoreResult First, DailyScoreResult Second)>()),
+            ChallengeSettings.Default);
+
+        Assert.Equal(0, result.RequiredBusinessDays);
+        Assert.Equal(WeeklyBonusType.None, result.WeeklyBonusType);
+        Assert.Equal(0m, result.WeeklyBonusPoints);
+        Assert.Equal(0m, result.IndividualPoints);
     }
 
     [Fact]
@@ -62,6 +96,7 @@ public sealed class WeeklyScoreCalculatorTests
 
         Assert.Equal(2, result.RequiredBusinessDays);
         Assert.Equal(WeeklyBonusType.Perfect, result.WeeklyBonusType);
+        Assert.Equal(12m, result.IndividualPoints);
     }
 
     private static IReadOnlyList<(DailyScoreResult First, DailyScoreResult Second)> BuildWeek(params CoverageKind[] kinds)
@@ -75,5 +110,20 @@ public sealed class WeeklyScoreCalculatorTests
         return (
             DailyScoreCalculator.Calculate(new DailyScoreInput(date, firstKind), ChallengeSettings.Default),
             DailyScoreCalculator.Calculate(new DailyScoreInput(date, secondKind), ChallengeSettings.Default));
+    }
+
+    private static DailyScoreResult CoveredWithoutWeeklyEligibility(DateOnly date, decimal points)
+    {
+        return new DailyScoreResult(
+            date,
+            CoverageKind.Morning,
+            points,
+            IsCovered: true,
+            CountsForDailyCoupleBonus: false,
+            CountsForMorningStreak: false,
+            CountsForGymStreak: false,
+            CountsForPerfectWeek: false,
+            CountsForCompleteWeek: false,
+            CountsForRescuedWeek: false);
     }
 }
