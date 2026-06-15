@@ -4,6 +4,14 @@ public static class DailyScoreCalculator
 {
     public static DailyScoreResult Calculate(DailyScoreInput input, ChallengeSettings settings)
     {
+        if (IsWeekend(input.Date))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(input),
+                input.Date,
+                "Daily scoring only supports business days.");
+        }
+
         var normalDayPoints = GetNormalDayPoints(input.Date, settings);
 
         return input.CoverageKind switch
@@ -89,5 +97,10 @@ public static class DailyScoreCalculator
         return date.DayOfWeek == DayOfWeek.Monday
             ? settings.MondayMorningPoints
             : settings.WeekdayMorningPoints;
+    }
+
+    private static bool IsWeekend(DateOnly date)
+    {
+        return date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
     }
 }
