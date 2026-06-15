@@ -52,7 +52,7 @@ GET http://localhost:5020/health
 
 ## Siguiente gate
 
-La base del motor de puntajes ya esta lista. El siguiente bloque funcional deberia cubrir persistencia, casos de uso de aplicacion, endpoints reales y luego una pasada de diseno visual/UX antes del frontend.
+La Fase 1 backend esta cerrada para el MVP. El siguiente bloque recomendado es documentar y construir la UI MVP mobile-first. Ver `docs/planning/next-step-ui-mvp.md`.
 
 ## Backend MVP Core
 
