@@ -3,6 +3,7 @@ using GymChall.Application.Challenges;
 using GymChall.Domain.Scoring;
 using GymChall.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace GymChall.Infrastructure.Persistence;
 
@@ -32,6 +33,12 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
 
     public async Task AddParticipantAsync(ParticipantCreateDto participant, CancellationToken cancellationToken = default)
     {
+        var usernameExists = await db.Participants.AnyAsync(x => x.Username == participant.Username, cancellationToken);
+        if (usernameExists)
+        {
+            throw new InvalidOperationException($"Participant username already exists: {participant.Username}");
+        }
+
         db.Participants.Add(new ParticipantEntity
         {
             Id = participant.Id,
@@ -47,6 +54,13 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
 
     public async Task AddCoupleAsync(CoupleCreateDto couple, CancellationToken cancellationToken = default)
     {
+        if (couple.FirstParticipantId == couple.SecondParticipantId)
+        {
+            throw new InvalidOperationException("A couple must have two different participants.");
+        }
+
+        var challenge = await db.Challenges.SingleAsync(x => x.Id == couple.ChallengeId, cancellationToken);
+
         db.Couples.Add(new CoupleEntity
         {
             Id = couple.Id,
@@ -56,10 +70,61 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
         });
 
         db.CoupleMemberships.AddRange(
-            new CoupleMembershipEntity { Id = Guid.NewGuid(), CoupleId = couple.Id, ParticipantId = couple.FirstParticipantId, StartsOn = DateOnly.FromDateTime(DateTime.UtcNow) },
-            new CoupleMembershipEntity { Id = Guid.NewGuid(), CoupleId = couple.Id, ParticipantId = couple.SecondParticipantId, StartsOn = DateOnly.FromDateTime(DateTime.UtcNow) });
+            new CoupleMembershipEntity { Id = Guid.NewGuid(), CoupleId = couple.Id, ParticipantId = couple.FirstParticipantId, StartsOn = challenge.StartDate },
+            new CoupleMembershipEntity { Id = Guid.NewGuid(), CoupleId = couple.Id, ParticipantId = couple.SecondParticipantId, StartsOn = challenge.StartDate });
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ParticipantSummaryDto>> ListParticipantsAsync(CancellationToken cancellationToken = default)
+    {
+        return await db.Participants
+            .OrderBy(x => x.DisplayName)
+            .Select(x => new ParticipantSummaryDto(x.Id, x.DisplayName, x.Username, x.Role == ParticipantRole.Admin ? ParticipantRoleDto.Admin : ParticipantRoleDto.Participant, x.Gender, x.Active))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CoupleSummaryDto>> ListCouplesAsync(Guid challengeId, CancellationToken cancellationToken = default)
+    {
+        var couples = await db.Couples
+            .Include(x => x.Memberships)
+            .Where(x => x.ChallengeId == challengeId)
+            .OrderBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+        var participantIds = couples.SelectMany(x => x.Memberships.Select(m => m.ParticipantId)).Distinct().ToArray();
+        var participants = await db.Participants
+            .Where(x => participantIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        return couples
+            .Select(couple => new CoupleSummaryDto(
+                couple.Id,
+                couple.Name,
+                couple.Memberships
+                    .OrderBy(m => m.StartsOn)
+                    .Select(m => participants[m.ParticipantId])
+                    .Select(x => new ParticipantSummaryDto(x.Id, x.DisplayName, x.Username, x.Role == ParticipantRole.Admin ? ParticipantRoleDto.Admin : ParticipantRoleDto.Participant, x.Gender, x.Active))
+                    .ToArray(),
+                couple.Active))
+            .ToArray();
+    }
+
+    public async Task<ChallengeSettingsDto> GetSettingsAsync(Guid challengeId, CancellationToken cancellationToken = default)
+    {
+        var settings = await db.ChallengeSettings.SingleAsync(x => x.ChallengeId == challengeId, cancellationToken);
+
+        return new ChallengeSettingsDto(
+            settings.MondayMorningPoints,
+            settings.WeekdayMorningPoints,
+            settings.SameDayRecoveryPoints,
+            settings.WeekendRecoveryPoints,
+            settings.DailyCoupleBonus,
+            settings.PerfectWeekBonus,
+            settings.CompleteWeekBonus,
+            settings.RescuedWeekBonus,
+            settings.GymMinimumMinutes,
+            settings.MorningWindowStart,
+            settings.MorningWindowEnd);
     }
 
     public async Task AddCheckInAsync(CheckInCreateDto checkIn, CancellationToken cancellationToken = default)
@@ -123,5 +188,50 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             couples.Select(x => new CoupleDto(x.Id, x.ChallengeId, x.Name, x.Memberships.Select(m => m.ParticipantId).ToArray(), x.Active)).ToArray(),
             checkIns.Select(x => new CheckInDto(x.Id, x.ChallengeId, x.ParticipantId, x.ActivityDate, x.Type == CheckInType.GymMorning ? CheckInTypeDto.GymMorning : CheckInTypeDto.GymSameDayRecovery, x.DurationMinutes)).ToArray(),
             tokens.Select(x => new FullCoverageTokenDto(x.Id, x.ChallengeId, x.ParticipantId, x.TargetDate, (ExceptionReasonCategoryDto)x.ReasonCategory)).ToArray());
+    }
+
+    public async Task InvalidateCheckInAsync(Guid checkInId, Guid actorParticipantId, string? reason, CancellationToken cancellationToken = default)
+    {
+        var checkIn = await db.CheckIns.SingleAsync(x => x.Id == checkInId, cancellationToken);
+        var oldStatus = checkIn.Status;
+        checkIn.Status = RecordStatus.Rejected;
+        checkIn.CorrectedByParticipantId = actorParticipantId;
+        checkIn.UpdatedAt = DateTimeOffset.UtcNow;
+
+        db.AuditLogs.Add(new AuditLogEntity
+        {
+            Id = Guid.NewGuid(),
+            ChallengeId = checkIn.ChallengeId,
+            ActorParticipantId = actorParticipantId,
+            Action = "invalidate_check_in",
+            EntityType = "CheckIn",
+            EntityId = checkIn.Id,
+            OldValueJson = JsonSerializer.Serialize(new { Status = oldStatus.ToString() }),
+            NewValueJson = JsonSerializer.Serialize(new { Status = checkIn.Status.ToString(), Reason = reason })
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task InvalidateFullCoverageTokenAsync(Guid tokenId, Guid actorParticipantId, string? reason, CancellationToken cancellationToken = default)
+    {
+        var token = await db.ExceptionTokens.SingleAsync(x => x.Id == tokenId, cancellationToken);
+        var oldStatus = token.Status;
+        token.Status = ExceptionTokenStatus.Rejected;
+        token.UpdatedAt = DateTimeOffset.UtcNow;
+
+        db.AuditLogs.Add(new AuditLogEntity
+        {
+            Id = Guid.NewGuid(),
+            ChallengeId = token.ChallengeId,
+            ActorParticipantId = actorParticipantId,
+            Action = "invalidate_token",
+            EntityType = "ExceptionToken",
+            EntityId = token.Id,
+            OldValueJson = JsonSerializer.Serialize(new { Status = oldStatus.ToString() }),
+            NewValueJson = JsonSerializer.Serialize(new { Status = token.Status.ToString(), Reason = reason })
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
     }
 }
