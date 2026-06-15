@@ -4,6 +4,16 @@ using GymChall.Domain.Scoring;
 namespace GymChall.Application.Scoring;
 
 public sealed record CoupleRankingRow(Guid CoupleId, string CoupleName, decimal TotalPoints, int MorningStreak, int GymStreak);
+public sealed record WeeklyRankingDto(DateOnly WeekStartDate, DateOnly WeekEndDate, IReadOnlyList<WeeklyRankingRowDto> Rows);
+public sealed record WeeklyRankingRowDto(
+    Guid CoupleId,
+    string CoupleName,
+    decimal IndividualPoints,
+    decimal DailyBonusPoints,
+    decimal WeeklyBonusPoints,
+    decimal TotalPoints,
+    string WeeklyBonusType,
+    int RequiredBusinessDays);
 
 public static class RankingService
 {
@@ -17,6 +27,41 @@ public static class RankingService
             .OrderByDescending(row => row.TotalPoints)
             .ThenBy(row => row.CoupleName)
             .ToArray();
+    }
+
+    public static IReadOnlyList<WeeklyRankingDto> CalculateWeeklyRankings(ChallengeSnapshotDto snapshot, DateOnly throughDate)
+    {
+        var cappedThroughDate = Min(snapshot.Challenge.EndDate, throughDate);
+        if (cappedThroughDate < snapshot.Challenge.StartDate)
+        {
+            return Array.Empty<WeeklyRankingDto>();
+        }
+
+        var firstWeekStart = StartOfWeek(snapshot.Challenge.StartDate);
+        var rankings = new List<WeeklyRankingDto>();
+
+        for (var weekStart = firstWeekStart; weekStart <= cappedThroughDate; weekStart = weekStart.AddDays(7))
+        {
+            rankings.Add(CalculateWeeklyRanking(snapshot, weekStart, cappedThroughDate));
+        }
+
+        return rankings;
+    }
+
+    public static WeeklyRankingDto CalculateWeeklyRanking(ChallengeSnapshotDto snapshot, DateOnly weekStartDate, DateOnly throughDate)
+    {
+        var cappedThroughDate = Min(snapshot.Challenge.EndDate, throughDate);
+        var weekEndDate = weekStartDate.AddDays(6);
+        var dates = BusinessDates(Max(snapshot.Challenge.StartDate, weekStartDate), Min(weekEndDate, cappedThroughDate)).ToArray();
+
+        var rows = snapshot.Couples
+            .Where(couple => couple.Active && couple.ParticipantIds.Count == 2)
+            .Select(couple => CalculateWeeklyCouple(snapshot, couple, dates))
+            .OrderByDescending(row => row.TotalPoints)
+            .ThenBy(row => row.CoupleName)
+            .ToArray();
+
+        return new WeeklyRankingDto(weekStartDate, weekEndDate, rows);
     }
 
     private static CoupleRankingRow CalculateCouple(ChallengeSnapshotDto snapshot, CoupleDto couple, IReadOnlyList<DateOnly> dates)
@@ -56,6 +101,37 @@ public static class RankingService
         return new CoupleRankingRow(couple.Id, couple.Name, total, morningStreak, gymStreak);
     }
 
+    private static WeeklyRankingRowDto CalculateWeeklyCouple(ChallengeSnapshotDto snapshot, CoupleDto couple, IReadOnlyList<DateOnly> dates)
+    {
+        var firstId = couple.ParticipantIds[0];
+        var secondId = couple.ParticipantIds[1];
+        var dailyPairs = new List<(DailyScoreResult First, DailyScoreResult Second)>();
+        var dailyBonusPoints = 0m;
+
+        foreach (var date in dates)
+        {
+            var first = ScoreParticipant(snapshot, firstId, date);
+            var second = ScoreParticipant(snapshot, secondId, date);
+            var daily = CoupleDailyScoreCalculator.Calculate(first, second, lakePoints: 0m, snapshot.Settings);
+
+            dailyPairs.Add((first, second));
+            dailyBonusPoints += daily.DailyBonusPoints;
+        }
+
+        var weekly = WeeklyScoreCalculator.Calculate(new WeeklyScoreInput(dailyPairs), snapshot.Settings);
+        var total = weekly.IndividualPoints + dailyBonusPoints + weekly.WeeklyBonusPoints;
+
+        return new WeeklyRankingRowDto(
+            couple.Id,
+            couple.Name,
+            weekly.IndividualPoints,
+            dailyBonusPoints,
+            weekly.WeeklyBonusPoints,
+            total,
+            weekly.WeeklyBonusType.ToString(),
+            weekly.RequiredBusinessDays);
+    }
+
     private static DailyScoreResult ScoreParticipant(ChallengeSnapshotDto snapshot, Guid participantId, DateOnly date)
     {
         if (snapshot.FullCoverageTokens.Any(token => token.ParticipantId == participantId && token.TargetDate == date))
@@ -92,5 +168,16 @@ public static class RankingService
     private static DateOnly Min(DateOnly first, DateOnly second)
     {
         return first <= second ? first : second;
+    }
+
+    private static DateOnly Max(DateOnly first, DateOnly second)
+    {
+        return first >= second ? first : second;
+    }
+
+    private static DateOnly StartOfWeek(DateOnly date)
+    {
+        var daysSinceMonday = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        return date.AddDays(-daysSinceMonday);
     }
 }
