@@ -53,3 +53,17 @@ GET http://localhost:5020/health
 ## Siguiente gate
 
 La base del motor de puntajes ya esta lista. El siguiente bloque funcional deberia cubrir persistencia, casos de uso de aplicacion, endpoints reales y luego una pasada de diseno visual/UX antes del frontend.
+
+## Backend MVP Core
+
+Endpoints iniciales:
+
+```text
+GET  /health
+GET  /api/challenge
+POST /api/check-ins
+POST /api/tokens/full-coverage
+GET  /api/rankings/general?throughDate=2026-06-15
+```
+
+La API crea la base local `gymchall.db` y carga el reto inicial si no existe.
