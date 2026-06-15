@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\GymChall.Infrastructure\GymChall.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\GymChall.Application\GymChall.Application.csproj" />
   </ItemGroup>
 
 </Project>
