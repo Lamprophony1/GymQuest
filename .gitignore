@@ -1,0 +1,39 @@
+﻿# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# .NET
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+
+# Node / Next
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Local storage / uploads
+uploads/
+storage/
+*.db
+*.db-shm
+*.db-wal
+
+# Generated artifacts
+.artifacts/
