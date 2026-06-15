@@ -8,9 +8,22 @@ public static class LakeScoringCalculator
         Guid secondParticipantId,
         ChallengeSettings settings)
     {
+        if (firstParticipantId == secondParticipantId)
+        {
+            throw new ArgumentException("Lake scoring requires two distinct couple participants.", nameof(secondParticipantId));
+        }
+
         var validActivities = activities
-            .Where(activity => activity.IsAssociatedToValidGym)
-            .OrderBy(activity => activity.ActivityDate)
+            .Select((activity, originalOrder) => new
+            {
+                Activity = activity,
+                OriginalOrder = originalOrder,
+                Classification = Classify(activity, firstParticipantId, secondParticipantId)
+            })
+            .Where(activity => activity.Activity.IsAssociatedToValidGym
+                && activity.Classification != LakeActivityClassification.Invalid)
+            .OrderBy(activity => activity.Activity.ActivityDate)
+            .ThenBy(activity => activity.OriginalOrder)
             .ToArray();
 
         var scoringActivities = validActivities
@@ -18,7 +31,7 @@ public static class LakeScoringCalculator
             .ToArray();
 
         var points = scoringActivities.Sum(activity =>
-            IsCoupleActivity(activity, firstParticipantId, secondParticipantId)
+            activity.Classification == LakeActivityClassification.Couple
                 ? settings.LakeCouplePoints
                 : settings.LakeSoloPoints);
 
@@ -28,9 +41,35 @@ public static class LakeScoringCalculator
             TotalValidActivities: validActivities.Length);
     }
 
-    private static bool IsCoupleActivity(LakeActivityInput activity, Guid firstParticipantId, Guid secondParticipantId)
+    private static LakeActivityClassification Classify(
+        LakeActivityInput activity,
+        Guid firstParticipantId,
+        Guid secondParticipantId)
     {
-        return activity.ParticipantIds.Contains(firstParticipantId)
-            && activity.ParticipantIds.Contains(secondParticipantId);
+        var participantIds = activity.ParticipantIds.ToArray();
+
+        if (participantIds.Length == 1)
+        {
+            return participantIds[0] == firstParticipantId || participantIds[0] == secondParticipantId
+                ? LakeActivityClassification.Solo
+                : LakeActivityClassification.Invalid;
+        }
+
+        if (participantIds.Length == 2
+            && participantIds[0] != participantIds[1]
+            && participantIds.Contains(firstParticipantId)
+            && participantIds.Contains(secondParticipantId))
+        {
+            return LakeActivityClassification.Couple;
+        }
+
+        return LakeActivityClassification.Invalid;
+    }
+
+    private enum LakeActivityClassification
+    {
+        Invalid,
+        Solo,
+        Couple
     }
 }

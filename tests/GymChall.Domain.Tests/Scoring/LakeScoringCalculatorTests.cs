@@ -6,6 +6,7 @@ public sealed class LakeScoringCalculatorTests
 {
     private static readonly Guid Rafa = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static readonly Guid Clari = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+    private static readonly Guid Unknown = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
 
     [Fact]
     public void Solo_lake_activity_scores_one_point_when_associated_to_valid_gym()
@@ -61,6 +62,112 @@ public sealed class LakeScoringCalculatorTests
 
         Assert.Equal(0m, result.Points);
         Assert.Equal(0, result.ScoringActivities);
+    }
+
+    [Fact]
+    public void Unknown_only_lake_activity_is_not_valid()
+    {
+        var activities = new[]
+        {
+            new LakeActivityInput(new DateOnly(2026, 6, 16), new[] { Unknown }, IsAssociatedToValidGym: true)
+        };
+
+        var result = LakeScoringCalculator.Calculate(activities, Rafa, Clari, ChallengeSettings.Default);
+
+        Assert.Equal(0m, result.Points);
+        Assert.Equal(0, result.ScoringActivities);
+        Assert.Equal(0, result.TotalValidActivities);
+    }
+
+    [Fact]
+    public void Empty_participants_lake_activity_is_not_valid()
+    {
+        var activities = new[]
+        {
+            new LakeActivityInput(new DateOnly(2026, 6, 16), Array.Empty<Guid>(), IsAssociatedToValidGym: true)
+        };
+
+        var result = LakeScoringCalculator.Calculate(activities, Rafa, Clari, ChallengeSettings.Default);
+
+        Assert.Equal(0m, result.Points);
+        Assert.Equal(0, result.ScoringActivities);
+        Assert.Equal(0, result.TotalValidActivities);
+    }
+
+    [Fact]
+    public void Couple_activity_with_extra_participant_is_not_valid()
+    {
+        var activities = new[]
+        {
+            new LakeActivityInput(new DateOnly(2026, 6, 16), new[] { Rafa, Clari, Unknown }, IsAssociatedToValidGym: true)
+        };
+
+        var result = LakeScoringCalculator.Calculate(activities, Rafa, Clari, ChallengeSettings.Default);
+
+        Assert.Equal(0m, result.Points);
+        Assert.Equal(0, result.ScoringActivities);
+        Assert.Equal(0, result.TotalValidActivities);
+    }
+
+    [Fact]
+    public void Duplicate_participant_ids_lake_activity_is_not_valid()
+    {
+        var activities = new[]
+        {
+            new LakeActivityInput(new DateOnly(2026, 6, 16), new[] { Rafa, Rafa }, IsAssociatedToValidGym: true)
+        };
+
+        var result = LakeScoringCalculator.Calculate(activities, Rafa, Clari, ChallengeSettings.Default);
+
+        Assert.Equal(0m, result.Points);
+        Assert.Equal(0, result.ScoringActivities);
+        Assert.Equal(0, result.TotalValidActivities);
+    }
+
+    [Fact]
+    public void Same_participant_ids_for_couple_throw()
+    {
+        var activities = new[]
+        {
+            new LakeActivityInput(new DateOnly(2026, 6, 16), new[] { Rafa }, IsAssociatedToValidGym: true)
+        };
+
+        Assert.Throws<ArgumentException>(() =>
+            LakeScoringCalculator.Calculate(activities, Rafa, Rafa, ChallengeSettings.Default));
+    }
+
+    [Fact]
+    public void Invalid_participant_activity_does_not_consume_weekly_cap()
+    {
+        var activities = new[]
+        {
+            new LakeActivityInput(new DateOnly(2026, 6, 16), new[] { Unknown }, IsAssociatedToValidGym: true),
+            new LakeActivityInput(new DateOnly(2026, 6, 17), new[] { Rafa }, IsAssociatedToValidGym: true),
+            new LakeActivityInput(new DateOnly(2026, 6, 18), new[] { Rafa, Clari }, IsAssociatedToValidGym: true)
+        };
+
+        var result = LakeScoringCalculator.Calculate(activities, Rafa, Clari, ChallengeSettings.Default);
+
+        Assert.Equal(4m, result.Points);
+        Assert.Equal(2, result.ScoringActivities);
+        Assert.Equal(2, result.TotalValidActivities);
+    }
+
+    [Fact]
+    public void Same_date_lake_activities_use_caller_order_as_tiebreaker()
+    {
+        var activities = new[]
+        {
+            new LakeActivityInput(new DateOnly(2026, 6, 16), new[] { Rafa }, IsAssociatedToValidGym: true),
+            new LakeActivityInput(new DateOnly(2026, 6, 16), new[] { Clari }, IsAssociatedToValidGym: true),
+            new LakeActivityInput(new DateOnly(2026, 6, 16), new[] { Rafa, Clari }, IsAssociatedToValidGym: true)
+        };
+
+        var result = LakeScoringCalculator.Calculate(activities, Rafa, Clari, ChallengeSettings.Default);
+
+        Assert.Equal(2m, result.Points);
+        Assert.Equal(2, result.ScoringActivities);
+        Assert.Equal(3, result.TotalValidActivities);
     }
 
     [Fact]
