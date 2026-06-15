@@ -61,9 +61,18 @@ Endpoints iniciales:
 ```text
 GET  /health
 GET  /api/challenge
+GET  /api/challenge/settings
+GET  /api/participants
+POST /api/participants
+GET  /api/couples
+POST /api/couples
 POST /api/check-ins
 POST /api/tokens/full-coverage
+POST /api/admin/check-ins/{id}/invalidate
+POST /api/admin/tokens/{id}/invalidate
 GET  /api/rankings/general?throughDate=2026-06-15
+GET  /api/rankings/weeks?throughDate=2026-06-26
+GET  /api/rankings/weeks/2026-06-15?throughDate=2026-06-26
 ```
 
 La API crea la base local `gymchall.db` y carga el reto inicial si no existe.

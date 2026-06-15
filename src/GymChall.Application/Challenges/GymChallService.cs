@@ -8,16 +8,20 @@ public sealed record CreateFullCoverageTokenRequest(Guid ParticipantId, DateOnly
 
 public sealed class GymChallService(IGymChallRepository repository)
 {
-    public async Task RegisterCheckInAsync(RegisterCheckInRequest request, CancellationToken cancellationToken = default)
+    public async Task<Guid> RegisterCheckInAsync(RegisterCheckInRequest request, CancellationToken cancellationToken = default)
     {
         var challengeId = await RequireActiveChallengeId(cancellationToken);
-        await repository.AddCheckInAsync(new CheckInCreateDto(Guid.NewGuid(), challengeId, request.ParticipantId, request.OccurredAt, DateOnly.FromDateTime(request.OccurredAt.Date), request.Type, request.DurationMinutes, request.CreatedByParticipantId, request.Notes), cancellationToken);
+        var checkInId = Guid.NewGuid();
+        await repository.AddCheckInAsync(new CheckInCreateDto(checkInId, challengeId, request.ParticipantId, request.OccurredAt, DateOnly.FromDateTime(request.OccurredAt.Date), request.Type, request.DurationMinutes, request.CreatedByParticipantId, request.Notes), cancellationToken);
+        return checkInId;
     }
 
-    public async Task CreateFullCoverageTokenAsync(CreateFullCoverageTokenRequest request, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateFullCoverageTokenAsync(CreateFullCoverageTokenRequest request, CancellationToken cancellationToken = default)
     {
         var challengeId = await RequireActiveChallengeId(cancellationToken);
-        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(Guid.NewGuid(), challengeId, request.ParticipantId, request.TargetDate, request.ReasonCategory, request.AssignedByAdminId, request.Notes), cancellationToken);
+        var tokenId = Guid.NewGuid();
+        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(tokenId, challengeId, request.ParticipantId, request.TargetDate, request.ReasonCategory, request.AssignedByAdminId, request.Notes), cancellationToken);
+        return tokenId;
     }
 
     public async Task<IReadOnlyList<CoupleRankingRow>> GetGeneralRankingAsync(DateOnly throughDate, CancellationToken cancellationToken = default)
@@ -52,9 +56,11 @@ public sealed class GymChallService(IGymChallRepository repository)
         return repository.ListParticipantsAsync(cancellationToken);
     }
 
-    public Task CreateParticipantAsync(CreateParticipantRequest request, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateParticipantAsync(CreateParticipantRequest request, CancellationToken cancellationToken = default)
     {
-        return repository.AddParticipantAsync(new ParticipantCreateDto(Guid.NewGuid(), request.DisplayName, request.Username, request.Role, request.Gender), cancellationToken);
+        var participantId = Guid.NewGuid();
+        await repository.AddParticipantAsync(new ParticipantCreateDto(participantId, request.DisplayName, request.Username, request.Role, request.Gender), cancellationToken);
+        return participantId;
     }
 
     public async Task<IReadOnlyList<CoupleSummaryDto>> ListCouplesAsync(CancellationToken cancellationToken = default)
@@ -63,10 +69,12 @@ public sealed class GymChallService(IGymChallRepository repository)
         return await repository.ListCouplesAsync(challengeId, cancellationToken);
     }
 
-    public async Task CreateCoupleAsync(CreateCoupleRequest request, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateCoupleAsync(CreateCoupleRequest request, CancellationToken cancellationToken = default)
     {
         var challengeId = await RequireActiveChallengeId(cancellationToken);
-        await repository.AddCoupleAsync(new CoupleCreateDto(Guid.NewGuid(), challengeId, request.Name, request.FirstParticipantId, request.SecondParticipantId), cancellationToken);
+        var coupleId = Guid.NewGuid();
+        await repository.AddCoupleAsync(new CoupleCreateDto(coupleId, challengeId, request.Name, request.FirstParticipantId, request.SecondParticipantId), cancellationToken);
+        return coupleId;
     }
 
     public async Task<ChallengeSettingsDto> GetSettingsAsync(CancellationToken cancellationToken = default)
