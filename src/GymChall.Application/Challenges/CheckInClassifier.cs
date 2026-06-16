@@ -7,10 +7,12 @@ public static class CheckInClassifier
     public static ClassifiedCheckIn Classify(
         DateTimeOffset occurredAt,
         DateOnly? recoveryTargetDate,
-        ChallengeSettingsDto settings)
+        ChallengeSettingsDto settings,
+        string timezone = "America/Asuncion")
     {
-        var localDate = DateOnly.FromDateTime(occurredAt.DateTime);
-        var localTime = TimeOnly.FromDateTime(occurredAt.DateTime);
+        var localOccurredAt = ConvertToTimezone(occurredAt, timezone);
+        var localDate = DateOnly.FromDateTime(localOccurredAt.DateTime);
+        var localTime = TimeOnly.FromDateTime(localOccurredAt.DateTime);
 
         if (localDate.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
         {
@@ -47,6 +49,23 @@ public static class CheckInClassifier
         if (StartOfWeek(weekendDate) != StartOfWeek(targetDate))
         {
             throw new InvalidOperationException("La recuperacion debe ser de la misma semana.");
+        }
+    }
+
+    private static DateTimeOffset ConvertToTimezone(DateTimeOffset occurredAt, string timezone)
+    {
+        try
+        {
+            return TimeZoneInfo.ConvertTime(occurredAt, TimeZoneInfo.FindSystemTimeZoneById(timezone));
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            if (timezone == "America/Asuncion")
+            {
+                return TimeZoneInfo.ConvertTime(occurredAt, TimeZoneInfo.FindSystemTimeZoneById("Paraguay Standard Time"));
+            }
+
+            throw;
         }
     }
 }

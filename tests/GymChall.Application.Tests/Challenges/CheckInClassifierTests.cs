@@ -21,11 +21,23 @@ public sealed class CheckInClassifierTests
     public void Classifies_morning_checkin_inside_configured_window()
     {
         var result = CheckInClassifier.Classify(
-            new DateTimeOffset(2026, 6, 15, 5, 20, 0, TimeSpan.FromHours(-4)),
+            new DateTimeOffset(2026, 6, 15, 5, 20, 0, TimeSpan.FromHours(-3)),
             recoveryTargetDate: null,
             Settings);
 
         Assert.Equal(new DateOnly(2026, 6, 15), result.ActivityDate);
+        Assert.Equal(CheckInTypeDto.GymMorning, result.Type);
+    }
+
+    [Fact]
+    public void Classifies_browser_utc_payload_inside_asuncion_window_as_morning()
+    {
+        var result = CheckInClassifier.Classify(
+            new DateTimeOffset(2026, 6, 16, 8, 10, 0, TimeSpan.Zero),
+            recoveryTargetDate: null,
+            Settings);
+
+        Assert.Equal(new DateOnly(2026, 6, 16), result.ActivityDate);
         Assert.Equal(CheckInTypeDto.GymMorning, result.Type);
     }
 

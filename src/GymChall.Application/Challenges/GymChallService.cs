@@ -16,10 +16,10 @@ public sealed class GymChallService(IGymChallRepository repository)
     {
         var challengeId = await RequireActiveChallengeId(cancellationToken);
         var settings = await repository.GetSettingsAsync(challengeId, cancellationToken);
-        var classified = CheckInClassifier.Classify(request.OccurredAt, request.RecoveryTargetDate, settings);
+        var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
+        var classified = CheckInClassifier.Classify(request.OccurredAt, request.RecoveryTargetDate, settings, snapshot.Challenge.Timezone);
         if (classified.Type == CheckInTypeDto.GymWeekendRecovery)
         {
-            var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
             EnsureNeedsCoverage(snapshot, request.ParticipantId, classified.ActivityDate);
         }
 
@@ -95,7 +95,7 @@ public sealed class GymChallService(IGymChallRepository repository)
                 }
 
                 var settings = await repository.GetSettingsAsync(challengeId, cancellationToken);
-                var classified = CheckInClassifier.Classify(request.OccurredAt.Value, request.RecoveryTargetDate, settings);
+                var classified = CheckInClassifier.Classify(request.OccurredAt.Value, request.RecoveryTargetDate, settings, snapshot.Challenge.Timezone);
                 if (classified.Type == CheckInTypeDto.GymMorning)
                 {
                     throw new InvalidOperationException("No hace falta usar ficha dentro de la ventana 5AM.");

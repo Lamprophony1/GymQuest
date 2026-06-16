@@ -68,7 +68,56 @@ public static class SeedData
             settings.MorningWindowEnd = new TimeOnly(6, 0);
         }
 
+        if (challenge is not null && settings is not null)
+        {
+            await CorrectMorningCheckInsAsync(db, challenge.Timezone, settings.MorningWindowStart, settings.MorningWindowEnd, cancellationToken);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task CorrectMorningCheckInsAsync(
+        GymChallDbContext db,
+        string timezone,
+        TimeOnly morningWindowStart,
+        TimeOnly morningWindowEnd,
+        CancellationToken cancellationToken)
+    {
+        var zone = ResolveTimezone(timezone);
+        var checkIns = await db.CheckIns
+            .Where(x => x.ChallengeId == ChallengeId && x.Type == CheckInType.GymSameDayRecovery)
+            .ToListAsync(cancellationToken);
+
+        foreach (var checkIn in checkIns)
+        {
+            var localOccurredAt = TimeZoneInfo.ConvertTime(checkIn.OccurredAt, zone);
+            var localTime = TimeOnly.FromDateTime(localOccurredAt.DateTime);
+            if (localTime < morningWindowStart || localTime > morningWindowEnd)
+            {
+                continue;
+            }
+
+            checkIn.Type = CheckInType.GymMorning;
+            checkIn.ActivityDate = DateOnly.FromDateTime(localOccurredAt.DateTime);
+            checkIn.UpdatedAt = DateTimeOffset.UtcNow;
+        }
+    }
+
+    private static TimeZoneInfo ResolveTimezone(string timezone)
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(timezone);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            if (timezone == "America/Asuncion")
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById("Paraguay Standard Time");
+            }
+
+            throw;
+        }
     }
 
     private static ParticipantEntity Participant(Guid id, string displayName, string username, ParticipantRole role, string gender)
