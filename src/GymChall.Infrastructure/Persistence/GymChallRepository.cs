@@ -127,6 +127,88 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             settings.MorningWindowEnd);
     }
 
+    public async Task<IReadOnlyList<AdminCheckInSummaryDto>> ListRecentCheckInsAsync(Guid challengeId, int limit, CancellationToken cancellationToken = default)
+    {
+        var cappedLimit = Math.Clamp(limit, 1, 100);
+        var rows = await db.CheckIns
+            .Where(x => x.ChallengeId == challengeId)
+            .Join(
+                db.Participants,
+                checkIn => checkIn.ParticipantId,
+                participant => participant.Id,
+                (checkIn, participant) => new { CheckIn = checkIn, Participant = participant })
+            .Select(x => new
+            {
+                x.CheckIn.Id,
+                x.CheckIn.ParticipantId,
+                ParticipantName = x.Participant.DisplayName,
+                x.CheckIn.ActivityDate,
+                x.CheckIn.OccurredAt,
+                x.CheckIn.Type,
+                x.CheckIn.Status,
+                x.CheckIn.DurationMinutes,
+                x.CheckIn.Notes,
+                x.CheckIn.CreatedAt
+            })
+            .ToArrayAsync(cancellationToken);
+
+        return rows
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.OccurredAt)
+            .Take(cappedLimit)
+            .Select(x => new AdminCheckInSummaryDto(
+                x.Id,
+                x.ParticipantId,
+                x.ParticipantName,
+                x.ActivityDate,
+                x.OccurredAt,
+                x.Type == CheckInType.GymMorning ? CheckInTypeDto.GymMorning : CheckInTypeDto.GymSameDayRecovery,
+                x.Status.ToString(),
+                x.DurationMinutes,
+                x.Notes,
+                x.CreatedAt))
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<AdminTokenSummaryDto>> ListRecentFullCoverageTokensAsync(Guid challengeId, int limit, CancellationToken cancellationToken = default)
+    {
+        var cappedLimit = Math.Clamp(limit, 1, 100);
+        var rows = await db.ExceptionTokens
+            .Where(x => x.ChallengeId == challengeId && x.Type == ExceptionTokenType.FullCoverage)
+            .Join(
+                db.Participants,
+                token => token.ParticipantId,
+                participant => participant.Id,
+                (token, participant) => new { Token = token, Participant = participant })
+            .Select(x => new
+            {
+                x.Token.Id,
+                x.Token.ParticipantId,
+                ParticipantName = x.Participant.DisplayName,
+                x.Token.TargetDate,
+                x.Token.ReasonCategory,
+                x.Token.Status,
+                x.Token.Notes,
+                x.Token.CreatedAt
+            })
+            .ToArrayAsync(cancellationToken);
+
+        return rows
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.TargetDate)
+            .Take(cappedLimit)
+            .Select(x => new AdminTokenSummaryDto(
+                x.Id,
+                x.ParticipantId,
+                x.ParticipantName,
+                x.TargetDate,
+                (ExceptionReasonCategoryDto)x.ReasonCategory,
+                x.Status.ToString(),
+                x.Notes,
+                x.CreatedAt))
+            .ToArray();
+    }
+
     public async Task AddCheckInAsync(CheckInCreateDto checkIn, CancellationToken cancellationToken = default)
     {
         db.CheckIns.Add(new CheckInEntity

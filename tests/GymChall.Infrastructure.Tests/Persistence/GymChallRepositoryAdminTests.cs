@@ -110,6 +110,80 @@ public sealed class GymChallRepositoryAdminTests
         Assert.Contains("error de carga", audit.NewValueJson);
     }
 
+    [Fact]
+    public async Task Lists_recent_checkins_with_participant_names_status_and_limit()
+    {
+        await using var fixture = await DbFixture.CreateSeededAsync();
+        var repository = new GymChallRepository(fixture.Db);
+        var firstId = Guid.Parse("40000000-0000-0000-0000-000000000001");
+        var secondId = Guid.Parse("40000000-0000-0000-0000-000000000002");
+
+        await repository.AddCheckInAsync(new CheckInCreateDto(
+            firstId,
+            SeedData.ChallengeId,
+            SeedData.RafaId,
+            new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)),
+            new DateOnly(2026, 6, 15),
+            CheckInTypeDto.GymMorning,
+            45,
+            SeedData.RafaId,
+            "5am"));
+        await repository.AddCheckInAsync(new CheckInCreateDto(
+            secondId,
+            SeedData.ChallengeId,
+            SeedData.ClariId,
+            new DateTimeOffset(2026, 6, 16, 19, 0, 0, TimeSpan.FromHours(-4)),
+            new DateOnly(2026, 6, 16),
+            CheckInTypeDto.GymSameDayRecovery,
+            45,
+            SeedData.ClariId,
+            "tarde"));
+
+        var rows = await repository.ListRecentCheckInsAsync(SeedData.ChallengeId, limit: 1);
+
+        var row = Assert.Single(rows);
+        Assert.Equal(secondId, row.Id);
+        Assert.Equal("Clari", row.ParticipantName);
+        Assert.Equal(CheckInTypeDto.GymSameDayRecovery, row.Type);
+        Assert.Equal("Valid", row.Status);
+        Assert.Equal("tarde", row.Notes);
+    }
+
+    [Fact]
+    public async Task Lists_recent_tokens_with_participant_names_status_and_limit()
+    {
+        await using var fixture = await DbFixture.CreateSeededAsync();
+        var repository = new GymChallRepository(fixture.Db);
+        var firstId = Guid.Parse("40000000-0000-0000-0000-000000000003");
+        var secondId = Guid.Parse("40000000-0000-0000-0000-000000000004");
+
+        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
+            firstId,
+            SeedData.ChallengeId,
+            SeedData.RafaId,
+            new DateOnly(2026, 6, 15),
+            ExceptionReasonCategoryDto.Health,
+            SeedData.RafaId,
+            "salud"));
+        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
+            secondId,
+            SeedData.ChallengeId,
+            SeedData.ClariId,
+            new DateOnly(2026, 6, 16),
+            ExceptionReasonCategoryDto.Period,
+            SeedData.RafaId,
+            "periodo"));
+
+        var rows = await repository.ListRecentFullCoverageTokensAsync(SeedData.ChallengeId, limit: 1);
+
+        var row = Assert.Single(rows);
+        Assert.Equal(secondId, row.Id);
+        Assert.Equal("Clari", row.ParticipantName);
+        Assert.Equal(ExceptionReasonCategoryDto.Period, row.ReasonCategory);
+        Assert.Equal("Applied", row.Status);
+        Assert.Equal("periodo", row.Notes);
+    }
+
     private sealed class DbFixture : IAsyncDisposable
     {
         private readonly SqliteConnection connection;

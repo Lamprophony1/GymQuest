@@ -23,6 +23,26 @@ public sealed record FullCoverageTokenDto(Guid Id, Guid ChallengeId, Guid Partic
 public sealed record ChallengeSnapshotDto(ChallengeDto Challenge, ChallengeSettings Settings, IReadOnlyList<ParticipantDto> Participants, IReadOnlyList<CoupleDto> Couples, IReadOnlyList<CheckInDto> CheckIns, IReadOnlyList<FullCoverageTokenDto> FullCoverageTokens);
 public sealed record ParticipantSummaryDto(Guid Id, string DisplayName, string Username, ParticipantRoleDto Role, string? Gender, bool Active);
 public sealed record CoupleSummaryDto(Guid Id, string Name, IReadOnlyList<ParticipantSummaryDto> Participants, bool Active);
+public sealed record AdminCheckInSummaryDto(
+    Guid Id,
+    Guid ParticipantId,
+    string ParticipantName,
+    DateOnly ActivityDate,
+    DateTimeOffset OccurredAt,
+    CheckInTypeDto Type,
+    string Status,
+    int DurationMinutes,
+    string? Notes,
+    DateTimeOffset CreatedAt);
+public sealed record AdminTokenSummaryDto(
+    Guid Id,
+    Guid ParticipantId,
+    string ParticipantName,
+    DateOnly TargetDate,
+    ExceptionReasonCategoryDto ReasonCategory,
+    string Status,
+    string? Notes,
+    DateTimeOffset CreatedAt);
 public sealed record ChallengeSettingsDto(
     decimal MondayMorningPoints,
     decimal WeekdayMorningPoints,
