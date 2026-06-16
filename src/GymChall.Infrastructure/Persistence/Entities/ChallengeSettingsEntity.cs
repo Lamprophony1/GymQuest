@@ -19,7 +19,7 @@ public sealed class ChallengeSettingsEntity
     public int MaxLakeScoringPerCouplePerWeek { get; set; } = ChallengeSettings.Default.MaxLakeScoringPerCouplePerWeek;
     public int MaxWeekendRecoveriesPerPersonPerWeek { get; set; } = ChallengeSettings.Default.MaxWeekendRecoveriesPerPersonPerWeek;
     public int GymMinimumMinutes { get; set; } = 45;
-    public TimeOnly MorningWindowStart { get; set; } = new(4, 50);
-    public TimeOnly MorningWindowEnd { get; set; } = new(5, 30);
+    public TimeOnly MorningWindowStart { get; set; } = new(5, 0);
+    public TimeOnly MorningWindowEnd { get; set; } = new(6, 0);
     public ChallengeEntity? Challenge { get; set; }
 }

@@ -42,7 +42,7 @@ public sealed class RankingServiceTests
             },
             new[]
             {
-                new FullCoverageTokenDto(Guid.NewGuid(), challengeId, clari, new DateOnly(2026, 6, 16), ExceptionReasonCategoryDto.Health)
+                new FullCoverageTokenDto(Guid.NewGuid(), challengeId, clari, new DateOnly(2026, 6, 16), ExceptionTokenTypeDto.Health, ExceptionReasonCategoryDto.Health, ExceptionTokenStatusDto.Applied)
             });
 
         var ranking = RankingService.CalculateGeneralRanking(snapshot, throughDate: new DateOnly(2026, 6, 16));
@@ -52,5 +52,44 @@ public sealed class RankingServiceTests
         Assert.Equal(2, ranking[0].MorningStreak);
         Assert.Equal(0, ranking[0].GymStreak);
         Assert.Equal(0, ranking[1].GymStreak);
+    }
+
+    [Fact]
+    public void Schedule_change_token_converts_recovery_into_morning_coverage()
+    {
+        var challengeId = Guid.NewGuid();
+        var rafa = Guid.NewGuid();
+        var clari = Guid.NewGuid();
+        var coupleId = Guid.NewGuid();
+        var targetDate = new DateOnly(2026, 6, 16);
+
+        var snapshot = new ChallengeSnapshotDto(
+            new ChallengeDto(challengeId, "Reto", new DateOnly(2026, 6, 15), new DateOnly(2026, 6, 19), rafa, "America/Asuncion"),
+            ChallengeSettings.Default,
+            new[]
+            {
+                new ParticipantDto(rafa, "Rafa", "rafa", ParticipantRoleDto.Admin, "male", true),
+                new ParticipantDto(clari, "Clari", "clari", ParticipantRoleDto.Participant, "female", true)
+            },
+            new[]
+            {
+                new CoupleDto(coupleId, challengeId, "Rafa + Clari", new[] { rafa, clari }, true)
+            },
+            new[]
+            {
+                new CheckInDto(Guid.NewGuid(), challengeId, rafa, targetDate, CheckInTypeDto.GymMorning, 0),
+                new CheckInDto(Guid.NewGuid(), challengeId, clari, targetDate, CheckInTypeDto.GymSameDayRecovery, 0)
+            },
+            new[]
+            {
+                new FullCoverageTokenDto(Guid.NewGuid(), challengeId, clari, targetDate, ExceptionTokenTypeDto.ScheduleChange, ExceptionReasonCategoryDto.OtherApproved, ExceptionTokenStatusDto.Applied)
+            });
+
+        var ranking = RankingService.CalculateGeneralRanking(snapshot, targetDate);
+
+        var row = Assert.Single(ranking);
+        Assert.Equal(7m, row.TotalPoints);
+        Assert.Equal(1, row.MorningStreak);
+        Assert.Equal(1, row.GymStreak);
     }
 }

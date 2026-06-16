@@ -1,4 +1,4 @@
-import type { CheckInType, ExceptionReasonCategory } from '../api/types';
+import type { CheckInType, ExceptionReasonCategory, ExceptionTokenType } from '../api/types';
 
 export function formatPoints(value: number | null | undefined): string {
   if (value === null || value === undefined) {
@@ -23,7 +23,29 @@ export function formatShortDate(value: string | null | undefined): string {
 }
 
 export function checkInTypeLabel(type: CheckInType): string {
-  return type === 0 ? '5AM' : 'Recuperacion';
+  switch (type) {
+    case 0:
+      return '5AM';
+    case 1:
+      return 'Recuperacion dia';
+    case 2:
+      return 'Recuperacion finde';
+    default:
+      return 'Check-in';
+  }
+}
+
+export function tokenTypeLabel(type: ExceptionTokenType): string {
+  switch (type) {
+    case 0:
+      return 'Salud';
+    case 1:
+      return 'Compromiso obligatorio';
+    case 2:
+      return 'Cambio de horario';
+    default:
+      return 'Ficha';
+  }
 }
 
 export function reasonCategoryLabel(category: ExceptionReasonCategory): string {
@@ -53,7 +75,7 @@ export function statusTone(status: string): 'success' | 'warning' | 'danger' | '
     return 'danger';
   }
 
-  if (normalized.includes('pending')) {
+  if (normalized.includes('pending') || normalized.includes('available')) {
     return 'warning';
   }
 

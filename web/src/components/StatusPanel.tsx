@@ -33,7 +33,7 @@ export function StatusPanel({
   const latestWeek = weeklyRankings[0];
   const ownWeek = latestWeek?.rows.find((row) => row.coupleId === ownCouple?.id) ?? null;
   const participantTokens =
-    challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id).length ?? 0;
+    challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id && token.status === 1).length ?? 0;
   const isRedZone = ownWeek ? ownWeek.totalPoints < ownWeek.requiredBusinessDays * 2 : false;
 
   return (

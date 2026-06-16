@@ -9,6 +9,7 @@ public interface IGymChallRepository
     Task AddCoupleAsync(CoupleCreateDto couple, CancellationToken cancellationToken = default);
     Task AddCheckInAsync(CheckInCreateDto checkIn, CancellationToken cancellationToken = default);
     Task AddFullCoverageTokenAsync(FullCoverageTokenCreateDto token, CancellationToken cancellationToken = default);
+    Task ApplyFullCoverageTokenAsync(Guid tokenId, Guid participantId, DateOnly targetDate, Guid actorParticipantId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ParticipantSummaryDto>> ListParticipantsAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<CoupleSummaryDto>> ListCouplesAsync(Guid challengeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AdminCheckInSummaryDto>> ListRecentCheckInsAsync(Guid challengeId, int limit, CancellationToken cancellationToken = default);

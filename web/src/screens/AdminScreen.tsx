@@ -9,7 +9,7 @@ import type {
   Participant,
   ParticipantRole
 } from '../api/types';
-import { checkInTypeLabel, formatShortDate, reasonCategoryLabel, statusTone } from '../components/format';
+import { checkInTypeLabel, formatShortDate, reasonCategoryLabel, statusTone, tokenTypeLabel } from '../components/format';
 
 interface AdminScreenProps {
   participants: Participant[];
@@ -232,7 +232,7 @@ export function AdminScreen({
                 <div className="record-row" key={checkIn.id}>
                   <div>
                     <strong>{checkIn.participantName}</strong>
-                    <span>{formatShortDate(checkIn.activityDate)} - {checkInTypeLabel(checkIn.type)} - {checkIn.durationMinutes} min</span>
+                    <span>{formatShortDate(checkIn.activityDate)} - {checkInTypeLabel(checkIn.type)}</span>
                     {checkIn.notes ? <small>{checkIn.notes}</small> : null}
                   </div>
                   <span className={`badge badge--${statusTone(checkIn.status)}`}>{checkIn.status}</span>
@@ -265,7 +265,13 @@ export function AdminScreen({
                 <div className="record-row" key={token.id}>
                   <div>
                     <strong>{token.participantName}</strong>
-                    <span>{formatShortDate(token.targetDate)} - {reasonCategoryLabel(token.reasonCategory)}</span>
+                    <span>
+                      {token.status.toLowerCase() === 'available' ? 'Disponible' : formatShortDate(token.targetDate)}
+                      {' - '}
+                      {tokenTypeLabel(token.type)}
+                      {' - '}
+                      {reasonCategoryLabel(token.reasonCategory)}
+                    </span>
                     {token.notes ? <small>{token.notes}</small> : null}
                   </div>
                   <span className={`badge badge--${statusTone(token.status)}`}>{token.status}</span>
@@ -273,7 +279,7 @@ export function AdminScreen({
                     className="icon-button icon-button--danger"
                     type="button"
                     aria-label={`Invalidar ficha de ${token.participantName}`}
-                    disabled={busyAction === token.id || token.status.toLowerCase() !== 'applied'}
+                    disabled={busyAction === token.id || token.status.toLowerCase() === 'rejected'}
                     onClick={() =>
                       runAdminAction(
                         token.id,

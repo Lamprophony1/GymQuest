@@ -1,31 +1,39 @@
 import { Save, Ticket } from 'lucide-react';
 import { type FormEvent, useMemo, useState } from 'react';
 import type {
-  CreateFullCoverageTokenRequest,
   ExceptionReasonCategory,
+  ExceptionTokenType,
+  GrantTokenRequest,
   Participant
 } from '../api/types';
-import { reasonCategoryLabel } from '../components/format';
+import { reasonCategoryLabel, tokenTypeLabel } from '../components/format';
 
 interface TokenScreenProps {
   participants: Participant[];
   selectedParticipant: Participant | null;
   adminParticipantId?: string | null;
-  onSubmit: (request: CreateFullCoverageTokenRequest) => Promise<void>;
+  onSubmit: (request: GrantTokenRequest) => Promise<void>;
 }
 
-function todayValue(): string {
-  const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 10);
-}
-
+const tokenTypeOptions: ExceptionTokenType[] = [0, 1, 2];
 const reasonOptions: ExceptionReasonCategory[] = [0, 1, 2, 3, 4];
+
+function defaultReasonForType(type: ExceptionTokenType): ExceptionReasonCategory {
+  if (type === 0) {
+    return 0;
+  }
+
+  if (type === 1) {
+    return 3;
+  }
+
+  return 4;
+}
 
 export function TokenScreen({ participants, selectedParticipant, adminParticipantId, onSubmit }: TokenScreenProps) {
   const activeParticipants = useMemo(() => participants.filter((participant) => participant.active), [participants]);
   const [participantId, setParticipantId] = useState(selectedParticipant?.id ?? activeParticipants[0]?.id ?? '');
-  const [targetDate, setTargetDate] = useState(todayValue);
+  const [type, setType] = useState<ExceptionTokenType>(0);
   const [reasonCategory, setReasonCategory] = useState<ExceptionReasonCategory>(0);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -47,15 +55,15 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
     try {
       await onSubmit({
         participantId,
-        targetDate,
+        type,
         reasonCategory,
         assignedByAdminId: actorId,
         notes: notes.trim() || null
       });
-      setMessage('Ficha cargada.');
+      setMessage('Ficha otorgada.');
       setNotes('');
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'No se pudo cargar la ficha.');
+      setError(submitError instanceof Error ? submitError.message : 'No se pudo otorgar la ficha.');
     } finally {
       setSubmitting(false);
     }
@@ -65,7 +73,7 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
     <section className="panel-section form-screen" aria-labelledby="token-title">
       <div className="section-heading">
         <span className="eyebrow">Power-up</span>
-        <h2 id="token-title">Ficha</h2>
+        <h2 id="token-title">Otorgar ficha</h2>
       </div>
       <form className="arcade-form" onSubmit={handleSubmit}>
         <label htmlFor="token-participant">Jugador</label>
@@ -77,8 +85,22 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
           ))}
         </select>
 
-        <label htmlFor="token-date">Fecha objetivo</label>
-        <input id="token-date" type="date" value={targetDate} onChange={(event) => setTargetDate(event.currentTarget.value)} />
+        <label htmlFor="token-type">Tipo</label>
+        <select
+          id="token-type"
+          value={type}
+          onChange={(event) => {
+            const nextType = Number(event.currentTarget.value) as ExceptionTokenType;
+            setType(nextType);
+            setReasonCategory(defaultReasonForType(nextType));
+          }}
+        >
+          {tokenTypeOptions.map((option) => (
+            <option key={option} value={option}>
+              {tokenTypeLabel(option)}
+            </option>
+          ))}
+        </select>
 
         <label htmlFor="token-reason">Motivo</label>
         <select
@@ -107,7 +129,7 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
 
         <button className="button button--quaternary" type="submit" disabled={submitting || !participantId}>
           {submitting ? <Ticket aria-hidden="true" /> : <Save aria-hidden="true" />}
-          Cargar ficha
+          Otorgar ficha
         </button>
       </form>
     </section>

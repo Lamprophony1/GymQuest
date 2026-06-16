@@ -1,5 +1,7 @@
 export type ParticipantRole = 0 | 1;
-export type CheckInType = 0 | 1;
+export type CheckInType = 0 | 1 | 2;
+export type ExceptionTokenType = 0 | 1 | 2;
+export type ExceptionTokenStatus = 0 | 1 | 2 | 3;
 export type ExceptionReasonCategory = 0 | 1 | 2 | 3 | 4;
 
 export interface Challenge {
@@ -72,7 +74,10 @@ export interface FullCoverageToken {
   challengeId: string;
   participantId: string;
   targetDate: string;
+  type: ExceptionTokenType;
   reasonCategory: ExceptionReasonCategory;
+  status: ExceptionTokenStatus;
+  notes?: string | null;
 }
 
 export interface RankingRow {
@@ -118,6 +123,7 @@ export interface AdminToken {
   participantId: string;
   participantName: string;
   targetDate: string;
+  type: ExceptionTokenType;
   reasonCategory: ExceptionReasonCategory;
   status: string;
   notes?: string | null;
@@ -140,8 +146,7 @@ export interface CreateCoupleRequest {
 export interface RegisterCheckInRequest {
   participantId: string;
   occurredAt: string;
-  type: CheckInType;
-  durationMinutes: number;
+  recoveryTargetDate?: string | null;
   createdByParticipantId: string;
   notes?: string | null;
 }
@@ -151,6 +156,23 @@ export interface CreateFullCoverageTokenRequest {
   targetDate: string;
   reasonCategory: ExceptionReasonCategory;
   assignedByAdminId: string;
+  notes?: string | null;
+}
+
+export interface GrantTokenRequest {
+  participantId: string;
+  type: ExceptionTokenType;
+  reasonCategory: ExceptionReasonCategory;
+  assignedByAdminId: string;
+  notes?: string | null;
+}
+
+export interface UseTokenRequest {
+  participantId: string;
+  targetDate: string;
+  usedByParticipantId: string;
+  occurredAt?: string | null;
+  recoveryTargetDate?: string | null;
   notes?: string | null;
 }
 

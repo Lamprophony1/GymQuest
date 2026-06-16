@@ -20,10 +20,10 @@ export function App() {
     [data.participants, identity?.participantId]
   );
   const isAdmin = identity?.mode === 'admin';
-  const visibleTab = activeTab === 'admin' && !isAdmin ? 'dashboard' : activeTab;
+  const visibleTab = (activeTab === 'admin' || activeTab === 'token') && !isAdmin ? 'dashboard' : activeTab;
 
   useEffect(() => {
-    if (activeTab === 'admin' && !isAdmin) {
+    if ((activeTab === 'admin' || activeTab === 'token') && !isAdmin) {
       setActiveTab('dashboard');
     }
   }, [activeTab, isAdmin]);
@@ -33,7 +33,7 @@ export function App() {
       <main className="identity-screen">
         <section className="identity-card">
           <span className="eyebrow">Loading</span>
-          <h1>GymChall</h1>
+          <h1>Proyecto RM</h1>
           <p>Sincronizando tablero...</p>
         </section>
       </main>
@@ -59,6 +59,7 @@ export function App() {
       identity={identity}
       isAdmin={isAdmin}
       participant={selectedParticipant}
+      challengeName={data.challenge?.challenge.name}
       loading={data.loading}
       error={data.error}
       onTabChange={setActiveTab}
@@ -85,10 +86,15 @@ export function App() {
       ) : null}
       {visibleTab === 'checkin' ? (
         <CheckInScreen
+          challenge={data.challenge}
           selectedParticipant={selectedParticipant}
           settings={data.challenge?.settings}
           onSubmit={async (request) => {
             await gymChallApi.registerCheckIn(request);
+            await data.refresh();
+          }}
+          onUseToken={async (id, request) => {
+            await gymChallApi.useToken(id, request);
             await data.refresh();
           }}
         />
@@ -99,7 +105,7 @@ export function App() {
           selectedParticipant={selectedParticipant}
           adminParticipantId={data.challenge?.challenge.adminParticipantId}
           onSubmit={async (request) => {
-            await gymChallApi.createFullCoverageToken(request);
+            await gymChallApi.grantToken(request);
             await data.refresh();
           }}
         />

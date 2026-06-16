@@ -50,6 +50,18 @@ public static class GymChallEndpoints
             return Results.Created($"/api/tokens/full-coverage/{id}", new { id });
         });
 
+        app.MapPost("/api/admin/tokens", async (GrantTokenRequest request, GymChallService service, CancellationToken cancellationToken) =>
+        {
+            var id = await service.GrantTokenAsync(request, cancellationToken);
+            return Results.Created($"/api/tokens/{id}", new { id });
+        });
+
+        app.MapPost("/api/tokens/{id:guid}/use", async (Guid id, UseTokenRequest request, GymChallService service, CancellationToken cancellationToken) =>
+        {
+            await service.UseTokenAsync(id, request, cancellationToken);
+            return Results.NoContent();
+        });
+
         app.MapPost("/api/admin/check-ins/{id:guid}/invalidate", async (Guid id, InvalidateRecordRequest request, GymChallService service, CancellationToken cancellationToken) =>
         {
             await service.InvalidateCheckInAsync(id, request, cancellationToken);

@@ -28,9 +28,17 @@ export function DashboardScreen({
     couples.find((couple) => couple.participants.some((participant) => participant.id === selectedParticipant?.id)) ??
     null;
   const ownRanking = ranking.find((row) => row.coupleId === ownCouple?.id) ?? null;
-  const lead = ranking[0] ?? null;
+  const leadPoints = ranking[0]?.totalPoints ?? null;
+  const leaders = leadPoints === null ? [] : ranking.filter((row) => row.totalPoints === leadPoints);
+  const leadTitle = leaders.length === 0 ? 'Sin lider' : leaders.length === 1 ? leaders[0].coupleName : 'Empate';
+  const leadMeta =
+    leaders.length === 0
+      ? 'Sin ranking'
+      : leaders.length === 1
+        ? `${formatPoints(leaders[0].totalPoints)} PTS lider`
+        : `${leaders.length} parejas con ${formatPoints(leadPoints)} PTS`;
   const participantTokens =
-    challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id).length ?? 0;
+    challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id && token.status === 1).length ?? 0;
 
   return (
     <div className="screen-stack">
@@ -60,15 +68,15 @@ export function DashboardScreen({
             eyebrow="Power-up"
             title="Fichas"
             value={participantTokens}
-            meta="Cobertura completa"
+            meta="Disponibles"
             tone="info"
             icon={<Ticket />}
           />
           <ScorePanel
             eyebrow="Lead"
-            title="Top pareja"
-            value={lead ? '#1' : '-'}
-            meta={lead ? `${formatPoints(lead.totalPoints)} PTS lider` : 'Sin ranking'}
+            title={leadTitle}
+            value={leaders.length ? '#1' : '-'}
+            meta={leadMeta}
             tone="success"
             icon={<ShieldAlert />}
           />
@@ -76,11 +84,7 @@ export function DashboardScreen({
         <div className="quick-actions">
           <button className="button button--success" type="button" onClick={() => onNavigate('checkin')}>
             <Flame aria-hidden="true" />
-            5AM
-          </button>
-          <button className="button button--quaternary" type="button" onClick={() => onNavigate('token')}>
-            <Ticket aria-hidden="true" />
-            Ficha
+            Check-in
           </button>
         </div>
       </section>

@@ -1,5 +1,5 @@
 import { Dumbbell, LayoutDashboard, Shield, Ticket, Trophy, UserRoundCog } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { Participant } from '../api/types';
 import type { SelectedIdentity } from '../state/useSelectedIdentity';
 
@@ -10,6 +10,7 @@ interface AppShellProps {
   identity: SelectedIdentity;
   isAdmin: boolean;
   participant: Participant | null;
+  challengeName?: string | null;
   loading?: boolean;
   error?: string | null;
   children: ReactNode;
@@ -17,11 +18,10 @@ interface AppShellProps {
   onChangeIdentity: () => void;
 }
 
-const baseNavItems: Array<{ tab: AppTab; label: string; icon: ReactNode }> = [
+const playerNavItems: Array<{ tab: AppTab; label: string; icon: ReactNode }> = [
   { tab: 'dashboard', label: 'Panel', icon: <LayoutDashboard /> },
   { tab: 'ranking', label: 'Ranking', icon: <Trophy /> },
-  { tab: 'checkin', label: '5AM', icon: <Dumbbell /> },
-  { tab: 'token', label: 'Ficha', icon: <Ticket /> }
+  { tab: 'checkin', label: 'Check-in', icon: <Dumbbell /> }
 ];
 
 export function AppShell({
@@ -29,21 +29,35 @@ export function AppShell({
   identity,
   isAdmin,
   participant,
+  challengeName,
   loading = false,
   error = null,
   children,
   onTabChange,
   onChangeIdentity
 }: AppShellProps) {
-  const navItems = isAdmin ? [...baseNavItems, { tab: 'admin' as const, label: 'Admin', icon: <Shield /> }] : baseNavItems;
+  const [isCompact, setIsCompact] = useState(false);
+  const navItems = isAdmin
+    ? [...playerNavItems, { tab: 'token' as const, label: 'Fichas', icon: <Ticket /> }, { tab: 'admin' as const, label: 'Admin', icon: <Shield /> }]
+    : playerNavItems;
+
+  useEffect(() => {
+    function onScroll() {
+      setIsCompact(window.scrollY > 24);
+    }
+
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
     <div className="app-shell">
-      <header className="app-header">
+      <header className={`app-header ${isCompact ? 'app-header--compact' : ''}`}>
         <div>
           <span className="eyebrow">{identity.mode === 'admin' ? 'Admin mode' : 'Player mode'}</span>
-          <h1>GymChall</h1>
-          <p>{participant ? participant.displayName : 'Sin jugador'}</p>
+          <h1>Proyecto RM</h1>
+          <p>{participant ? `${participant.displayName} · ${challengeName ?? 'Reto septiembre 2026'}` : 'Sin jugador'}</p>
         </div>
         <button className="icon-button" type="button" onClick={onChangeIdentity} aria-label="Cambiar identidad">
           <UserRoundCog aria-hidden="true" />

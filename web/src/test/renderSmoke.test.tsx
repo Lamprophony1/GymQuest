@@ -33,7 +33,7 @@ const clari: Participant = {
 const challenge: ChallengeSnapshot = {
   challenge: {
     id: 'challenge-id',
-    name: 'Reto Parejas - Rumbo a Septiembre',
+    name: 'Reto septiembre 2026',
     startDate: '2026-06-15',
     endDate: '2026-09-15',
     adminParticipantId: 'rafa-id',
@@ -49,8 +49,8 @@ const challenge: ChallengeSnapshot = {
     completeWeekBonus: 7,
     rescuedWeekBonus: 4,
     gymMinimumMinutes: 45,
-    morningWindowStart: '04:50',
-    morningWindowEnd: '05:30'
+    morningWindowStart: '05:00',
+    morningWindowEnd: '06:00'
   },
   participants: [rafa, clari],
   couples: [],
@@ -115,6 +115,7 @@ const recentTokens: AdminToken[] = [
     participantId: 'clari-id',
     participantName: 'Clari',
     targetDate: '2026-06-16',
+    type: 0,
     reasonCategory: 1,
     status: 'Applied',
     notes: 'periodo',
@@ -143,10 +144,9 @@ test('dashboard renders ranking, own couple, and quick actions', () => {
     />
   );
 
-  expect(screen.getByText('Rafa + Clari')).toBeInTheDocument();
+  expect(screen.getAllByText('Rafa + Clari').length).toBeGreaterThan(0);
   expect(screen.getByText('9 pts')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /5am/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /ficha/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /check-in/i })).toBeInTheDocument();
 });
 
 test('admin screen renders recent check-ins and token sections', () => {

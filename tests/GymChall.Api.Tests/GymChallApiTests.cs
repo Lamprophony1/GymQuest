@@ -28,7 +28,7 @@ public sealed class GymChallApiTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Reto Parejas - Rumbo a Septiembre", body);
+        Assert.Contains("Reto septiembre 2026", body);
     }
 
     [Fact]

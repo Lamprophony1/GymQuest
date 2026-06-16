@@ -19,7 +19,7 @@ export function IdentitySelector({ challenge, participants, onSelect }: Identity
     <main className="identity-screen">
       <section className="identity-card" aria-labelledby="identity-title">
         <span className="eyebrow">Insert coin</span>
-        <h1 id="identity-title">GymChall</h1>
+        <h1 id="identity-title">Proyecto RM</h1>
         <p>{challenge?.challenge.name ?? 'Reto fitness por parejas'}</p>
         <div className="identity-grid" aria-label="Participantes">
           {activeParticipants.map((participant) => (

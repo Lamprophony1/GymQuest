@@ -162,7 +162,7 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
                 x.ParticipantName,
                 x.ActivityDate,
                 x.OccurredAt,
-                x.Type == CheckInType.GymMorning ? CheckInTypeDto.GymMorning : CheckInTypeDto.GymSameDayRecovery,
+                ToDto(x.Type),
                 x.Status.ToString(),
                 x.DurationMinutes,
                 x.Notes,
@@ -174,7 +174,7 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
     {
         var cappedLimit = Math.Clamp(limit, 1, 100);
         var rows = await db.ExceptionTokens
-            .Where(x => x.ChallengeId == challengeId && x.Type == ExceptionTokenType.FullCoverage)
+            .Where(x => x.ChallengeId == challengeId)
             .Join(
                 db.Participants,
                 token => token.ParticipantId,
@@ -186,6 +186,7 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
                 x.Token.ParticipantId,
                 ParticipantName = x.Participant.DisplayName,
                 x.Token.TargetDate,
+                x.Token.Type,
                 x.Token.ReasonCategory,
                 x.Token.Status,
                 x.Token.Notes,
@@ -202,6 +203,7 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
                 x.ParticipantId,
                 x.ParticipantName,
                 x.TargetDate,
+                ToDto(x.Type),
                 (ExceptionReasonCategoryDto)x.ReasonCategory,
                 x.Status.ToString(),
                 x.Notes,
@@ -218,7 +220,7 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             ParticipantId = checkIn.ParticipantId,
             OccurredAt = checkIn.OccurredAt,
             ActivityDate = checkIn.ActivityDate,
-            Type = checkIn.Type == CheckInTypeDto.GymMorning ? CheckInType.GymMorning : CheckInType.GymSameDayRecovery,
+            Type = ToEntity(checkIn.Type),
             DurationMinutes = checkIn.DurationMinutes,
             CreatedByParticipantId = checkIn.CreatedByParticipantId,
             Notes = checkIn.Notes
@@ -235,11 +237,40 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             ChallengeId = token.ChallengeId,
             ParticipantId = token.ParticipantId,
             TargetDate = token.TargetDate,
-            Type = ExceptionTokenType.FullCoverage,
+            Type = ToEntity(token.Type),
             ReasonCategory = (ExceptionReasonCategory)token.ReasonCategory,
-            Status = ExceptionTokenStatus.Applied,
+            Status = ToEntity(token.Status),
             AssignedByAdminId = token.AssignedByAdminId,
             Notes = token.Notes
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ApplyFullCoverageTokenAsync(Guid tokenId, Guid participantId, DateOnly targetDate, Guid actorParticipantId, CancellationToken cancellationToken = default)
+    {
+        var token = await db.ExceptionTokens.SingleAsync(x => x.Id == tokenId, cancellationToken);
+        if (token.ParticipantId != participantId || token.Status != ExceptionTokenStatus.Available)
+        {
+            throw new InvalidOperationException("Ficha no disponible.");
+        }
+
+        var oldStatus = token.Status;
+        var oldTargetDate = token.TargetDate;
+        token.TargetDate = targetDate;
+        token.Status = ExceptionTokenStatus.Applied;
+        token.UpdatedAt = DateTimeOffset.UtcNow;
+
+        db.AuditLogs.Add(new AuditLogEntity
+        {
+            Id = Guid.NewGuid(),
+            ChallengeId = token.ChallengeId,
+            ActorParticipantId = actorParticipantId,
+            Action = "apply_token",
+            EntityType = "ExceptionToken",
+            EntityId = token.Id,
+            OldValueJson = JsonSerializer.Serialize(new { Status = oldStatus.ToString(), TargetDate = oldTargetDate }),
+            NewValueJson = JsonSerializer.Serialize(new { Status = token.Status.ToString(), token.TargetDate })
         });
 
         await db.SaveChangesAsync(cancellationToken);
@@ -261,15 +292,15 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
         var participants = await db.Participants.OrderBy(x => x.DisplayName).ToListAsync(cancellationToken);
         var couples = await db.Couples.Include(x => x.Memberships).Where(x => x.ChallengeId == challengeId).OrderBy(x => x.Name).ToListAsync(cancellationToken);
         var checkIns = await db.CheckIns.Where(x => x.ChallengeId == challengeId && x.Status == RecordStatus.Valid).ToListAsync(cancellationToken);
-        var tokens = await db.ExceptionTokens.Where(x => x.ChallengeId == challengeId && x.Status == ExceptionTokenStatus.Applied).ToListAsync(cancellationToken);
+        var tokens = await db.ExceptionTokens.Where(x => x.ChallengeId == challengeId && x.Status != ExceptionTokenStatus.Rejected).ToListAsync(cancellationToken);
 
         return new ChallengeSnapshotDto(
             new ChallengeDto(challenge.Id, challenge.Name, challenge.StartDate, challenge.EndDate, challenge.AdminParticipantId, challenge.Timezone),
             new ChallengeSettings(settings.MondayMorningPoints, settings.WeekdayMorningPoints, settings.SameDayRecoveryPoints, settings.WeekendRecoveryPoints, settings.DailyCoupleBonus, settings.PerfectWeekBonus, settings.CompleteWeekBonus, settings.RescuedWeekBonus, settings.LakeSoloPoints, settings.LakeCouplePoints, settings.MaxLakeScoringPerCouplePerWeek, settings.MaxWeekendRecoveriesPerPersonPerWeek),
             participants.Select(x => new ParticipantDto(x.Id, x.DisplayName, x.Username, x.Role == ParticipantRole.Admin ? ParticipantRoleDto.Admin : ParticipantRoleDto.Participant, x.Gender, x.Active)).ToArray(),
             couples.Select(x => new CoupleDto(x.Id, x.ChallengeId, x.Name, x.Memberships.Select(m => m.ParticipantId).ToArray(), x.Active)).ToArray(),
-            checkIns.Select(x => new CheckInDto(x.Id, x.ChallengeId, x.ParticipantId, x.ActivityDate, x.Type == CheckInType.GymMorning ? CheckInTypeDto.GymMorning : CheckInTypeDto.GymSameDayRecovery, x.DurationMinutes)).ToArray(),
-            tokens.Select(x => new FullCoverageTokenDto(x.Id, x.ChallengeId, x.ParticipantId, x.TargetDate, (ExceptionReasonCategoryDto)x.ReasonCategory)).ToArray());
+            checkIns.Select(x => new CheckInDto(x.Id, x.ChallengeId, x.ParticipantId, x.ActivityDate, ToDto(x.Type), x.DurationMinutes)).ToArray(),
+            tokens.Select(x => new FullCoverageTokenDto(x.Id, x.ChallengeId, x.ParticipantId, x.TargetDate, ToDto(x.Type), (ExceptionReasonCategoryDto)x.ReasonCategory, ToDto(x.Status), x.Notes)).ToArray());
     }
 
     public async Task InvalidateCheckInAsync(Guid checkInId, Guid actorParticipantId, string? reason, CancellationToken cancellationToken = default)
@@ -315,5 +346,73 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
         });
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static CheckInTypeDto ToDto(CheckInType type)
+    {
+        return type switch
+        {
+            CheckInType.GymMorning => CheckInTypeDto.GymMorning,
+            CheckInType.GymSameDayRecovery => CheckInTypeDto.GymSameDayRecovery,
+            CheckInType.GymWeekendRecovery => CheckInTypeDto.GymWeekendRecovery,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported check-in type.")
+        };
+    }
+
+    private static CheckInType ToEntity(CheckInTypeDto type)
+    {
+        return type switch
+        {
+            CheckInTypeDto.GymMorning => CheckInType.GymMorning,
+            CheckInTypeDto.GymSameDayRecovery => CheckInType.GymSameDayRecovery,
+            CheckInTypeDto.GymWeekendRecovery => CheckInType.GymWeekendRecovery,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported check-in type.")
+        };
+    }
+
+    private static ExceptionTokenTypeDto ToDto(ExceptionTokenType type)
+    {
+        return type switch
+        {
+            ExceptionTokenType.Health => ExceptionTokenTypeDto.Health,
+            ExceptionTokenType.Mandatory => ExceptionTokenTypeDto.Mandatory,
+            ExceptionTokenType.ScheduleChange => ExceptionTokenTypeDto.ScheduleChange,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported token type.")
+        };
+    }
+
+    private static ExceptionTokenType ToEntity(ExceptionTokenTypeDto type)
+    {
+        return type switch
+        {
+            ExceptionTokenTypeDto.Health => ExceptionTokenType.Health,
+            ExceptionTokenTypeDto.Mandatory => ExceptionTokenType.Mandatory,
+            ExceptionTokenTypeDto.ScheduleChange => ExceptionTokenType.ScheduleChange,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported token type.")
+        };
+    }
+
+    private static ExceptionTokenStatusDto ToDto(ExceptionTokenStatus status)
+    {
+        return status switch
+        {
+            ExceptionTokenStatus.Applied => ExceptionTokenStatusDto.Applied,
+            ExceptionTokenStatus.Available => ExceptionTokenStatusDto.Available,
+            ExceptionTokenStatus.Corrected => ExceptionTokenStatusDto.Corrected,
+            ExceptionTokenStatus.Rejected => ExceptionTokenStatusDto.Rejected,
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported token status.")
+        };
+    }
+
+    private static ExceptionTokenStatus ToEntity(ExceptionTokenStatusDto status)
+    {
+        return status switch
+        {
+            ExceptionTokenStatusDto.Applied => ExceptionTokenStatus.Applied,
+            ExceptionTokenStatusDto.Available => ExceptionTokenStatus.Available,
+            ExceptionTokenStatusDto.Corrected => ExceptionTokenStatus.Corrected,
+            ExceptionTokenStatusDto.Rejected => ExceptionTokenStatus.Rejected,
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported token status.")
+        };
     }
 }

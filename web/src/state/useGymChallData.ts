@@ -66,7 +66,7 @@ export function useGymChallData() {
       setState((current) => ({
         ...current,
         loading: false,
-        error: error instanceof Error ? error.message : 'No se pudo cargar GymChall.'
+        error: error instanceof Error ? error.message : 'No se pudo cargar Proyecto RM.'
       }));
     }
   }, []);

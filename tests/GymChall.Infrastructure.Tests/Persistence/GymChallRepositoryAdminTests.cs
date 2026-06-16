@@ -97,7 +97,9 @@ public sealed class GymChallRepositoryAdminTests
             SeedData.ChallengeId,
             SeedData.ClariId,
             new DateOnly(2026, 6, 16),
+            ExceptionTokenTypeDto.Health,
             ExceptionReasonCategoryDto.Health,
+            ExceptionTokenStatusDto.Applied,
             SeedData.RafaId,
             "salud"));
 
@@ -162,7 +164,9 @@ public sealed class GymChallRepositoryAdminTests
             SeedData.ChallengeId,
             SeedData.RafaId,
             new DateOnly(2026, 6, 15),
+            ExceptionTokenTypeDto.Health,
             ExceptionReasonCategoryDto.Health,
+            ExceptionTokenStatusDto.Applied,
             SeedData.RafaId,
             "salud"));
         await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
@@ -170,7 +174,9 @@ public sealed class GymChallRepositoryAdminTests
             SeedData.ChallengeId,
             SeedData.ClariId,
             new DateOnly(2026, 6, 16),
+            ExceptionTokenTypeDto.Health,
             ExceptionReasonCategoryDto.Period,
+            ExceptionTokenStatusDto.Applied,
             SeedData.RafaId,
             "periodo"));
 

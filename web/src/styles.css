@@ -210,15 +210,36 @@ svg {
   background: rgba(255, 255, 255, 0.94);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(12px);
+  transition: padding 160ms ease-out, box-shadow 160ms ease-out;
 }
 
 .app-header h1 {
   font-size: clamp(1.75rem, 7vw, 2.25rem);
+  transition: font-size 160ms ease-out;
 }
 
 .app-header p {
   color: var(--muted);
   font-weight: 700;
+  transition: font-size 160ms ease-out;
+}
+
+.app-header--compact {
+  padding: 10px 16px;
+  box-shadow: 0 10px 24px rgba(15, 111, 72, 0.12);
+}
+
+.app-header--compact h1 {
+  font-size: 1.25rem;
+}
+
+.app-header--compact .eyebrow {
+  margin-bottom: 2px;
+  font-size: 0.75rem;
+}
+
+.app-header--compact p {
+  font-size: 0.875rem;
 }
 
 .app-main {
@@ -249,6 +270,11 @@ svg {
 .dashboard-hero h2,
 .dashboard-hero .eyebrow {
   color: var(--surface);
+}
+
+.dashboard-hero .score-panel h3,
+.dashboard-hero .score-panel .eyebrow {
+  color: var(--ink);
 }
 
 .dashboard-hero h2 {
@@ -323,6 +349,10 @@ svg {
 
 .score-panel__topline > div {
   min-width: 0;
+}
+
+.score-panel h3 {
+  overflow-wrap: anywhere;
 }
 
 .score-panel__value {
@@ -794,6 +824,10 @@ svg {
   margin-top: 14px;
 }
 
+.token-use-form {
+  margin-top: 18px;
+}
+
 .alert {
   padding: 14px 16px;
   border: 2px solid var(--border);
@@ -926,6 +960,10 @@ svg {
   .app-header {
     margin: 0 -24px 32px;
     padding: 18px 24px;
+  }
+
+  .app-header--compact {
+    padding: 10px 24px;
   }
 
   .dashboard-hero,

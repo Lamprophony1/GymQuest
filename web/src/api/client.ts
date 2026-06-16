@@ -8,10 +8,12 @@ import type {
   CreatedRecord,
   CreateFullCoverageTokenRequest,
   CreateParticipantRequest,
+  GrantTokenRequest,
   InvalidateRecordRequest,
   Participant,
   RankingRow,
   RegisterCheckInRequest,
+  UseTokenRequest,
   WeeklyRanking
 } from './types';
 
@@ -60,6 +62,8 @@ export const gymChallApi = {
     apiRequest<CreatedRecord>('/api/check-ins', jsonPost(request)),
   createFullCoverageToken: (request: CreateFullCoverageTokenRequest) =>
     apiRequest<CreatedRecord>('/api/tokens/full-coverage', jsonPost(request)),
+  grantToken: (request: GrantTokenRequest) => apiRequest<CreatedRecord>('/api/admin/tokens', jsonPost(request)),
+  useToken: (id: string, request: UseTokenRequest) => apiRequest<void>(`/api/tokens/${id}/use`, jsonPost(request)),
   invalidateCheckIn: (id: string, request: InvalidateRecordRequest) =>
     apiRequest<void>(`/api/admin/check-ins/${id}/invalidate`, jsonPost(request)),
   invalidateToken: (id: string, request: InvalidateRecordRequest) =>

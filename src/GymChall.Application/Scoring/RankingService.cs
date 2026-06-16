@@ -134,7 +134,14 @@ public static class RankingService
 
     private static DailyScoreResult ScoreParticipant(ChallengeSnapshotDto snapshot, Guid participantId, DateOnly date)
     {
-        if (snapshot.FullCoverageTokens.Any(token => token.ParticipantId == participantId && token.TargetDate == date))
+        var appliedTokens = snapshot.FullCoverageTokens
+            .Where(token =>
+                token.ParticipantId == participantId &&
+                token.TargetDate == date &&
+                token.Status == ExceptionTokenStatusDto.Applied)
+            .ToArray();
+
+        if (appliedTokens.Any(token => token.Type is ExceptionTokenTypeDto.Health or ExceptionTokenTypeDto.Mandatory))
         {
             return DailyScoreCalculator.Calculate(new DailyScoreInput(date, CoverageKind.FullToken), snapshot.Settings);
         }
@@ -144,10 +151,16 @@ public static class RankingService
             .OrderBy(x => x.Type)
             .FirstOrDefault();
 
+        if (checkIn is not null && appliedTokens.Any(token => token.Type == ExceptionTokenTypeDto.ScheduleChange))
+        {
+            return DailyScoreCalculator.Calculate(new DailyScoreInput(date, CoverageKind.MovedSchedule), snapshot.Settings);
+        }
+
         var coverage = checkIn?.Type switch
         {
             CheckInTypeDto.GymMorning => CoverageKind.Morning,
             CheckInTypeDto.GymSameDayRecovery => CoverageKind.SameDayRecovery,
+            CheckInTypeDto.GymWeekendRecovery => CoverageKind.WeekendRecovery,
             _ => CoverageKind.None
         };
 

@@ -32,7 +32,7 @@ public sealed class WeeklyRankingServiceTests
             .ToArray();
         var tokens = new[]
         {
-            new FullCoverageTokenDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart.AddDays(1), ExceptionReasonCategoryDto.Health)
+            new FullCoverageTokenDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart.AddDays(1), ExceptionTokenTypeDto.Health, ExceptionReasonCategoryDto.Health, ExceptionTokenStatusDto.Applied)
         };
         var snapshot = BuildSnapshot(weekStart, weekStart.AddDays(4), checkIns, tokens);
 

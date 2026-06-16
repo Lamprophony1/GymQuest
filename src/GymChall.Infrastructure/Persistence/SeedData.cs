@@ -17,6 +17,7 @@ public static class SeedData
     {
         if (await db.Challenges.AnyAsync(cancellationToken))
         {
+            await EnsureCurrentDefaultsAsync(db, cancellationToken);
             return;
         }
 
@@ -31,7 +32,7 @@ public static class SeedData
         db.Challenges.Add(new ChallengeEntity
         {
             Id = ChallengeId,
-            Name = "Reto Parejas - Rumbo a Septiembre",
+            Name = "Reto septiembre 2026",
             StartDate = new DateOnly(2026, 6, 15),
             EndDate = new DateOnly(2026, 9, 15),
             Status = ChallengeStatus.Active,
@@ -48,6 +49,24 @@ public static class SeedData
         AddCouple(db, Guid.Parse("10000000-0000-0000-0000-000000000301"), "Rafa + Clari", RafaId, ClariId);
         AddCouple(db, Guid.Parse("10000000-0000-0000-0000-000000000302"), "Obelar + Chachi", ObelarId, ChachiId);
         AddCouple(db, Guid.Parse("10000000-0000-0000-0000-000000000303"), "Cieli + Naldo", CieliId, NaldoId);
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task EnsureCurrentDefaultsAsync(GymChallDbContext db, CancellationToken cancellationToken)
+    {
+        var challenge = await db.Challenges.SingleOrDefaultAsync(x => x.Id == ChallengeId, cancellationToken);
+        if (challenge is not null)
+        {
+            challenge.Name = "Reto septiembre 2026";
+        }
+
+        var settings = await db.ChallengeSettings.SingleOrDefaultAsync(x => x.ChallengeId == ChallengeId, cancellationToken);
+        if (settings is not null)
+        {
+            settings.MorningWindowStart = new TimeOnly(5, 0);
+            settings.MorningWindowEnd = new TimeOnly(6, 0);
+        }
 
         await db.SaveChangesAsync(cancellationToken);
     }
