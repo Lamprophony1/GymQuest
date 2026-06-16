@@ -160,6 +160,59 @@ public sealed class GymChallApiTests
         Assert.True(before.Sum(x => x.TotalPoints) > after.Sum(x => x.TotalPoints));
     }
 
+    [Fact]
+    public async Task Admin_recent_checkins_endpoint_returns_recent_rows()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+        var participants = await client.GetFromJsonAsync<List<ParticipantRow>>("/api/participants");
+        Assert.NotNull(participants);
+        var rafa = Assert.Single(participants, x => x.Username == "rafa");
+
+        await client.PostAsJsonAsync("/api/check-ins", new
+        {
+            participantId = rafa.Id,
+            occurredAt = new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)),
+            type = 0,
+            durationMinutes = 45,
+            createdByParticipantId = rafa.Id,
+            notes = "5am"
+        });
+
+        var rows = await client.GetFromJsonAsync<List<AdminCheckInRow>>("/api/admin/check-ins?limit=10");
+
+        Assert.NotNull(rows);
+        var row = Assert.Single(rows);
+        Assert.Equal("Rafa", row.ParticipantName);
+        Assert.Equal("Valid", row.Status);
+    }
+
+    [Fact]
+    public async Task Admin_recent_tokens_endpoint_returns_recent_rows()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+        var participants = await client.GetFromJsonAsync<List<ParticipantRow>>("/api/participants");
+        Assert.NotNull(participants);
+        var rafa = Assert.Single(participants, x => x.Username == "rafa");
+
+        await client.PostAsJsonAsync("/api/tokens/full-coverage", new
+        {
+            participantId = rafa.Id,
+            targetDate = new DateOnly(2026, 6, 16),
+            reasonCategory = 0,
+            assignedByAdminId = rafa.Id,
+            notes = "salud"
+        });
+
+        var rows = await client.GetFromJsonAsync<List<AdminTokenRow>>("/api/admin/tokens?limit=10");
+
+        Assert.NotNull(rows);
+        var row = Assert.Single(rows);
+        Assert.Equal("Rafa", row.ParticipantName);
+        Assert.Equal("Applied", row.Status);
+    }
+
     private static WebApplicationFactory<Program> CreateApp()
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"gymchall-api-tests-{Guid.NewGuid():N}.db");
@@ -174,4 +227,6 @@ public sealed class GymChallApiTests
     private sealed record WeeklyRanking(DateOnly WeekStartDate, DateOnly WeekEndDate, List<WeeklyRankingRow> Rows);
     private sealed record WeeklyRankingRow(Guid CoupleId, string CoupleName, decimal TotalPoints, string WeeklyBonusType);
     private sealed record CreatedRecord(Guid Id);
+    private sealed record AdminCheckInRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly ActivityDate, string Status);
+    private sealed record AdminTokenRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly TargetDate, string Status);
 }

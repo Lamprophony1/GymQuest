@@ -83,6 +83,18 @@ public sealed class GymChallService(IGymChallRepository repository)
         return await repository.GetSettingsAsync(challengeId, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<AdminCheckInSummaryDto>> ListRecentCheckInsAsync(int? limit, CancellationToken cancellationToken = default)
+    {
+        var challengeId = await RequireActiveChallengeId(cancellationToken);
+        return await repository.ListRecentCheckInsAsync(challengeId, NormalizeAdminListLimit(limit), cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AdminTokenSummaryDto>> ListRecentFullCoverageTokensAsync(int? limit, CancellationToken cancellationToken = default)
+    {
+        var challengeId = await RequireActiveChallengeId(cancellationToken);
+        return await repository.ListRecentFullCoverageTokensAsync(challengeId, NormalizeAdminListLimit(limit), cancellationToken);
+    }
+
     public Task InvalidateCheckInAsync(Guid checkInId, InvalidateRecordRequest request, CancellationToken cancellationToken = default)
     {
         return repository.InvalidateCheckInAsync(checkInId, request.ActorParticipantId, request.Reason, cancellationToken);
@@ -97,5 +109,15 @@ public sealed class GymChallService(IGymChallRepository repository)
     {
         var challengeId = await repository.GetActiveChallengeIdAsync(cancellationToken);
         return challengeId ?? throw new InvalidOperationException("No active challenge exists.");
+    }
+
+    private static int NormalizeAdminListLimit(int? limit)
+    {
+        if (limit is null or <= 0)
+        {
+            return 50;
+        }
+
+        return Math.Min(limit.Value, 100);
     }
 }

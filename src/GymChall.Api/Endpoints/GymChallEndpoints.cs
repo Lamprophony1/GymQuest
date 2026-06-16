@@ -62,6 +62,16 @@ public static class GymChallEndpoints
             return Results.NoContent();
         });
 
+        app.MapGet("/api/admin/check-ins", async (int? limit, GymChallService service, CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.ListRecentCheckInsAsync(limit, cancellationToken));
+        });
+
+        app.MapGet("/api/admin/tokens", async (int? limit, GymChallService service, CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.ListRecentFullCoverageTokensAsync(limit, cancellationToken));
+        });
+
         app.MapGet("/api/rankings/general", async (DateOnly? throughDate, GymChallService service, CancellationToken cancellationToken) =>
         {
             var date = throughDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
