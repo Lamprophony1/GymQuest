@@ -38,3 +38,4 @@ storage/
 # Generated artifacts
 .artifacts/
 .tools/
+.superpowers/
