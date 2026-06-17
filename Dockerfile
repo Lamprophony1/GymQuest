@@ -32,22 +32,18 @@ WORKDIR /app
 
 ENV ASPNETCORE_URLS=http://+:8080 \
     ASPNETCORE_ENVIRONMENT=Production \
+    TZ=America/Asuncion \
     Auth__Mode=PinLogin \
     Auth__CookieSecure=true \
     Auth__DataProtectionKeysPath=/var/lib/gymquest/keys \
     ConnectionStrings__GymChall="Data Source=/var/lib/gymquest/data/gymchall.db"
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends tzdata \
-    && rm -rf /var/lib/apt/lists/* \
-    && addgroup --system gymquest \
-    && adduser --system --ingroup gymquest --home /nonexistent --disabled-password gymquest \
-    && mkdir -p /var/lib/gymquest/data /var/lib/gymquest/keys \
-    && chown -R gymquest:gymquest /var/lib/gymquest /app
+RUN mkdir -p /var/lib/gymquest/data /var/lib/gymquest/keys \
+    && chown -R 1001:1001 /var/lib/gymquest /app
 
-COPY --from=api-build --chown=gymquest:gymquest /app/publish ./
+COPY --from=api-build --chown=1001:1001 /app/publish ./
 
-USER gymquest
+USER 1001:1001
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "GymChall.Api.dll"]

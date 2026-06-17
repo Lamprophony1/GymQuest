@@ -59,6 +59,8 @@ sudo mkdir -p /opt/gymquest/data /opt/gymquest/keys /opt/gymquest/deploy
 sudo chown -R gc:gc /opt/gymquest
 ```
 
+La imagen corre con UID/GID `1001:1001`, que en esta VM corresponde al usuario `gc`.
+
 Crear el archivo de entorno real:
 
 ```bash
