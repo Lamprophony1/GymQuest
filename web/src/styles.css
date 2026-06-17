@@ -363,20 +363,22 @@ svg {
   width: min(100%, var(--app-width));
   min-height: 100vh;
   margin: 0 auto;
-  padding: 16px 16px 104px;
+  padding: 114px 16px 104px;
 }
 
 .app-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 10;
+  left: 50%;
+  z-index: 30;
   isolation: isolate;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+  width: min(100%, var(--app-width));
   min-height: 90px;
-  margin: 0 -16px 24px;
+  margin: 0;
   padding: 12px;
   border: 2px solid var(--border);
   border-top: 0;
@@ -384,6 +386,7 @@ svg {
   background: var(--lime-soft);
   box-shadow: var(--shadow-sticker-sm);
   overflow: visible;
+  transform: translateX(-50%);
   transition: min-height 180ms ease-out, padding 180ms ease-out, border-color 180ms ease-out, box-shadow 180ms ease-out, background 180ms ease-out;
   will-change: min-height, padding;
 }
@@ -1659,10 +1662,12 @@ svg {
 .arcade-form {
   display: grid;
   gap: 8px;
+  min-width: 0;
   padding: 18px;
   border: 2px solid var(--border-soft);
   border-radius: var(--radius-md);
   background: var(--surface);
+  overflow: hidden;
 }
 
 .arcade-form h3 {
@@ -1687,7 +1692,9 @@ svg {
 .arcade-form textarea {
   display: block;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  min-inline-size: 0;
   min-height: 48px;
   padding: 12px 14px;
   border: 2px solid var(--input-border);
@@ -1698,6 +1705,20 @@ svg {
   font-weight: 700;
   outline: none;
   transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.arcade-form input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  padding-inline: 12px;
+  text-align: left;
+}
+
+.arcade-form input[type="datetime-local"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
 }
 
 .arcade-form textarea {
@@ -1860,11 +1881,10 @@ svg {
 
 @media (min-width: 900px) {
   .app-shell {
-    padding: 24px 24px 120px;
+    padding: 122px 24px 120px;
   }
 
   .app-header {
-    margin: 0 -24px 32px;
     padding: 14px 16px;
   }
 

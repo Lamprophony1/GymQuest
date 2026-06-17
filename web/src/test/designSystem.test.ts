@@ -34,6 +34,7 @@ describe('Doodle Fit visual system', () => {
 
   test('uses a Doodle scorebar treatment for the compact app header', () => {
     expect(styles).toContain('.app-header::before');
+    expect(styles).toContain('position: fixed');
     expect(styles).toContain('.app-header__brand-mark');
     expect(styles).toContain('.app-header__brand-mark svg');
     expect(styles).toContain('.app-header__barbell');
@@ -42,5 +43,11 @@ describe('Doodle Fit visual system', () => {
     expect(styles).toContain('background: var(--lime-soft)');
     expect(styles).toContain('.app-header--compact .app-header__brand-mark');
     expect(styles).toContain('transform: translateY');
+  });
+
+  test('keeps mobile date-time inputs inside form cards', () => {
+    expect(styles).toContain('.arcade-form input[type="datetime-local"]');
+    expect(styles).toContain('max-inline-size: 100%');
+    expect(styles).toContain('::-webkit-date-and-time-value');
   });
 });
