@@ -1,89 +1,125 @@
-﻿# GymChall
+# GymChall
 
-App para administrar el desafio fitness de parejas "Reto Parejas - Rumbo a Septiembre".
+Repositorio del MVP tecnico de la app de desafio fitness por parejas.
 
-Estado actual: MVP tecnico con backend .NET, motor de puntajes, API minima y SPA mobile-first en React/Vite. La UI usa una estetica arcade competitiva inspirada en TypeUI Sega, adaptada a tablero de puntos por parejas.
+- Nombre de desarrollo: `GymChall`.
+- Nombre visible temporal en la app: `Proyecto RM`.
+- Reto activo: `Reto septiembre 2026`.
+- UI actual: mobile-first, Doodle Fit / Clean Gym, con energia de juego competitivo pero mas moderno y saludable que el arcade Sega inicial.
 
-## Objetivo
+## Estado Actual
 
-Gestionar un reto entre parejas donde el ranking principal es por pareja, los puntos individuales se combinan con bonus compartidos, y las fichas validas cubren motivos reales sin castigar rachas ni desempates.
+El MVP ya permite usar el reto desde una SPA React conectada a una API .NET con SQLite local.
 
-## Principios del producto
+Incluye:
 
-- Prioridad competitiva: 5am > recuperacion mismo dia > recuperacion fin de semana > lago.
-- El puntaje debe poder recalcularse desde registros base.
-- Los totales precalculados son cache regenerable, no fuente de verdad.
-- Cada cambio administrativo importante debe dejar auditoria.
-- Las reglas configurables deben estar centralizadas.
-- El motor de puntajes debe tener tests unitarios antes de construir UI compleja.
+- Dashboard mobile-first con ranking, puntos, rachas y coins disponibles.
+- Ranking general y ranking semanal por pareja.
+- Check-in automatico por fecha/hora, con deteccion de 5am, recuperacion del mismo dia y recuperacion de fin de semana.
+- Coins disponibles y aplicables desde Check-in:
+  - `Health coin`: cobertura completa por salud.
+  - `Commit coin`: cobertura completa por compromiso obligatorio.
+  - `Flex coin`: valida entrenamiento fuera de horario o recuperacion como si fuera 5am.
+- Health coin mensual automatica para participantes con genero femenino, no acumulable.
+- Admin para crear participantes, crear parejas, otorgar coins e invalidar check-ins o coins.
+- Motor de scoring con puntos base, bonus diario, bonus semanal, Perfect streak y Gym streak.
+- Persistencia SQLite local y seed inicial.
 
-## Estructura inicial
+No incluye todavia:
+
+- Login real o permisos fuertes.
+- Lago / side quest conectado a API y UI.
+- Motor persistido de insignias o achievements.
+- Evidencias/fotos.
+- Notificaciones.
+- Premios y distribucion auditada.
+- Exportaciones o resumen WhatsApp.
+
+## Reglas Principales
+
+El ranking principal es por pareja. Cada pareja suma puntos individuales de sus integrantes, bonus diarios y bonus semanales.
+
+Prioridad competitiva:
+
+1. Check-in dentro de ventana 5am.
+2. Coin valida que cubre el dia.
+3. Recuperacion del mismo dia.
+4. Recuperacion de fin de semana.
+5. Lago, pendiente para una fase posterior.
+
+La API sigue siendo la fuente de verdad para puntajes y rankings. El frontend solo registra acciones y muestra los resultados calculados.
+
+## Estructura
 
 ```text
 src/
   GymChall.Api/             API HTTP minima
-  GymChall.Application/     Casos de uso futuros
+  GymChall.Application/     Casos de uso, scoring y reglas de app
   GymChall.Domain/          Reglas puras de dominio y scoring
-  GymChall.Infrastructure/  Persistencia futura
+  GymChall.Infrastructure/  EF Core, SQLite y seed local
 tests/
-  GymChall.Domain.Tests/    Tests unitarios del dominio
+  GymChall.Api.Tests/
+  GymChall.Application.Tests/
+  GymChall.Domain.Tests/
+  GymChall.Infrastructure.Tests/
 web/
-  src/                     SPA React mobile-first
+  src/                      SPA React mobile-first
 docs/
-  decisions/              Propuestas y decisiones de arquitectura
-  planning/               Reglas, modelo, motor y fases
-  superpowers/specs/      Specs formales cuando el diseno quede aprobado
+  planning/                 Estado, reglas y modelo actual
+  superpowers/specs/        Specs historicas y specs vigentes
+  superpowers/plans/        Planes de implementacion
 ```
 
-## Desarrollo local
+## Desarrollo Local
 
-Comandos base:
+Backend:
 
 ```powershell
-dotnet restore GymChall.sln
-dotnet build GymChall.sln
-dotnet test GymChall.sln
-dotnet run --project src/GymChall.Api/GymChall.Api.csproj --urls http://localhost:5020
+& '.\.tools\dotnet\dotnet.exe' restore GymChall.sln
+& '.\.tools\dotnet\dotnet.exe' build GymChall.sln
+& '.\.tools\dotnet\dotnet.exe' test GymChall.sln
+& '.\.tools\dotnet\dotnet.exe' run --project src/GymChall.Api/GymChall.Api.csproj --urls http://127.0.0.1:5020
 ```
 
-Health check:
-
-```text
-GET http://localhost:5020/health
-```
-
-## Frontend local
-
-Instalar dependencias y levantar Vite:
+Frontend:
 
 ```powershell
 cd web
-npm install
-npm run dev
+$env:PATH = (Resolve-Path '..\.tools\node-v24.16.0-win-x64').Path + ';' + $env:PATH
+& '..\.tools\node-v24.16.0-win-x64\npm.cmd' install
+& '..\.tools\node-v24.16.0-win-x64\npm.cmd' run dev
 ```
 
-Frontend: `http://127.0.0.1:5173`
-Backend API: `http://localhost:5020`
+URLs locales:
 
-Run both apps in separate terminals:
+- Frontend: `http://127.0.0.1:5173`
+- Backend API: `http://127.0.0.1:5020`
+- Health check: `GET http://127.0.0.1:5020/health`
+
+## Verificacion
+
+Backend:
 
 ```powershell
-dotnet run --project src/GymChall.Api/GymChall.Api.csproj --urls http://localhost:5020
-cd web
-npm run dev
+& '.\.tools\dotnet\dotnet.exe' test GymChall.sln --no-restore
 ```
 
-Verificacion frontend:
+Frontend tests:
 
 ```powershell
 cd web
-npm test
-npm run build
+& '..\.tools\node-v24.16.0-win-x64\node.exe' '.\node_modules\vitest\vitest.mjs' run --pool=threads
 ```
 
-## Backend MVP Core
+Frontend build:
 
-Endpoints iniciales:
+```powershell
+cd web
+$env:PATH = (Resolve-Path '..\.tools\node-v24.16.0-win-x64').Path + ';' + $env:PATH
+& '..\.tools\node-v24.16.0-win-x64\npm.cmd' run build
+```
+
+## API MVP
 
 ```text
 GET  /health
@@ -94,14 +130,25 @@ POST /api/participants
 GET  /api/couples
 POST /api/couples
 POST /api/check-ins
+POST /api/admin/tokens
+POST /api/tokens/{id}/use
 POST /api/tokens/full-coverage
 POST /api/admin/check-ins/{id}/invalidate
 POST /api/admin/tokens/{id}/invalidate
 GET  /api/admin/check-ins?limit=50
 GET  /api/admin/tokens?limit=50
-GET  /api/rankings/general?throughDate=2026-06-15
-GET  /api/rankings/weeks?throughDate=2026-06-26
-GET  /api/rankings/weeks/2026-06-15?throughDate=2026-06-26
+GET  /api/rankings/general?throughDate=YYYY-MM-DD
+GET  /api/rankings/weeks?throughDate=YYYY-MM-DD
+GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
 ```
 
-La API crea la base local `gymchall.db` y carga el reto inicial si no existe.
+`POST /api/tokens/full-coverage` se mantiene por compatibilidad con el primer MVP. El flujo actual preferido es otorgar coins con admin y aplicarlas con `POST /api/tokens/{id}/use`.
+
+## Docs Relevantes
+
+- Estado actual del MVP: `docs/planning/mvp-current-state.md`
+- Reglas de dominio: `docs/planning/domain-rules.md`
+- Motor de puntajes: `docs/planning/scoring-engine.md`
+- Modelo de datos: `docs/planning/data-model.md`
+- Visual vigente: `docs/superpowers/specs/2026-06-16-gymchall-doodle-fit-visual-refresh.md`
+- Check-in y coins: `docs/superpowers/specs/2026-06-16-checkin-fichas-ui-rules.md`

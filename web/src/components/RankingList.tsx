@@ -1,6 +1,6 @@
-import { Flame, Trophy } from 'lucide-react';
+import { Dumbbell, Flame } from 'lucide-react';
 import type { RankingRow } from '../api/types';
-import { formatPoints } from './format';
+import { formatCoupleName, formatPoints } from './format';
 
 interface RankingListProps {
   rows: RankingRow[];
@@ -24,15 +24,15 @@ export function RankingList({ rows, highlightCoupleId, compact = false }: Rankin
           >
             <span className="ranking-row__position">#{index + 1}</span>
             <div className="ranking-row__main">
-              <span className="ranking-row__name">{row.coupleName}</span>
+              <span className="ranking-row__name">{formatCoupleName(row.coupleName)}</span>
               <span className="ranking-row__badges">
-                <span className="badge badge--warning">
+                <span className="badge badge--warning badge--streak" aria-label={`Perfect streak ${row.morningStreak}x`}>
                   <Flame aria-hidden="true" />
-                  {row.morningStreak} combo
+                  <strong>{row.morningStreak}x</strong>
                 </span>
-                <span className="badge badge--success">
-                  <Trophy aria-hidden="true" />
-                  {row.gymStreak} gym
+                <span className="badge badge--success badge--streak" aria-label={`Gym streak ${row.gymStreak}x`}>
+                  <Dumbbell aria-hidden="true" />
+                  <strong>{row.gymStreak}x</strong>
                 </span>
               </span>
             </div>

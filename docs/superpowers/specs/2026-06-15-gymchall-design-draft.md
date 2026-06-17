@@ -1,5 +1,7 @@
 ﻿# GymChall - Diseno funcional draft
 
+> Estado historico: este draft fue la base inicial del dominio. El estado vigente del MVP esta en `docs/planning/mvp-current-state.md`.
+
 Estado: aprobado para planificacion de implementacion. El diseno visual/UX se definira antes de construir el frontend real.
 Fecha: 2026-06-15.
 

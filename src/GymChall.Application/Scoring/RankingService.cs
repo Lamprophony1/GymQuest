@@ -52,11 +52,12 @@ public static class RankingService
     {
         var cappedThroughDate = Min(snapshot.Challenge.EndDate, throughDate);
         var weekEndDate = weekStartDate.AddDays(6);
-        var dates = BusinessDates(Max(snapshot.Challenge.StartDate, weekStartDate), Min(weekEndDate, cappedThroughDate)).ToArray();
+        var scoredDates = BusinessDates(Max(snapshot.Challenge.StartDate, weekStartDate), Min(weekEndDate, cappedThroughDate)).ToArray();
+        var requiredDates = BusinessDates(Max(snapshot.Challenge.StartDate, weekStartDate), Min(weekEndDate, snapshot.Challenge.EndDate)).ToArray();
 
         var rows = snapshot.Couples
             .Where(couple => couple.Active && couple.ParticipantIds.Count == 2)
-            .Select(couple => CalculateWeeklyCouple(snapshot, couple, dates))
+            .Select(couple => CalculateWeeklyCouple(snapshot, couple, scoredDates, requiredDates.Length))
             .OrderByDescending(row => row.TotalPoints)
             .ThenBy(row => row.CoupleName)
             .ToArray();
@@ -101,14 +102,18 @@ public static class RankingService
         return new CoupleRankingRow(couple.Id, couple.Name, total, morningStreak, gymStreak);
     }
 
-    private static WeeklyRankingRowDto CalculateWeeklyCouple(ChallengeSnapshotDto snapshot, CoupleDto couple, IReadOnlyList<DateOnly> dates)
+    private static WeeklyRankingRowDto CalculateWeeklyCouple(
+        ChallengeSnapshotDto snapshot,
+        CoupleDto couple,
+        IReadOnlyList<DateOnly> scoredDates,
+        int requiredBusinessDays)
     {
         var firstId = couple.ParticipantIds[0];
         var secondId = couple.ParticipantIds[1];
         var dailyPairs = new List<(DailyScoreResult First, DailyScoreResult Second)>();
         var dailyBonusPoints = 0m;
 
-        foreach (var date in dates)
+        foreach (var date in scoredDates)
         {
             var first = ScoreParticipant(snapshot, firstId, date);
             var second = ScoreParticipant(snapshot, secondId, date);
@@ -118,18 +123,29 @@ public static class RankingService
             dailyBonusPoints += daily.DailyBonusPoints;
         }
 
-        var weekly = WeeklyScoreCalculator.Calculate(new WeeklyScoreInput(dailyPairs), snapshot.Settings);
-        var total = weekly.IndividualPoints + dailyBonusPoints + weekly.WeeklyBonusPoints;
+        var individualPoints = dailyPairs.Sum(pair => pair.First.Points + pair.Second.Points);
+        var weeklyBonusPoints = 0m;
+        var weeklyBonusType = WeeklyBonusType.None.ToString();
+
+        if (requiredBusinessDays > 0 && scoredDates.Count == requiredBusinessDays)
+        {
+            var weekly = WeeklyScoreCalculator.Calculate(new WeeklyScoreInput(dailyPairs), snapshot.Settings);
+            individualPoints = weekly.IndividualPoints;
+            weeklyBonusPoints = weekly.WeeklyBonusPoints;
+            weeklyBonusType = weekly.WeeklyBonusType.ToString();
+        }
+
+        var total = individualPoints + dailyBonusPoints + weeklyBonusPoints;
 
         return new WeeklyRankingRowDto(
             couple.Id,
             couple.Name,
-            weekly.IndividualPoints,
+            individualPoints,
             dailyBonusPoints,
-            weekly.WeeklyBonusPoints,
+            weeklyBonusPoints,
             total,
-            weekly.WeeklyBonusType.ToString(),
-            weekly.RequiredBusinessDays);
+            weeklyBonusType,
+            requiredBusinessDays);
     }
 
     private static DailyScoreResult ScoreParticipant(ChallengeSnapshotDto snapshot, Guid participantId, DateOnly date)

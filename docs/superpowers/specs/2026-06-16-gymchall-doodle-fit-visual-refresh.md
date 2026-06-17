@@ -2,6 +2,7 @@
 
 Fecha: 2026-06-16
 Estado: aprobado para ejecucion
+Estado actual: visual vigente del MVP. Complementar con `docs/planning/mvp-current-state.md`.
 
 ## Decision
 
@@ -10,7 +11,7 @@ GymChall adopta un patron visual general llamado **Doodle Fit**:
 - La estructura, ritmo, formas y tono salen de la opcion 1 validada: doodle moderno, organico, competitivo y mobile-first.
 - La paleta sale de la opcion 2 validada: verdes fitness, fondo limpio, acentos lima/aqua y alerta coral.
 - La app deja de apoyarse en el look Sega/arcade retro fuerte como identidad principal.
-- Se conserva el lenguaje de juego competitivo, pero tratado como fitness moderno: scores, combos, power-ups, badges, ranking y warning states.
+- Se conserva el lenguaje de juego competitivo, pero tratado como fitness moderno: scores, streaks, coins, badges, ranking y warning states.
 
 El MCP oficial de TypeUI para obtener la skill `doodle` quedo bloqueado por OAuth durante la exploracion, por lo que este patron se implementa como sistema inspirado en la direccion visual aprobada con TypeUI/fundamentals y los mockups locales validados.
 
@@ -34,7 +35,7 @@ Prioridades:
 - Doodle/sticker controlado, no caricaturesco.
 - Mas cercano a una app fitness gamificada actual que a un arcade cabinet.
 - Energia concentrada en dashboard, ranking, status, badges y logros.
-- Formularios, carga de fichas y admin panel usan una version mas limpia del mismo sistema.
+- Formularios, uso de coins y admin panel usan una version mas limpia del mismo sistema.
 
 ### Shape
 
@@ -71,7 +72,7 @@ Usage:
 - Primary green dirige acciones, estados activos y score principal.
 - Fresh green se usa para superficies fitness y estados positivos.
 - Lime se reserva para highlights competitivos, posiciones, badges y acciones secundarias destacadas.
-- Aqua se usa para power-ups, side quests, fichas e informacion.
+- Aqua se usa para coins, side quests e informacion.
 - Coral se usa para zona roja, errores e invalidaciones.
 - Fondos deben mantenerse claros y respirables. No saturar todas las pantallas.
 

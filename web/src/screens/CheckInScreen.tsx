@@ -1,4 +1,4 @@
-import { Dumbbell, Save, Ticket } from 'lucide-react';
+import { CircleDollarSign, Dumbbell, Save } from 'lucide-react';
 import { type FormEvent, useMemo, useState } from 'react';
 import type {
   ChallengeSettings,
@@ -168,7 +168,7 @@ export function CheckInScreen({ challenge, selectedParticipant, onSubmit, onUseT
   async function handleUseToken(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedParticipant || !selectedToken || !effectiveTokenTarget) {
-      setError('Elegir ficha y fecha.');
+      setError('Elegir coin y fecha.');
       return;
     }
 
@@ -190,10 +190,10 @@ export function CheckInScreen({ challenge, selectedParticipant, onSubmit, onUseT
 
     try {
       await onUseToken(selectedToken.id, request);
-      setMessage('Ficha usada.');
+      setMessage('Coin usada.');
       setTokenTargetDate('');
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'No se pudo usar la ficha.');
+      setError(submitError instanceof Error ? submitError.message : 'No se pudo usar coin.');
     } finally {
       setUsingToken(false);
     }
@@ -251,9 +251,9 @@ export function CheckInScreen({ challenge, selectedParticipant, onSubmit, onUseT
 
       {availableTokens.length ? (
         <form className="arcade-form token-use-form" onSubmit={handleUseToken}>
-          <h3>Usar ficha</h3>
+          <h3>Usar coin</h3>
 
-          <label htmlFor="token-use-id">Ficha</label>
+          <label htmlFor="token-use-id">Coin</label>
           <select
             id="token-use-id"
             value={selectedToken?.id ?? ''}
@@ -292,8 +292,8 @@ export function CheckInScreen({ challenge, selectedParticipant, onSubmit, onUseT
             type="submit"
             disabled={usingToken || !selectedToken || !effectiveTokenTarget}
           >
-            {usingToken ? <Dumbbell aria-hidden="true" /> : <Ticket aria-hidden="true" />}
-            Usar ficha
+            {usingToken ? <Dumbbell aria-hidden="true" /> : <CircleDollarSign aria-hidden="true" />}
+            Usar coin
           </button>
         </form>
       ) : null}

@@ -73,7 +73,7 @@ public sealed class DailyScoreCalculatorTests
     }
 
     [Fact]
-    public void Full_token_scores_normal_day_and_counts_for_daily_bonus_and_morning_streak()
+    public void Full_token_scores_normal_day_and_counts_for_daily_bonus_and_both_streaks()
     {
         var date = new DateOnly(2026, 6, 17);
 
@@ -89,7 +89,7 @@ public sealed class DailyScoreCalculatorTests
             isCovered: true,
             countsForDailyCoupleBonus: true,
             countsForMorningStreak: true,
-            countsForGymStreak: false,
+            countsForGymStreak: true,
             countsForPerfectWeek: true,
             countsForCompleteWeek: false,
             countsForRescuedWeek: false);

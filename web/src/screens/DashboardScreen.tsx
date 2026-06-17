@@ -1,10 +1,10 @@
-import { Flame, ShieldAlert, Ticket, Trophy } from 'lucide-react';
+import { CircleDollarSign, Clock3, Dumbbell, Flame, HeartPulse, ShieldAlert, ShieldCheck, Trophy } from 'lucide-react';
 import type { AppTab } from '../components/AppShell';
-import { formatPoints } from '../components/format';
+import { coinTone, coinTypes, formatCoupleName, formatPoints, tokenTypeLabel } from '../components/format';
 import { RankingList } from '../components/RankingList';
 import { ScorePanel } from '../components/ScorePanel';
 import { StatusPanel } from '../components/StatusPanel';
-import type { ChallengeSnapshot, Couple, Participant, RankingRow, WeeklyRanking } from '../api/types';
+import type { ChallengeSnapshot, Couple, ExceptionTokenType, Participant, RankingRow, WeeklyRanking } from '../api/types';
 
 interface DashboardScreenProps {
   challenge: ChallengeSnapshot | null;
@@ -14,6 +14,18 @@ interface DashboardScreenProps {
   weeklyRankings: WeeklyRanking[];
   selectedParticipant: Participant | null;
   onNavigate: (tab: AppTab) => void;
+}
+
+function coinIcon(type: ExceptionTokenType) {
+  if (type === 0) {
+    return <HeartPulse aria-hidden="true" />;
+  }
+
+  if (type === 1) {
+    return <ShieldCheck aria-hidden="true" />;
+  }
+
+  return <Clock3 aria-hidden="true" />;
 }
 
 export function DashboardScreen({
@@ -28,9 +40,10 @@ export function DashboardScreen({
     couples.find((couple) => couple.participants.some((participant) => participant.id === selectedParticipant?.id)) ??
     null;
   const ownRanking = ranking.find((row) => row.coupleId === ownCouple?.id) ?? null;
+  const ownCoupleName = ownCouple ? formatCoupleName(ownCouple.name) : 'Sin pareja';
   const leadPoints = ranking[0]?.totalPoints ?? null;
   const leaders = leadPoints === null ? [] : ranking.filter((row) => row.totalPoints === leadPoints);
-  const leadTitle = leaders.length === 0 ? 'Sin lider' : leaders.length === 1 ? leaders[0].coupleName : 'Empate';
+  const leadTitle = leaders.length === 0 ? 'Sin lider' : leaders.length === 1 ? formatCoupleName(leaders[0].coupleName) : 'Empate';
   const leadMeta =
     leaders.length === 0
       ? 'Sin ranking'
@@ -38,7 +51,12 @@ export function DashboardScreen({
         ? `${formatPoints(leaders[0].totalPoints)} PTS lider`
         : `${leaders.length} parejas con ${formatPoints(leadPoints)} PTS`;
   const participantTokens =
-    challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id && token.status === 1).length ?? 0;
+    challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id && token.status === 1) ?? [];
+  const tokenCount = participantTokens.length;
+
+  function coinCount(type: ExceptionTokenType): number {
+    return participantTokens.filter((token) => token.type === type).length;
+  }
 
   return (
     <div className="screen-stack">
@@ -47,7 +65,7 @@ export function DashboardScreen({
         <h2 id="dashboard-title">{challenge?.challenge.name ?? 'Reto activo'}</h2>
         <div className="score-grid">
           <ScorePanel
-            eyebrow="Tu dupla"
+            eyebrow={ownCoupleName}
             title="Puntos"
             value={formatPoints(ownRanking?.totalPoints)}
             suffix="pts"
@@ -55,23 +73,55 @@ export function DashboardScreen({
             tone="brand"
             icon={<Trophy />}
           />
-          <ScorePanel
-            eyebrow="Combo"
-            title="Racha"
-            value={ownRanking?.morningStreak ?? 0}
-            suffix="x"
-            meta={`${ownRanking?.gymStreak ?? 0} gym streak`}
-            tone="warning"
-            icon={<Flame />}
-          />
-          <ScorePanel
-            eyebrow="Power-up"
-            title="Fichas"
-            value={participantTokens}
-            meta="Disponibles"
-            tone="info"
-            icon={<Ticket />}
-          />
+          <article className="score-panel score-panel--warning score-panel--streaks">
+            <div className="score-panel__topline">
+              <div>
+                <span className="eyebrow">Rachas</span>
+                <h3>Streak board</h3>
+              </div>
+              <span className="icon-frame icon-frame--warning" aria-hidden="true">
+                <Flame />
+              </span>
+            </div>
+            <div className="streak-score-grid" aria-label="Rachas actuales">
+              <div className="streak-score">
+                <span className="icon-frame icon-frame--warning" aria-hidden="true">
+                  <Flame />
+                </span>
+                <strong>{ownRanking?.morningStreak ?? 0}x</strong>
+                <span>Perfect streak</span>
+              </div>
+              <div className="streak-score">
+                <span className="icon-frame icon-frame--success" aria-hidden="true">
+                  <Dumbbell />
+                </span>
+                <strong>{ownRanking?.gymStreak ?? 0}x</strong>
+                <span>Gym streak</span>
+              </div>
+            </div>
+          </article>
+          <article className="score-panel score-panel--info score-panel--coins">
+            <div className="score-panel__topline">
+              <div>
+                <span className="eyebrow">Power-up</span>
+                <h3>Coins</h3>
+              </div>
+              <span className="icon-frame icon-frame--info" aria-hidden="true">
+                <CircleDollarSign />
+              </span>
+            </div>
+            <div className="coin-list" aria-label="Coins disponibles">
+              {coinTypes.map((type) => (
+                <span className={`coin-chip coin-chip--${coinTone(type)}`} key={type}>
+                  <span className="coin-mark" aria-hidden="true">
+                    {coinIcon(type)}
+                  </span>
+                  <span>{tokenTypeLabel(type)} x{coinCount(type)}</span>
+                </span>
+              ))}
+            </div>
+            <p className="score-panel__meta">{tokenCount ? `${tokenCount} disponibles` : 'Sin coins disponibles'}</p>
+          </article>
           <ScorePanel
             eyebrow="Lead"
             title={leadTitle}
@@ -83,7 +133,7 @@ export function DashboardScreen({
         </div>
         <div className="quick-actions">
           <button className="button button--success" type="button" onClick={() => onNavigate('checkin')}>
-            <Flame aria-hidden="true" />
+            <Dumbbell aria-hidden="true" />
             Check-in
           </button>
         </div>

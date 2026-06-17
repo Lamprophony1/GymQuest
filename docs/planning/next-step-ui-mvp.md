@@ -1,5 +1,7 @@
 # Siguiente paso: UI MVP mobile-first
 
+> Estado historico: este documento describia el proximo paso antes de construir la UI. La UI MVP ya existe. Para el estado actual, usar `docs/planning/mvp-current-state.md`.
+
 ## Estado actual
 
 La Fase 1 backend esta cerrada para un MVP usable.

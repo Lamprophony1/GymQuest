@@ -1,5 +1,7 @@
 # GymChall UI MVP Mobile-First Design
 
+> Estado historico: esta spec documenta la primera direccion Sega / Scoreboard Arcade. Quedo supersedida por `docs/superpowers/specs/2026-06-16-gymchall-doodle-fit-visual-refresh.md` y por el estado actual en `docs/planning/mvp-current-state.md`.
+
 ## Contexto
 
 GymChall ya tiene backend Fase 1 para un MVP usable: API minima, persistencia SQLite local, seed inicial, endpoints de participantes/parejas/check-ins/fichas/rankings e invalidacion auditada. La UI todavia no existe.

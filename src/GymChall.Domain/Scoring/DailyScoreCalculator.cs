@@ -35,7 +35,7 @@ public static class DailyScoreCalculator
                 IsCovered: true,
                 CountsForDailyCoupleBonus: true,
                 CountsForMorningStreak: true,
-                CountsForGymStreak: false,
+                CountsForGymStreak: true,
                 CountsForPerfectWeek: true,
                 CountsForCompleteWeek: false,
                 CountsForRescuedWeek: false),

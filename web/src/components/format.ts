@@ -1,4 +1,13 @@
-import type { CheckInType, ExceptionReasonCategory, ExceptionTokenType } from '../api/types';
+import type {
+  ChallengeSettings,
+  CheckInType,
+  ExceptionReasonCategory,
+  ExceptionTokenType,
+  WeeklyRanking,
+  WeeklyRankingRow
+} from '../api/types';
+
+export const coinTypes: ExceptionTokenType[] = [0, 1, 2];
 
 export function formatPoints(value: number | null | undefined): string {
   if (value === null || value === undefined) {
@@ -22,6 +31,72 @@ export function formatShortDate(value: string | null | undefined): string {
   return `${parts[2]}/${parts[1]}`;
 }
 
+export function latestWeeklyRanking(weeklyRankings: WeeklyRanking[]): WeeklyRanking | null {
+  return weeklyRankings.reduce<WeeklyRanking | null>(
+    (latest, week) => (!latest || week.weekStartDate > latest.weekStartDate ? week : latest),
+    null
+  );
+}
+
+export function formatCoupleName(name: string | null | undefined): string {
+  if (!name) {
+    return 'Sin pareja';
+  }
+
+  return name.replace(/\s*\+\s*/g, ' y ');
+}
+
+export function weeklyBonusLabel(value: string | null | undefined): string {
+  switch (value) {
+    case 'Perfect':
+    case 'PerfectWeek':
+      return 'Perfect week';
+    case 'Complete':
+    case 'CompleteWeek':
+      return 'Complete week';
+    case 'Rescued':
+    case 'RescuedWeek':
+      return 'Rescue week';
+    default:
+      return 'Sin bonus semanal';
+  }
+}
+
+export function weeklyBreakdown(row: WeeklyRankingRow): string {
+  return `Base ${formatPoints(row.individualPoints)} · dupla ${formatPoints(row.dailyBonusPoints)} · semana ${formatPoints(row.weeklyBonusPoints)}`;
+}
+
+export function weeklyBonusStatus(
+  row: WeeklyRankingRow | null | undefined,
+  settings: ChallengeSettings | null | undefined
+): { title: string; description: string } {
+  if (!row) {
+    return {
+      title: 'Bonus semanal',
+      description: 'Semana sin datos'
+    };
+  }
+
+  if (row.weeklyBonusPoints > 0) {
+    return {
+      title: weeklyBonusLabel(row.weeklyBonusType),
+      description: `+${formatPoints(row.weeklyBonusPoints)} pts ganados esta semana`
+    };
+  }
+
+  if (row.totalPoints > 0) {
+    return {
+      title: 'Perfect week en juego',
+      description: `+${formatPoints(settings?.perfectWeekBonus ?? 12)} pts si finalizan la semana`
+    };
+  }
+
+  return {
+    title: 'Bonus semanal',
+    description: 'Todavia no hay bonus en juego'
+  };
+}
+
 export function checkInTypeLabel(type: CheckInType): string {
   switch (type) {
     case 0:
@@ -38,13 +113,24 @@ export function checkInTypeLabel(type: CheckInType): string {
 export function tokenTypeLabel(type: ExceptionTokenType): string {
   switch (type) {
     case 0:
-      return 'Salud';
+      return 'Health coin';
     case 1:
-      return 'Compromiso obligatorio';
+      return 'Commit coin';
     case 2:
-      return 'Cambio de horario';
+      return 'Flex coin';
     default:
-      return 'Ficha';
+      return 'Coin';
+  }
+}
+
+export function coinTone(type: ExceptionTokenType): 'health' | 'commit' | 'flex' {
+  switch (type) {
+    case 0:
+      return 'health';
+    case 1:
+      return 'commit';
+    default:
+      return 'flex';
   }
 }
 
@@ -61,7 +147,7 @@ export function reasonCategoryLabel(category: ExceptionReasonCategory): string {
     case 4:
       return 'Aprobada';
     default:
-      return 'Ficha';
+      return 'Coin';
   }
 }
 

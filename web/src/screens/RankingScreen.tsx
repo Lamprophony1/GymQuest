@@ -1,6 +1,6 @@
 import { CalendarDays, Trophy } from 'lucide-react';
 import { useState } from 'react';
-import { formatPoints, formatShortDate } from '../components/format';
+import { formatCoupleName, formatPoints, formatShortDate, latestWeeklyRanking, weeklyBreakdown } from '../components/format';
 import { RankingList } from '../components/RankingList';
 import type { Couple, RankingRow, WeeklyRanking } from '../api/types';
 
@@ -16,7 +16,7 @@ export function RankingScreen({ couples, ranking, weeklyRankings, selectedPartic
   const ownCouple =
     couples.find((couple) => couple.participants.some((participant) => participant.id === selectedParticipantId)) ??
     null;
-  const latestWeek = weeklyRankings[0] ?? null;
+  const latestWeek = latestWeeklyRanking(weeklyRankings);
 
   return (
     <div className="screen-stack">
@@ -62,10 +62,8 @@ export function RankingScreen({ couples, ranking, weeklyRankings, selectedPartic
                 >
                   <span className="ranking-row__position">#{index + 1}</span>
                   <div>
-                    <h3>{row.coupleName}</h3>
-                    <p>
-                      Base {formatPoints(row.individualPoints)} + bonus {formatPoints(row.dailyBonusPoints + row.weeklyBonusPoints)}
-                    </p>
+                    <h3>{formatCoupleName(row.coupleName)}</h3>
+                    <p>{weeklyBreakdown(row)}</p>
                   </div>
                   <strong>{formatPoints(row.totalPoints)} PTS</strong>
                 </article>

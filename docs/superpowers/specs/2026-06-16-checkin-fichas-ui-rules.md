@@ -1,5 +1,7 @@
 # Spec: Check-in, fichas y ajustes visuales RM
 
+> Estado historico/intermedio: las reglas de check-in y creditos siguen siendo utiles, pero el lenguaje visible actual cambio de `fichas` a `Coins`. Para el estado vigente, usar `docs/planning/mvp-current-state.md`.
+
 Fecha: 2026-06-16
 
 ## Objetivo

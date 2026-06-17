@@ -1,4 +1,4 @@
-import { Save, Ticket } from 'lucide-react';
+import { CircleDollarSign, Save } from 'lucide-react';
 import { type FormEvent, useMemo, useState } from 'react';
 import type {
   ExceptionReasonCategory,
@@ -44,7 +44,7 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
     event.preventDefault();
     const actorId = adminParticipantId || selectedParticipant?.id;
     if (!participantId || !actorId) {
-      setError('Falta jugador para la ficha.');
+      setError('Falta jugador para otorgar coin.');
       return;
     }
 
@@ -60,10 +60,10 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
         assignedByAdminId: actorId,
         notes: notes.trim() || null
       });
-      setMessage('Ficha otorgada.');
+      setMessage('Coin otorgada.');
       setNotes('');
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'No se pudo otorgar la ficha.');
+      setError(submitError instanceof Error ? submitError.message : 'No se pudo otorgar coin.');
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +73,7 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
     <section className="panel-section form-screen" aria-labelledby="token-title">
       <div className="section-heading">
         <span className="eyebrow">Power-up</span>
-        <h2 id="token-title">Otorgar ficha</h2>
+        <h2 id="token-title">Otorgar coin</h2>
       </div>
       <form className="arcade-form" onSubmit={handleSubmit}>
         <label htmlFor="token-participant">Jugador</label>
@@ -128,8 +128,8 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
         {error ? <div className="alert alert--danger">{error}</div> : null}
 
         <button className="button button--quaternary" type="submit" disabled={submitting || !participantId}>
-          {submitting ? <Ticket aria-hidden="true" /> : <Save aria-hidden="true" />}
-          Otorgar ficha
+          {submitting ? <CircleDollarSign aria-hidden="true" /> : <Save aria-hidden="true" />}
+          Otorgar coin
         </button>
       </form>
     </section>

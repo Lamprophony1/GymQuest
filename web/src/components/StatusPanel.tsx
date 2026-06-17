@@ -1,6 +1,6 @@
-import { AlertTriangle, BadgeCheck, Flame, MapPinned, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, CircleDollarSign, Dumbbell, Flame, MapPinned, ShieldCheck } from 'lucide-react';
 import type { ChallengeSnapshot, Couple, Participant, RankingRow, WeeklyRanking } from '../api/types';
-import { formatPoints } from './format';
+import { latestWeeklyRanking, weeklyBonusStatus } from './format';
 
 interface StatusPanelProps {
   challenge: ChallengeSnapshot | null;
@@ -10,19 +10,6 @@ interface StatusPanelProps {
   weeklyRankings: WeeklyRanking[];
 }
 
-function weeklyBonusLabel(value: string): string {
-  switch (value) {
-    case 'PerfectWeek':
-      return 'Perfect week';
-    case 'CompleteWeek':
-      return 'Complete week';
-    case 'RescuedWeek':
-      return 'Rescue week';
-    default:
-      return 'Sin bonus';
-  }
-}
-
 export function StatusPanel({
   challenge,
   selectedParticipant,
@@ -30,11 +17,12 @@ export function StatusPanel({
   ownRanking,
   weeklyRankings
 }: StatusPanelProps) {
-  const latestWeek = weeklyRankings[0];
+  const latestWeek = latestWeeklyRanking(weeklyRankings);
   const ownWeek = latestWeek?.rows.find((row) => row.coupleId === ownCouple?.id) ?? null;
   const participantTokens =
     challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id && token.status === 1).length ?? 0;
   const isRedZone = ownWeek ? ownWeek.totalPoints < ownWeek.requiredBusinessDays * 2 : false;
+  const bonus = weeklyBonusStatus(ownWeek, challenge?.settings);
 
   return (
     <section className="status-panel" aria-labelledby="status-title">
@@ -48,8 +36,17 @@ export function StatusPanel({
             <Flame />
           </span>
           <div>
-            <h3>Combo streak</h3>
-            <p>{ownRanking ? `${ownRanking.morningStreak} manana / ${ownRanking.gymStreak} gym` : 'Sin combo activo'}</p>
+            <h3>Perfect streak</h3>
+            <p>{ownRanking ? `${ownRanking.morningStreak} dias 5am perfectos` : 'Sin perfect streak activo'}</p>
+          </div>
+        </article>
+        <article className="status-card">
+          <span className="icon-frame icon-frame--success" aria-hidden="true">
+            <Dumbbell />
+          </span>
+          <div>
+            <h3>Gym streak</h3>
+            <p>{ownRanking ? `${ownRanking.gymStreak} dias de gym cubiertos` : 'Sin gym streak activo'}</p>
           </div>
         </article>
         <article className={`status-card ${isRedZone ? 'status-card--danger' : ''}`}>
@@ -63,11 +60,11 @@ export function StatusPanel({
         </article>
         <article className="status-card">
           <span className="icon-frame icon-frame--info" aria-hidden="true">
-            <MapPinned />
+            {participantTokens > 0 ? <CircleDollarSign /> : <MapPinned />}
           </span>
           <div>
             <h3>Lago side quest</h3>
-            <p>{participantTokens > 0 ? `${participantTokens} ficha activa` : 'Disponible como mision'}</p>
+            <p>{participantTokens > 0 ? `${participantTokens} coins disponibles` : 'Disponible como mision'}</p>
           </div>
         </article>
         <article className="status-card">
@@ -75,8 +72,8 @@ export function StatusPanel({
             <BadgeCheck />
           </span>
           <div>
-            <h3>{weeklyBonusLabel(ownWeek?.weeklyBonusType ?? 'None')}</h3>
-            <p>{ownWeek ? `${formatPoints(ownWeek.weeklyBonusPoints)} pts bonus` : 'Semana sin datos'}</p>
+            <h3>{bonus.title}</h3>
+            <p>{bonus.description}</p>
           </div>
         </article>
       </div>

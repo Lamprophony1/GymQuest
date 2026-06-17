@@ -21,4 +21,24 @@ describe('Doodle Fit visual system', () => {
     expect(styles).not.toContain('#4503ff');
     expect(styles).not.toContain('--shadow-ring');
   });
+
+  test('uses restrained TypeUI-style medallions for coins and clear power board hierarchy', () => {
+    expect(styles).toContain('--coin-gold: #c47f00');
+    expect(styles).toContain('--coin-gold-soft: #fff0bd');
+    expect(styles).toContain('.coin-chip--commit .coin-mark');
+    expect(styles).toContain('.status-card h3');
+    expect(styles).toContain('.status-card p');
+    expect(styles).not.toContain('.game-icon--flaming-heart');
+    expect(styles).not.toContain('.game-coin');
+  });
+
+  test('uses a Doodle scorebar treatment for the compact app header', () => {
+    expect(styles).toContain('.app-header__brand-mark');
+    expect(styles).toContain('.app-header__brand-mark svg');
+    expect(styles).toContain('.app-header__title-row');
+    expect(styles).toContain('.app-header__meta-pill');
+    expect(styles).toContain('.app-header::after');
+    expect(styles).toContain('.app-header--compact .app-header__brand-mark');
+    expect(styles).toContain('transform: translateY');
+  });
 });

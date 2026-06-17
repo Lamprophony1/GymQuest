@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Proyecto RM - Doodle Fit Header Options</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+      :root {
+        --ink: #141615;
+        --muted: #64716a;
+        --page-bg: #f8fbf5;
+        --surface: #ffffff;
+        --surface-soft: #eff9ef;
+        --primary: #0f6f48;
+        --fresh: #1aa866;
+        --accent: #f4ff5f;
+        --aqua: #79e7ff;
+        --danger: #ff6f61;
+        --warning-soft: #fff6d8;
+        --danger-soft: #fff0ed;
+        --aqua-soft: #ebfbff;
+        --lime-soft: #fbffe0;
+        --success-soft: #eaf8ee;
+        --border: #203a2d;
+        --border-soft: #cfe1d5;
+        --shadow-sticker: 5px 6px 0 #203a2d;
+        --shadow-sticker-sm: 3px 4px 0 #203a2d;
+        --shadow-soft: 0 16px 40px rgba(15, 111, 72, 0.12);
+        --radius-xl: 32px;
+        --radius-lg: 28px;
+        --radius-md: 20px;
+        --radius-sm: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+        background: var(--page-bg);
+      }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        background:
+          linear-gradient(135deg, rgba(239, 249, 239, 0.96) 0%, rgba(248, 251, 245, 0.9) 48%, rgba(235, 251, 255, 0.82) 100%),
+          var(--page-bg);
+        color: var(--ink);
+        font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1,
+      h2,
+      h3,
+      strong {
+        font-family: "Space Grotesk", "Nunito", sans-serif;
+        letter-spacing: 0;
+      }
+
+      svg {
+        width: 1em;
+        height: 1em;
+        flex: 0 0 auto;
+      }
+
+      .page {
+        width: min(100%, 1220px);
+        margin: 0 auto;
+        padding: 28px 16px 48px;
+      }
+
+      .page-intro {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 28px;
+        padding: 22px 18px;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow-sticker);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        color: var(--primary);
+        font-size: 0.875rem;
+        font-weight: 800;
+        line-height: 1.1;
+      }
+
+      .page-intro h1 {
+        max-width: 14ch;
+        font-size: clamp(2rem, 7vw, 3.35rem);
+        line-height: 0.96;
+      }
+
+      .page-intro p {
+        max-width: 68ch;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+        gap: 26px;
+      }
+
+      .option-card {
+        display: grid;
+        gap: 16px;
+        min-width: 0;
+        padding: 18px;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .option-title {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .option-title h2 {
+        min-width: 0;
+        font-size: 1.55rem;
+        line-height: 1.05;
+      }
+
+      .option-title p {
+        grid-column: 1 / -1;
+        color: var(--muted);
+        font-size: 0.9375rem;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 5px 10px;
+        border: 2px solid var(--border);
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--ink);
+        box-shadow: 1px 2px 0 var(--border);
+        font-size: 0.8125rem;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .phone {
+        display: grid;
+        gap: 14px;
+        min-height: 660px;
+        padding: 12px;
+        border: 2px solid var(--border);
+        border-radius: 30px;
+        background:
+          linear-gradient(135deg, rgba(239, 249, 239, 0.96), rgba(235, 251, 255, 0.9)),
+          var(--page-bg);
+        box-shadow: var(--shadow-sticker);
+        overflow: hidden;
+      }
+
+      .phone-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .header-preview {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        border: 2px solid var(--border-soft);
+        overflow: hidden;
+      }
+
+      .brand-mark,
+      .profile-button,
+      .mini-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .brand-mark {
+        width: 48px;
+        height: 48px;
+        border: 2px solid var(--border);
+        color: var(--ink);
+        box-shadow: var(--shadow-sticker-sm);
+        font-size: 1.35rem;
+      }
+
+      .profile-button {
+        width: 46px;
+        height: 46px;
+        border: 2px solid var(--border);
+        background: var(--surface);
+        color: var(--primary);
+        box-shadow: var(--shadow-sticker-sm);
+        font-size: 1.2rem;
+      }
+
+      .header-main {
+        display: grid;
+        min-width: 0;
+        gap: 4px;
+      }
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .header-main h3 {
+        min-width: 0;
+        overflow: hidden;
+        color: inherit;
+        font-size: 1.55rem;
+        line-height: 1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .header-main p {
+        min-width: 0;
+        overflow: hidden;
+        color: inherit;
+        font-size: 0.9rem;
+        font-weight: 800;
+        opacity: 0.78;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        grid-column: 1 / -1;
+        min-width: 0;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 30px;
+        padding: 5px 9px;
+        border: 2px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--ink);
+        box-shadow: 1px 2px 0 var(--border);
+        font-size: 0.78rem;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .pill svg {
+        width: 0.98rem;
+        height: 0.98rem;
+      }
+
+      .pill--lime {
+        background: var(--accent);
+      }
+
+      .pill--mint {
+        background: var(--surface-soft);
+        color: var(--primary);
+      }
+
+      .pill--aqua {
+        background: var(--aqua-soft);
+        color: #07506b;
+      }
+
+      .pill--coral {
+        background: var(--danger-soft);
+        color: #9d2118;
+      }
+
+      .mock-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero-mini {
+        display: grid;
+        gap: 14px;
+        padding: 18px 14px;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: linear-gradient(145deg, var(--primary) 0%, #158a59 58%, #126f72 100%);
+        box-shadow: var(--shadow-sticker);
+        color: var(--surface);
+      }
+
+      .hero-mini h3 {
+        max-width: 12ch;
+        color: var(--surface);
+        font-size: 1.45rem;
+        line-height: 1.04;
+      }
+
+      .score-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .mini-card {
+        display: grid;
+        min-width: 0;
+        gap: 7px;
+        padding: 13px;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        box-shadow: var(--shadow-sticker-sm);
+        color: var(--ink);
+      }
+
+      .mini-card span {
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+        line-height: 1.05;
+      }
+
+      .mini-card strong {
+        color: var(--primary);
+        font-size: 2rem;
+        line-height: 0.95;
+      }
+
+      .status-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .status-tile {
+        display: grid;
+        gap: 5px;
+        min-width: 0;
+        padding: 10px 8px;
+        border: 2px solid var(--border-soft);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+      }
+
+      .status-tile strong {
+        color: var(--primary);
+        font-size: 1.2rem;
+        line-height: 1;
+      }
+
+      .status-tile span {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mini-nav {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: auto;
+        padding: 8px;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        background: rgba(255, 255, 255, 0.96);
+      }
+
+      .mini-nav span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      .mini-nav span:first-child {
+        border: 2px solid var(--border);
+        background: var(--primary);
+        color: var(--surface);
+      }
+
+      .option-a .header-expanded {
+        min-height: 108px;
+        padding: 14px;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(239, 249, 239, 0.96) 52%, rgba(235, 251, 255, 0.92) 100%);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .option-a .header-expanded::after,
+      .option-a .header-compact::after {
+        position: absolute;
+        right: 16px;
+        bottom: 0;
+        left: 16px;
+        height: 4px;
+        border-radius: 999px 999px 0 0;
+        background: linear-gradient(90deg, var(--accent), var(--aqua), var(--fresh));
+        content: "";
+      }
+
+      .option-a .brand-mark {
+        border-radius: 16px 19px 15px 18px;
+        background: linear-gradient(145deg, var(--accent) 0%, var(--aqua) 100%);
+      }
+
+      .option-a .profile-button {
+        border-radius: 16px;
+      }
+
+      .option-a .header-compact {
+        min-height: 58px;
+        padding: 8px 10px;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 10px 24px rgba(15, 111, 72, 0.14);
+      }
+
+      .option-a .header-compact .brand-mark {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+        box-shadow: 2px 3px 0 var(--border);
+      }
+
+      .option-a .header-compact .profile-button {
+        width: 40px;
+        height: 40px;
+        box-shadow: 2px 3px 0 var(--border);
+      }
+
+      .option-a .header-compact h3 {
+        font-size: 1.05rem;
+      }
+
+      .option-a .header-compact p {
+        display: none;
+      }
+
+      .option-b .header-expanded {
+        min-height: 118px;
+        padding: 14px;
+        border-color: var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow-sticker);
+      }
+
+      .option-b .header-expanded::before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 72px;
+        background: linear-gradient(180deg, var(--primary), var(--fresh));
+        content: "";
+      }
+
+      .option-b .brand-mark {
+        position: relative;
+        background: var(--accent);
+        border-radius: 50%;
+      }
+
+      .option-b .header-main {
+        color: var(--ink);
+      }
+
+      .option-b .profile-button {
+        border-radius: 999px;
+        background: var(--aqua-soft);
+      }
+
+      .option-b .header-compact {
+        min-height: 56px;
+        padding: 8px 10px;
+        border-color: var(--border);
+        border-radius: 999px;
+        background: var(--primary);
+        color: var(--surface);
+        box-shadow: var(--shadow-sticker-sm);
+      }
+
+      .option-b .header-compact .brand-mark {
+        width: 38px;
+        height: 38px;
+        border-color: var(--surface);
+        background: var(--accent);
+        box-shadow: none;
+      }
+
+      .option-b .header-compact .profile-button {
+        width: 38px;
+        height: 38px;
+        border-color: var(--surface);
+        background: var(--surface);
+        box-shadow: none;
+      }
+
+      .option-b .header-compact h3 {
+        color: var(--surface);
+        font-size: 1.05rem;
+      }
+
+      .option-b .header-compact p {
+        color: var(--surface);
+        opacity: 0.82;
+      }
+
+      .option-c .header-expanded {
+        min-height: 112px;
+        padding: 12px;
+        border-color: var(--border);
+        border-radius: var(--radius-md) var(--radius-lg) var(--radius-md) var(--radius-lg);
+        background: var(--surface-soft);
+        box-shadow: var(--shadow-sticker-sm);
+      }
+
+      .option-c .brand-mark {
+        width: 52px;
+        height: 52px;
+        border-radius: var(--radius-sm) var(--radius-md) var(--radius-sm) var(--radius-md);
+        background: var(--primary);
+        color: var(--surface);
+      }
+
+      .option-c .profile-button {
+        border-radius: var(--radius-sm);
+        background: var(--accent);
+        color: var(--ink);
+      }
+
+      .mini-stat-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        grid-column: 2 / -1;
+      }
+
+      .mini-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 28px;
+        padding: 4px 8px;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--primary);
+        box-shadow: 1px 2px 0 var(--border);
+        font-size: 0.75rem;
+        font-weight: 800;
+      }
+
+      .option-c .header-compact {
+        min-height: 54px;
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
+        padding: 7px 8px;
+        border-color: var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        box-shadow: var(--shadow-sticker-sm);
+      }
+
+      .option-c .header-compact .brand-mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px 14px 11px 13px;
+        font-size: 1rem;
+        box-shadow: 1px 2px 0 var(--border);
+      }
+
+      .option-c .header-compact .profile-button {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        box-shadow: 1px 2px 0 var(--border);
+      }
+
+      .option-c .header-compact h3 {
+        font-size: 1rem;
+      }
+
+      .compact-score {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 34px;
+        border: 2px solid var(--border);
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--ink);
+        box-shadow: 1px 2px 0 var(--border);
+        font-family: "Space Grotesk", "Nunito", sans-serif;
+        font-size: 0.86rem;
+        font-weight: 700;
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          padding-inline: 12px;
+        }
+
+        .options {
+          grid-template-columns: 1fr;
+        }
+
+        .option-card {
+          padding: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-intro">
+        <span class="eyebrow">Doodle Fit / app actual</span>
+        <h1>Opciones de header</h1>
+        <p>
+          Tres direcciones basadas en la UI actual: verde fitness, lima, aqua, cards blancos,
+          bordes gruesos, sombras sticker y energia de juego moderno sin volver al Sega inicial.
+        </p>
+      </header>
+
+      <section class="options" aria-label="Opciones de header">
+        <article class="option-card option-a">
+          <div class="option-title">
+            <h2>1. Scorebar Fit</h2>
+            <span class="tag">Mas fiel</span>
+            <p>Es la evolucion mas natural de lo que ya esta implementado: claro, sticky, con barra de energia y datos compactos.</p>
+          </div>
+
+          <div class="phone">
+            <div class="phone-label"><span>Expandido</span><span>Dashboard</span></div>
+            <div class="header-preview header-expanded">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 5v14" />
+                  <path d="M18 5v14" />
+                  <path d="M8 12h8" />
+                  <path d="M4 9v6" />
+                  <path d="M20 9v6" />
+                </svg>
+              </span>
+              <div class="header-main">
+                <div class="title-row">
+                  <h3>Proyecto RM</h3>
+                </div>
+                <p>Rafa - Reto septiembre 2026</p>
+              </div>
+              <span class="profile-button" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21a7 7 0 0 0-14 0" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+              <div class="pill-row">
+                <span class="pill pill--lime">#1</span>
+                <span class="pill pill--mint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8.5 14.5A3.5 3.5 0 0 1 12 11a3.5 3.5 0 0 1 3.5 3.5c0 2.2-1.6 3.5-3.5 3.5s-3.5-1.3-3.5-3.5Z" />
+                    <path d="M12 2s5 4 5 9" />
+                  </svg>
+                  2x
+                </span>
+                <span class="pill pill--aqua">9 pts</span>
+              </div>
+            </div>
+
+            <div class="mock-stack">
+              <div class="hero-mini">
+                <span class="eyebrow">Scoreboard</span>
+                <h3>Reto septiembre 2026</h3>
+                <div class="score-pair">
+                  <div class="mini-card"><span>Rafa y Clari</span><strong>9</strong></div>
+                  <div class="mini-card"><span>Perfect streak</span><strong>2x</strong></div>
+                </div>
+              </div>
+              <div class="status-strip">
+                <div class="status-tile"><strong>2x</strong><span>Gym streak</span></div>
+                <div class="status-tile"><strong>1</strong><span>Coin</span></div>
+                <div class="status-tile"><strong>5am</strong><span>Check-in</span></div>
+              </div>
+            </div>
+
+            <div class="phone-label"><span>Compacto al scrollear</span><span>56-60px</span></div>
+            <div class="header-preview header-compact">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 5v14" />
+                  <path d="M18 5v14" />
+                  <path d="M8 12h8" />
+                  <path d="M4 9v6" />
+                  <path d="M20 9v6" />
+                </svg>
+              </span>
+              <div class="header-main">
+                <h3>Proyecto RM - Rafa</h3>
+                <p>Reto septiembre 2026</p>
+              </div>
+              <span class="profile-button" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21a7 7 0 0 0-14 0" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+            </div>
+
+            <div class="mini-nav"><span>Panel</span><span>Ranking</span><span>Check-in</span></div>
+          </div>
+        </article>
+
+        <article class="option-card option-b">
+          <div class="option-title">
+            <h2>2. Power Badge</h2>
+            <span class="tag">Mas juego</span>
+            <p>Sube la energia competitiva sin usar pixel art: el header funciona como una placa de equipo con acento gym.</p>
+          </div>
+
+          <div class="phone">
+            <div class="phone-label"><span>Expandido</span><span>Score mode</span></div>
+            <div class="header-preview header-expanded">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 5v14" />
+                  <path d="M18 5v14" />
+                  <path d="M8 12h8" />
+                  <path d="M4 9v6" />
+                  <path d="M20 9v6" />
+                </svg>
+              </span>
+              <div class="header-main">
+                <div class="title-row">
+                  <h3>Proyecto RM</h3>
+                  <span class="pill pill--mint">Rafa</span>
+                </div>
+                <p>Reto septiembre 2026 - check-in activo</p>
+              </div>
+              <span class="profile-button" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 6v6l4 2" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </span>
+              <div class="pill-row">
+                <span class="pill pill--lime">Perfect 2x</span>
+                <span class="pill pill--aqua">Gym 2x</span>
+                <span class="pill">Coins 1</span>
+              </div>
+            </div>
+
+            <div class="mock-stack">
+              <div class="hero-mini">
+                <span class="eyebrow">Arcade ladder</span>
+                <h3>Ranking parejas</h3>
+                <div class="score-pair">
+                  <div class="mini-card"><span>Lead</span><strong>#1</strong></div>
+                  <div class="mini-card"><span>Bonus posible</span><strong>+12</strong></div>
+                </div>
+              </div>
+              <div class="status-strip">
+                <div class="status-tile"><strong>5am</strong><span>Ventana</span></div>
+                <div class="status-tile"><strong>0</strong><span>Zona roja</span></div>
+                <div class="status-tile"><strong>2</strong><span>Rachas</span></div>
+              </div>
+            </div>
+
+            <div class="phone-label"><span>Compacto al scrollear</span><span>56px</span></div>
+            <div class="header-preview header-compact">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 5v14" />
+                  <path d="M18 5v14" />
+                  <path d="M8 12h8" />
+                  <path d="M4 9v6" />
+                  <path d="M20 9v6" />
+                </svg>
+              </span>
+              <div class="header-main">
+                <h3>Proyecto RM - Rafa</h3>
+                <p>9 pts - 2x streak</p>
+              </div>
+              <span class="profile-button" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 6v6l4 2" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </span>
+            </div>
+
+            <div class="mini-nav"><span>Panel</span><span>Ranking</span><span>Check-in</span></div>
+          </div>
+        </article>
+
+        <article class="option-card option-c">
+          <div class="option-title">
+            <h2>3. Quest Console</h2>
+            <span class="tag">Mas compacto</span>
+            <p>Prioriza espacio vertical: conserva la personalidad con mini stats visibles y deja el hero como protagonista.</p>
+          </div>
+
+          <div class="phone">
+            <div class="phone-label"><span>Expandido</span><span>Compact-first</span></div>
+            <div class="header-preview header-expanded">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 5v14" />
+                  <path d="M18 5v14" />
+                  <path d="M8 12h8" />
+                  <path d="M4 9v6" />
+                  <path d="M20 9v6" />
+                </svg>
+              </span>
+              <div class="header-main">
+                <h3>Proyecto RM</h3>
+                <p>Rafa - Reto septiembre 2026</p>
+              </div>
+              <span class="profile-button" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21a7 7 0 0 0-14 0" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+              <div class="mini-stat-stack">
+                <span class="mini-stat">#1</span>
+                <span class="mini-stat">9 pts</span>
+                <span class="mini-stat">2x perfect</span>
+              </div>
+            </div>
+
+            <div class="mock-stack">
+              <div class="hero-mini">
+                <span class="eyebrow">Scoreboard</span>
+                <h3>Reto septiembre 2026</h3>
+                <div class="score-pair">
+                  <div class="mini-card"><span>Puntos</span><strong>9</strong></div>
+                  <div class="mini-card"><span>Coins</span><strong>1</strong></div>
+                </div>
+              </div>
+              <div class="status-strip">
+                <div class="status-tile"><strong>2x</strong><span>Perfect</span></div>
+                <div class="status-tile"><strong>2x</strong><span>Gym</span></div>
+                <div class="status-tile"><strong>+12</strong><span>Bonus</span></div>
+              </div>
+            </div>
+
+            <div class="phone-label"><span>Compacto al scrollear</span><span>54px</span></div>
+            <div class="header-preview header-compact">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 5v14" />
+                  <path d="M18 5v14" />
+                  <path d="M8 12h8" />
+                  <path d="M4 9v6" />
+                  <path d="M20 9v6" />
+                </svg>
+              </span>
+              <div class="header-main">
+                <h3>Proyecto RM - Rafa</h3>
+              </div>
+              <span class="compact-score">9</span>
+              <span class="profile-button" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21a7 7 0 0 0-14 0" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+            </div>
+
+            <div class="mini-nav"><span>Panel</span><span>Ranking</span><span>Check-in</span></div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

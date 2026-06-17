@@ -67,6 +67,59 @@ public sealed class WeeklyRankingServiceTests
         Assert.Equal(42m, row.TotalPoints);
     }
 
+    [Fact]
+    public void Current_week_does_not_award_weekly_bonus_before_required_business_days_are_complete()
+    {
+        var ids = TestIds.Default;
+        var weekStart = new DateOnly(2026, 6, 15);
+        var throughDate = weekStart.AddDays(1);
+        var checkIns = Enumerable.Range(0, 2)
+            .SelectMany(offset => new[]
+            {
+                new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.RafaId, weekStart.AddDays(offset), CheckInTypeDto.GymMorning, 0),
+                new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart.AddDays(offset), CheckInTypeDto.GymMorning, 0)
+            })
+            .ToArray();
+        var snapshot = BuildSnapshot(weekStart, weekStart.AddDays(4), checkIns, Array.Empty<FullCoverageTokenDto>());
+
+        var ranking = RankingService.CalculateWeeklyRanking(snapshot, weekStart, throughDate);
+        var row = ranking.Rows.Single();
+
+        Assert.Equal("None", row.WeeklyBonusType);
+        Assert.Equal(0m, row.WeeklyBonusPoints);
+        Assert.Equal(14m, row.IndividualPoints);
+        Assert.Equal(2m, row.DailyBonusPoints);
+        Assert.Equal(16m, row.TotalPoints);
+        Assert.Equal(5, row.RequiredBusinessDays);
+    }
+
+    [Fact]
+    public void Partial_challenge_week_awards_bonus_after_challenge_end()
+    {
+        var ids = TestIds.Default;
+        var weekStart = new DateOnly(2026, 6, 15);
+        var challengeStart = weekStart.AddDays(2);
+        var challengeEnd = weekStart.AddDays(4);
+        var checkIns = Enumerable.Range(2, 3)
+            .SelectMany(offset => new[]
+            {
+                new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.RafaId, weekStart.AddDays(offset), CheckInTypeDto.GymMorning, 0),
+                new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart.AddDays(offset), CheckInTypeDto.GymMorning, 0)
+            })
+            .ToArray();
+        var snapshot = BuildSnapshot(challengeStart, challengeEnd, checkIns, Array.Empty<FullCoverageTokenDto>());
+
+        var ranking = RankingService.CalculateWeeklyRanking(snapshot, weekStart, challengeEnd);
+        var row = ranking.Rows.Single();
+
+        Assert.Equal("Perfect", row.WeeklyBonusType);
+        Assert.Equal(12m, row.WeeklyBonusPoints);
+        Assert.Equal(18m, row.IndividualPoints);
+        Assert.Equal(3m, row.DailyBonusPoints);
+        Assert.Equal(33m, row.TotalPoints);
+        Assert.Equal(3, row.RequiredBusinessDays);
+    }
+
     private static ChallengeSnapshotDto BuildSnapshot(
         DateOnly startDate,
         DateOnly endDate,

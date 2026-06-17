@@ -1,4 +1,4 @@
-import { Dumbbell, LayoutDashboard, Shield, Ticket, Trophy, UserRoundCog } from 'lucide-react';
+import { CircleDollarSign, Dumbbell, LayoutDashboard, Shield, Trophy, UserRoundCog } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Participant } from '../api/types';
 import type { SelectedIdentity } from '../state/useSelectedIdentity';
@@ -38,12 +38,15 @@ export function AppShell({
 }: AppShellProps) {
   const [isCompact, setIsCompact] = useState(false);
   const navItems = isAdmin
-    ? [...playerNavItems, { tab: 'token' as const, label: 'Fichas', icon: <Ticket /> }, { tab: 'admin' as const, label: 'Admin', icon: <Shield /> }]
+    ? [...playerNavItems, { tab: 'token' as const, label: 'Coins', icon: <CircleDollarSign /> }, { tab: 'admin' as const, label: 'Admin', icon: <Shield /> }]
     : playerNavItems;
+  const participantName = participant?.displayName ?? 'Sin jugador';
+  const headerTitle = isCompact && participant ? `Proyecto RM - ${participant.displayName}` : 'Proyecto RM';
+  const headerClassName = `app-header${isCompact ? ' app-header--compact' : ''}`;
 
   useEffect(() => {
     function onScroll() {
-      setIsCompact(window.scrollY > 24);
+      setIsCompact((current) => (current ? window.scrollY > 8 : window.scrollY > 56));
     }
 
     onScroll();
@@ -53,11 +56,21 @@ export function AppShell({
 
   return (
     <div className="app-shell">
-      <header className={`app-header ${isCompact ? 'app-header--compact' : ''}`}>
-        <div>
-          <span className="eyebrow">{identity.mode === 'admin' ? 'Admin mode' : 'Player mode'}</span>
-          <h1>Proyecto RM</h1>
-          <p>{participant ? `${participant.displayName} · ${challengeName ?? 'Reto septiembre 2026'}` : 'Sin jugador'}</p>
+      <header className={headerClassName}>
+        <span className="app-header__brand-mark" aria-hidden="true">
+          <Dumbbell />
+        </span>
+        <div className="app-header__content">
+          <div className="app-header__title-row">
+            {identity.mode === 'admin' && !isCompact ? <span className="eyebrow app-header__mode">Admin mode</span> : null}
+            <h1>{headerTitle}</h1>
+            {isCompact && identity.mode === 'admin' ? <span className="app-header__meta-pill app-header__meta-pill--admin">Admin</span> : null}
+          </div>
+          {!isCompact ? (
+            <p className="app-header__subtitle">
+              {participant ? `${participantName} · ${challengeName ?? 'Reto septiembre 2026'}` : 'Sin jugador'}
+            </p>
+          ) : null}
         </div>
         <button className="icon-button" type="button" onClick={onChangeIdentity} aria-label="Cambiar identidad">
           <UserRoundCog aria-hidden="true" />

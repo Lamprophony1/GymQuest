@@ -138,8 +138,6 @@ public sealed class GymChallApiTests
         {
             participantId = rafa.Id,
             occurredAt = new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)),
-            type = 0,
-            durationMinutes = 45,
             createdByParticipantId = rafa.Id,
             notes = "5am"
         });
@@ -173,8 +171,6 @@ public sealed class GymChallApiTests
         {
             participantId = rafa.Id,
             occurredAt = new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)),
-            type = 0,
-            durationMinutes = 45,
             createdByParticipantId = rafa.Id,
             notes = "5am"
         });

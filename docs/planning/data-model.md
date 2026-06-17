@@ -1,15 +1,17 @@
-﻿# Modelo de datos recomendado
+# Modelo de datos
 
 ## Principio
 
 Separar hechos base de resultados derivados.
 
-- Hechos base: registros ingresados por usuarios/admin, como check-ins, fichas, recuperaciones, lago, premios y evidencia opcional.
-- Derivados: daily scores, weekly scores, rankings, rachas e insignias calculadas.
+- Hechos base actuales: challenge, settings, participantes, parejas, check-ins, coins/tokens y audit logs.
+- Hechos base futuros: lago, evidencia, premios y badges.
+- Derivados actuales: rankings, bonus semanales y rachas calculadas al consultar.
+- Derivados futuros: daily scores, weekly scores, score runs, snapshots de rachas e insignias persistidas.
 
-Los derivados pueden guardarse por performance, pero siempre deben poder regenerarse.
+Los derivados pueden guardarse por performance, pero siempre deben poder regenerarse desde hechos base.
 
-## Entidades base
+## Entidades base actuales
 
 ### Challenge
 
@@ -42,21 +44,16 @@ Los derivados pueden guardarse por performance, pero siempre deben poder regener
 - gymMinimumMinutes
 - morningWindowStart
 - morningWindowEnd
-- dailyBonusPolicy: morning_or_valid_token_only
-- periodTokenPolicy: calendar_month
-- partialWeekPolicy: business_days_within_challenge
-- checkInValidationPolicy: trust_auto_valid
-- prizeChangePolicy: editable_with_audit
-- coupleChangePolicy: add_new_couples_only
 - createdAt
 - updatedAt
+
+Nota: `gymMinimumMinutes` queda para compatibilidad/fase futura. El check-in MVP no pide duracion.
 
 ### Participant
 
 - id
 - displayName
 - username
-- email nullable
 - role: admin | participant
 - gender nullable
 - active
@@ -72,6 +69,8 @@ Los derivados pueden guardarse por performance, pero siempre deben poder regener
 - createdAt
 - updatedAt
 
+La UI debe mostrar nombres de pareja con `y` aunque el seed/backend conserve `+`.
+
 ### CoupleMembership
 
 Aunque no se planean cambios de pareja, usar membresia permite agregar parejas nuevas y conservar historial si el dominio crece.
@@ -86,7 +85,7 @@ Aunque no se planean cambios de pareja, usar membresia permite agregar parejas n
 
 ### CheckIn
 
-Los check-ins son auto-validos por confianza. El admin puede corregirlos despues.
+Los check-ins son auto-validos por confianza. El admin puede invalidarlos despues.
 
 - id
 - challengeId
@@ -102,40 +101,60 @@ Los check-ins son auto-validos por confianza. El admin puede corregirlos despues
 - createdAt
 - updatedAt
 
-### RecoveryLink
+Notas:
 
-- id
-- challengeId
-- participantId
-- missedDate
-- recoveryCheckInId
-- recoveryType: same_day | weekend
-- status: valid | corrected | rejected
-- createdAt
-- updatedAt
+- `type` lo clasifica el backend, no el frontend.
+- `durationMinutes` existe en persistencia por compatibilidad y hoy se guarda como 0 desde el flujo nuevo.
+- `activityDate` puede ser distinto de la fecha local de `occurredAt` cuando se registra una recuperacion de fin de semana.
 
 ### ExceptionToken
+
+Entidad tecnica para las coins visibles.
 
 - id
 - challengeId
 - participantId
 - targetDate
-- type: full_coverage | move_schedule
+- type: health | mandatory | schedule_change
 - reasonCategory: health | period | work_trip | mandatory_trip | other_approved
-- status: pending | applied | fulfilled | rejected | expired
-- assignedWindowStart nullable
-- assignedWindowEnd nullable
-- assignedDate nullable
-- requiresGroupApproval
-- approvedByGroup
-- assignedByAdminId nullable
+- status: available | applied | corrected | rejected
+- assignedByAdminId
 - notes nullable
 - createdAt
 - updatedAt
 
+Mapeo visible:
+
+- `health` -> Health coin.
+- `mandatory` -> Commit coin.
+- `schedule_change` -> Flex coin.
+
+Estados visibles:
+
+- `available` -> disponible para usar.
+- `applied` -> usada sobre una fecha objetivo.
+- `rejected` -> invalidada.
+- `corrected` -> reservado para una fase de correccion mas completa.
+
+### AuditLog
+
+- id
+- challengeId
+- actorParticipantId
+- action
+- entityType
+- entityId
+- oldValueJson nullable
+- newValueJson nullable
+- createdAt
+
+Actualmente se usa para invalidaciones administrativas.
+
+## Entidades futuras
+
 ### LakeActivity
 
-El lago se modela como actividad separada. Para que cuente como pareja, ambos deben pertenecer a la misma LakeActivity.
+El lago se modelara como actividad separada. Para que cuente como pareja, ambos deben pertenecer a la misma LakeActivity.
 
 - id
 - challengeId
@@ -163,7 +182,7 @@ Reglas:
 
 ### Evidence
 
-La evidencia es opcional en el MVP.
+La evidencia es opcional y no forma parte del MVP cerrado.
 
 - id
 - challengeId
@@ -189,19 +208,7 @@ La evidencia es opcional en el MVP.
 
 Los cambios de premios son permitidos y deben auditarse.
 
-### AuditLog
-
-- id
-- challengeId
-- actorParticipantId
-- action
-- entityType
-- entityId
-- oldValueJson nullable
-- newValueJson nullable
-- createdAt
-
-## Entidades derivadas
+## Entidades derivadas futuras
 
 ### ScoreRun
 
@@ -229,7 +236,6 @@ Los cambios de premios son permitidos y deben auditarse.
 - totalIndividualPoints
 - coverageKind: morning | full_token | moved_schedule | same_day_recovery | weekend_recovery | none
 - isCovered
-- isMorning
 - hasValidToken
 - countsForDailyCoupleBonus
 - countsForMorningStreak
@@ -279,7 +285,7 @@ Los cambios de premios son permitidos y deben auditarse.
 - challengeId
 - ownerType: participant | couple
 - ownerId
-- streakType: morning_5am | gym_attendance
+- streakType: perfect | gym_attendance
 - currentCount
 - bestCount
 - calculatedAt
@@ -310,9 +316,9 @@ BadgeAward:
 
 - CheckIn(challengeId, participantId, activityDate).
 - ExceptionToken(challengeId, participantId, targetDate).
-- RecoveryLink(challengeId, participantId, missedDate).
 - LakeActivity(challengeId, coupleId, activityDate).
 - LakeActivityParticipant(lakeActivityId, participantId).
+- AuditLog(challengeId, entityType, entityId).
 - DailyScore(scoreRunId, challengeId, participantId, date).
 - CoupleDailyScore(scoreRunId, challengeId, coupleId, date).
 - WeeklyScore(scoreRunId, challengeId, coupleId, weekStartDate).

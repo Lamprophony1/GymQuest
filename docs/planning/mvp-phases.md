@@ -1,71 +1,98 @@
-﻿# MVP por fases
+# MVP por fases
 
 ## Fase 0 - Planificacion y base tecnica
+
+Estado: completada.
 
 - Repo git inicial.
 - Documentacion de dominio, datos y motor de puntajes.
 - Decisiones de stack.
 - Preguntas criticas cerradas.
-- Plan de implementacion despues de aprobar diseno.
+- Planes de implementacion iniciales.
 
-## Fase 1 - MVP basico usable
+## Fase 1 - Backend MVP
 
-Objetivo: registrar el reto y ver rankings simples con reglas centrales ya correctas.
+Estado: completada.
 
 Incluye:
 
-- Crear challenge.
-- Crear participantes.
-- Crear parejas iniciales y permitir agregar nuevas parejas.
-- Configurar fechas, timezone y puntajes basicos.
-- Registrar check-ins 5am y tarde/noche.
-- Registrar fichas simples de cobertura total.
-- Calcular puntaje diario individual.
-- Calcular bonus diario solo con 5am o ficha valida.
-- Calcular racha 5am y racha de gym como conceptos separados.
+- Challenge activo con seed inicial.
+- Participantes y parejas.
+- Settings de puntaje.
+- Check-ins persistidos.
+- Coins/tokens persistidos.
 - Ranking general por pareja.
-- Ranking semanal basico sobre dias habiles dentro del reto.
-- Vista admin simple.
-- Vista participante simple.
-- Correcciones administrativas auditadas.
+- Ranking semanal por pareja.
+- Invalidaciones administrativas auditadas.
+- Tests de dominio, aplicacion, infraestructura y API.
 
-No incluye todavia:
+## Fase 2 - App mobile-first MVP
 
-- Lago complejo.
-- Insignias.
-- Notificaciones.
-- Exportaciones.
+Estado: completada para uso interno.
 
-## Fase 2 - Reglas completas
+Incluye:
 
-- Recuperaciones vinculadas a dias perdidos.
-- Maximo 2 recuperaciones de fin de semana por persona/semana.
-- Fichas con estados completos.
-- Ficha de mover horario, incluyendo movimiento a fin de semana.
-- Evidencias opcionales.
-- Lago con limite semanal y actividad conjunta de pareja.
-- Bonus semanal.
-- Auditoria administrativa completa.
-- Recalculo forzado de puntajes.
-- Cambios de premios auditados.
+- SPA React/Vite en `web/`.
+- Selector de identidad por confianza.
+- Dashboard mobile-first.
+- Ranking general y semanal.
+- Check-in con clasificacion automatica por horario.
+- Recuperacion de fin de semana con dia objetivo.
+- Uso de coins desde Check-in.
+- Admin para crear participantes, crear parejas, otorgar coins e invalidar registros.
+- UI Doodle Fit / Clean Gym.
+- Tests smoke de frontend y build Vite.
 
-## Fase 3 - Gamificacion
+## Fase 3 - Reglas y UX refinadas
+
+Estado: completada en el MVP actual.
+
+Incluye:
+
+- Health, Commit y Flex coins.
+- Health coin mensual automatica para participantes con genero femenino, no acumulable.
+- Perfect streak y Gym streak visibles.
+- Coins preservan rachas segun su cobertura.
+- Bonus semanal sin adelantar puntos futuros.
+- Leaderboard con rachas compactas e icon-led.
+- Header mobile refinado.
+- Lenguaje visible `Coins` en vez de `fichas`.
+
+## Fase 4 - Proximo bloque recomendado
+
+Estado: pendiente.
+
+Opcion recomendada: Lago / Side quest.
+
+Alcance probable:
+
+- Persistir actividades de lago.
+- Endpoints de lago.
+- Integracion de puntos de lago al ranking.
+- UI para registrar actividad de lago.
+- Tests de dominio, API y frontend.
+
+## Fase 5 - Gamificacion avanzada
+
+Estado: pendiente.
 
 - Insignias historicas.
 - Insignias de estado.
-- Rachas individuales.
-- Rachas de pareja.
-- Zona Roja.
+- Zona Roja mas accionable.
 - Ranking de lunes.
 - Ranking de lago.
 - Ranking de recuperaciones para estadisticas/desempates.
 - Remontada contra semana anterior.
 
-## Fase 4 - Experiencia social
+## Fase 6 - Experiencia social y cierre
+
+Estado: pendiente.
 
 - Resumen semanal para WhatsApp.
 - Notificaciones.
 - Perfil de pareja.
 - Graficos.
 - Exportacion CSV/PDF.
-- Mini estadisticas.
+- Evidencias opcionales.
+- Premios y cierre del reto.
+- Autenticacion real si deja de alcanzar el modo confianza.

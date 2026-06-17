@@ -50,7 +50,7 @@ public sealed class RankingServiceTests
         Assert.Equal("Rafa + Clari", ranking[0].CoupleName);
         Assert.True(ranking[0].TotalPoints > ranking[1].TotalPoints);
         Assert.Equal(2, ranking[0].MorningStreak);
-        Assert.Equal(0, ranking[0].GymStreak);
+        Assert.Equal(2, ranking[0].GymStreak);
         Assert.Equal(0, ranking[1].GymStreak);
     }
 

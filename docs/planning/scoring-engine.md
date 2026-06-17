@@ -1,73 +1,113 @@
-﻿# Motor de puntajes
+# Motor de puntajes
 
 ## Objetivo
 
-Calcular puntajes, rankings, rachas, insignias y desempates desde hechos base. El motor debe ser determinista: mismos inputs + mismas reglas = mismos outputs.
+Calcular puntajes, rankings, rachas, bonus semanales y futuros desempates desde hechos base. El motor debe ser determinista: mismos inputs + mismas reglas = mismos outputs.
 
-## Inputs
+## Inputs actuales
 
 - Challenge.
-- ChallengeSettings vigente o snapshot de reglas.
+- ChallengeSettings vigente.
 - Participantes activos.
-- Parejas y membresias vigentes por fecha.
-- Check-ins auto-validos salvo correccion administrativa.
-- Fichas aplicadas, cumplidas, rechazadas o vencidas.
-- Recuperaciones vinculadas.
+- Parejas activas.
+- Check-ins validos o rechazados por admin.
+- Coins/tokens disponibles, aplicados o rechazados.
+
+Inputs futuros:
+
 - Actividades de lago.
 - Evidencias opcionales.
+- Premios y auditoria de cierre.
+- Insignias persistidas.
 
-## Outputs
+## Outputs actuales
 
-- DailyScore por participante y dia.
-- CoupleDailyScore por pareja y dia.
-- WeeklyScore por pareja y semana.
-- Rankings.
-- Racha 5am individual y de pareja.
-- Racha gym individual y de pareja.
+- Ranking general por pareja.
+- Ranking semanal por pareja.
+- Puntos individuales base.
+- Bonus diario de pareja.
+- Bonus semanal.
+- Perfect streak de pareja.
+- Gym streak de pareja.
+- Estado de coins disponibles/aplicadas.
+- Zona roja en UI, derivada de estado semanal.
+
+Outputs futuros:
+
+- DailyScore persistido.
+- WeeklyScore persistido.
+- ScoreRun.
 - Insignias.
-- Alertas Zona Roja.
-- Desempates.
+- Ranking de lago.
+- Desempates finales persistidos.
+
+## Clasificacion de check-ins
+
+El request actual de check-in envia:
+
+- `participantId`
+- `occurredAt`
+- `recoveryTargetDate` opcional
+- `createdByParticipantId`
+- `notes` opcional
+
+El frontend no envia `type` ni `durationMinutes`.
+
+El backend clasifica asi:
+
+1. Convertir `occurredAt` al timezone del reto.
+2. Si es dia habil y cae dentro de ventana 05:00-06:00:
+   - `type = GymMorning`
+   - `activityDate = fecha local`
+3. Si es dia habil y cae fuera de ventana:
+   - `type = GymSameDayRecovery`
+   - `activityDate = fecha local`
+4. Si es sabado/domingo:
+   - Exige `recoveryTargetDate`.
+   - `recoveryTargetDate` debe ser dia habil de la misma semana.
+   - `type = GymWeekendRecovery`
+   - `activityDate = recoveryTargetDate`
 
 ## Algoritmo diario individual
 
 Para cada participante y cada dia habil dentro del reto:
 
-1. Obtener pareja vigente en esa fecha.
-2. Buscar ficha valida para la fecha.
-3. Si hay ficha de cobertura total aplicada:
-   - coverageKind = full_token.
+1. Buscar coins aplicadas para esa fecha.
+2. Si hay Health coin o Commit coin aplicada:
+   - coverageKind = `full_token`.
    - puntos = puntaje normal del dia.
    - isCovered = true.
    - countsForDailyCoupleBonus = true.
    - countsForMorningStreak = true.
-   - countsForGymStreak = false, porque no hubo entrenamiento efectivo.
+   - countsForGymStreak = true.
    - cuenta para semana perfecta.
-4. Si hay ficha de mover horario cumplida:
-   - coverageKind = moved_schedule.
+3. Buscar check-in valido para esa fecha.
+4. Si hay check-in y Flex coin aplicada:
+   - coverageKind = `moved_schedule`.
    - puntos = puntaje normal del dia original.
    - isCovered = true.
    - countsForDailyCoupleBonus = true.
    - countsForMorningStreak = true.
    - countsForGymStreak = true.
    - cuenta para semana perfecta.
-5. Si hay check-in 5am valido dentro de ventana:
-   - coverageKind = morning.
+5. Si hay check-in 5am valido:
+   - coverageKind = `morning`.
    - puntos = 4 si lunes, 3 si martes-viernes.
    - isCovered = true.
    - countsForDailyCoupleBonus = true.
    - countsForMorningStreak = true.
    - countsForGymStreak = true.
    - cuenta para semana perfecta.
-6. Si hay recuperacion tarde/noche valida sin ficha:
-   - coverageKind = same_day_recovery.
+6. Si hay recuperacion tarde/noche valida sin coin:
+   - coverageKind = `same_day_recovery`.
    - puntos = 2.
    - isCovered = true para completar semana.
    - countsForDailyCoupleBonus = false.
    - countsForMorningStreak = false.
    - countsForGymStreak = true.
    - cuenta para semana completa.
-7. Si hay recuperacion sabado/domingo valida vinculada a este dia sin ficha:
-   - coverageKind = weekend_recovery.
+7. Si hay recuperacion sabado/domingo valida vinculada a este dia sin coin:
+   - coverageKind = `weekend_recovery`.
    - puntos = 1.5.
    - isCovered = true para completar semana.
    - countsForDailyCoupleBonus = false.
@@ -75,98 +115,102 @@ Para cada participante y cada dia habil dentro del reto:
    - countsForGymStreak = false para el dia perdido.
    - cuenta para semana rescatada.
 8. Si no aplica nada:
-   - coverageKind = none.
+   - coverageKind = `none`.
    - puntos = 0.
    - isCovered = false.
    - rompe rachas aplicables.
 
-Regla de prioridad: si existen varios registros para el mismo dia, gana el de mayor prioridad valida y los demas quedan como no puntuables/auditables.
+Regla de prioridad: si existen varios registros para el mismo dia, gana la cobertura valida de mayor prioridad y los demas quedan como no puntuables/auditables.
 
-## Recuperacion de fin de semana con ficha
+## Uso de coins
 
-Si existe una ficha de mover horario que permite mover el entrenamiento del dia original al fin de semana y la persona cumple ese horario:
+### Health coin
 
-- Se clasifica como moved_schedule, no como weekend_recovery.
-- Suma puntaje normal del dia original.
-- Puede preservar racha 5am/gym segun la regla de ficha valida.
-- Puede activar bonus diario de pareja si la pareja tambien cumple una condicion elegible.
+- Puede ser otorgada por admin.
+- Tambien se crea automaticamente una vez por mes para participantes con genero femenino.
+- Al usarse cubre un dia habil.
+- No requiere check-in asociado.
 
-## Validaciones de recuperacion
+### Commit coin
 
-- El dia perdido debe ser lunes-viernes dentro del reto.
-- El recoveryCheckIn debe existir.
-- Un missedDate no puede tener mas de una recuperacion puntuable por persona.
-- Maximo 2 weekend recoveries por persona por semana.
-- Una ficha de cobertura total elimina necesidad de recuperacion para ese dia.
-- Una ficha de mover horario cumplida no es recuperacion.
+- Puede ser otorgada por admin.
+- Al usarse cubre un dia habil.
+- No requiere check-in asociado.
+
+### Flex coin
+
+- Puede ser otorgada por admin.
+- Al usarse requiere fecha/hora de entrenamiento.
+- No se permite usarla si el entrenamiento ya cae dentro de ventana 5am.
+- Si se usa para fin de semana, requiere `recoveryTargetDate` igual al dia objetivo.
+- Clasifica como moved schedule para scoring, no como recovery normal.
 
 ## Algoritmo diario de pareja
 
 Para cada pareja y fecha:
 
-1. Tomar los DailyScore de ambos miembros vigentes.
+1. Tomar los scores diarios de ambos miembros.
 2. Sumar puntos individuales.
-3. Si ambos tienen countsForDailyCoupleBonus = true, sumar dailyCoupleBonus.
-4. Sumar lago elegible del dia.
-5. Guardar CoupleDailyScore.
+3. Si ambos tienen `countsForDailyCoupleBonus = true`, sumar dailyCoupleBonus.
+4. Sumar lago elegible del dia cuando esa fase exista.
+5. Guardar o proyectar CoupleDailyScore.
 
-La recuperacion sin ficha nunca activa el bonus diario.
-
-## Lago
-
-Para cada pareja y semana:
-
-1. Ordenar actividades de lago validas por fecha/creacion.
-2. Filtrar actividades asociadas a gym/entrenamiento valido.
-3. Para mode = couple, exigir que ambos miembros esten en la misma LakeActivity.
-4. Tomar solo las primeras N puntuables segun settings.
-5. Asignar puntos: solo = 1, pareja = 3.
-6. Actividades extra pueden generar insignias pero no puntos.
+La recuperacion sin coin nunca activa el bonus diario.
 
 ## Bonus semanal
 
 Para cada pareja y semana:
 
 1. Tomar solo dias habiles dentro del rango real del reto.
-2. Verificar que ambos integrantes completen todos esos dias requeridos.
-3. Si ambos tienen todos los dias por morning/full_token/moved_schedule, weeklyBonusType = perfect.
-4. Si completaron todos los dias y hubo same_day_recovery pero no weekend_recovery, weeklyBonusType = complete.
-5. Si para completar se uso weekend_recovery, weeklyBonusType = rescued.
-6. Si no completaron ambos los dias requeridos, weeklyBonusType = none.
+2. Tomar solo dias hasta el `throughDate` consultado.
+3. Verificar que ambos integrantes completen todos los dias requeridos.
+4. Si no estan todos los dias requeridos, `weeklyBonusType = None`.
+5. Si ambos tienen todos los dias por morning/full_token/moved_schedule, `weeklyBonusType = Perfect`.
+6. Si completaron todos los dias y hubo same_day_recovery pero no weekend_recovery, `weeklyBonusType = Complete`.
+7. Si para completar se uso weekend_recovery, `weeklyBonusType = Rescued`.
+
+El bonus semanal no se otorga por dias futuros cargados antes de tiempo si el `throughDate` todavia no llego a esos dias.
+
+## Rachas
+
+- Perfect streak usa `countsForMorningStreak`.
+- Gym streak usa `countsForGymStreak`.
+- En el MVP, las rachas visibles son de pareja: avanzan si ambos miembros cumplen la condicion para el mismo dia.
+- Las coins validas preservan rachas segun su cobertura.
+
+## Lago
+
+El dominio tiene calculador de lago, pero todavia no hay API/UI/persistencia de lago.
+
+Regla objetivo para la fase futura:
+
+1. Ordenar actividades validas por fecha/creacion.
+2. Filtrar actividades asociadas a gym/entrenamiento valido.
+3. Para mode = couple, exigir que ambos miembros esten en la misma LakeActivity.
+4. Tomar solo las primeras N puntuables segun settings.
+5. Asignar puntos: solo = 1, pareja = 3.
+6. Actividades extra pueden generar insignias pero no puntos.
 
 ## Admin y recalculo
 
-El admin puede corregir cualquier registro si hubo error. Cada cambio debe generar AuditLog y permitir un nuevo ScoreRun. El ScoreRun recalcula derivados desde hechos base y reglas vigentes/snapshot.
+El admin puede invalidar check-ins y coins. Cada invalidacion genera AuditLog. Los rankings se proyectan desde hechos base, por lo que reflejan los cambios al volver a consultar.
 
-## Rankings
-
-- General: suma WeeklyScore y/o CoupleDailyScore del reto completo.
-- Semanal: WeeklyScore por semana.
-- Racha 5am: usa countsForMorningStreak.
-- Racha gym: usa countsForGymStreak y reglas de continuidad.
-- Lunes: lunes cubiertos por ambos con 5am/ficha valida.
-- Lago: vueltas puntuables y totales.
-- Recuperaciones: cantidad por tipo para estadistica y desempate.
+ScoreRun persistido queda como fase futura.
 
 ## Tests minimos del motor
 
-1. Lunes 5am suma 4 y activa bonus/racha 5am.
+1. Lunes 5am suma 4 y activa bonus/rachas.
 2. Martes 5am suma 3.
-3. Ficha de cobertura total suma puntaje normal y activa bonus diario.
-4. Ficha de mover horario cumplida suma puntaje normal y activa bonus diario.
-5. Ficha de mover horario vencida no suma.
-6. Recuperacion tarde suma 2, cuenta para racha gym, no activa bonus diario ni racha 5am.
+3. Health coin suma puntaje normal y activa bonus diario.
+4. Commit coin suma puntaje normal y activa bonus diario.
+5. Flex coin usada con entrenamiento fuera de horario suma puntaje normal y activa bonus diario.
+6. Recuperacion tarde suma 2, cuenta para Gym streak, no activa bonus diario ni Perfect streak.
 7. Recuperacion fin de semana suma 1.5, completa semana, no preserva racha del dia perdido.
-8. Ficha que mueve entrenamiento al fin de semana clasifica como moved_schedule, no como rescue.
+8. Flex coin que mueve entrenamiento al fin de semana clasifica como moved_schedule, no como rescue.
 9. No permite recuperar dos veces el mismo dia perdido.
-10. No permite mas de 2 recuperaciones de fin de semana por persona/semana.
-11. Lago sin gym valido no suma.
-12. Lago de pareja exige ambos en la misma actividad.
-13. Tercera vuelta de lago no suma puntos.
-14. Semana parcial evalua solo dias habiles dentro del reto.
-15. Semana perfecta vence a completa si no hay recuperaciones.
-16. Mezcla con weekend recovery baja a rescued.
-17. Fichas validas no penalizan desempates.
-18. Empate aplica criterios en orden.
-19. Correccion admin genera auditoria y permite nuevo ScoreRun.
-20. Cambio de premios queda auditado y no altera puntajes.
+10. No permite usar Flex coin para un check-in dentro de ventana 5am.
+11. Semana parcial evalua solo dias habiles dentro del reto y hasta `throughDate`.
+12. Semana perfecta vence a complete si no hay recuperaciones.
+13. Mezcla con weekend recovery baja a rescued.
+14. Coins validas no penalizan desempates.
+15. Correccion admin invalida registros y el ranking cambia al recalcular.

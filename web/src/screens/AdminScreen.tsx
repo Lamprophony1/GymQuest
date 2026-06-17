@@ -259,7 +259,7 @@ export function AdminScreen({
           </article>
 
           <article className="admin-list">
-            <h3>Fichas</h3>
+            <h3>Coins</h3>
             {recentTokens.length ? (
               recentTokens.map((token) => (
                 <div className="record-row" key={token.id}>
@@ -278,13 +278,13 @@ export function AdminScreen({
                   <button
                     className="icon-button icon-button--danger"
                     type="button"
-                    aria-label={`Invalidar ficha de ${token.participantName}`}
+                    aria-label={`Invalidar coin de ${token.participantName}`}
                     disabled={busyAction === token.id || token.status.toLowerCase() === 'rejected'}
                     onClick={() =>
                       runAdminAction(
                         token.id,
                         () => onInvalidateToken(token.id, `Admin ${adminParticipantId}`),
-                        'Ficha invalidada.'
+                        'Coin invalidada.'
                       )
                     }
                   >
@@ -293,7 +293,7 @@ export function AdminScreen({
                 </div>
               ))
             ) : (
-              <p className="empty-state">Sin fichas recientes.</p>
+              <p className="empty-state">Sin coins recientes.</p>
             )}
           </article>
         </div>
