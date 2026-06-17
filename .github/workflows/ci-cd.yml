@@ -127,4 +127,16 @@ jobs:
 
       - name: Verify local health
         shell: bash
-        run: curl -fsS "http://127.0.0.1:${{ env.GYMQUEST_HOST_PORT }}/health"
+        run: |
+          for attempt in {1..30}; do
+            if curl -fsS "http://127.0.0.1:${{ env.GYMQUEST_HOST_PORT }}/health"; then
+              exit 0
+            fi
+
+            echo "GymQuest is not ready yet. Attempt ${attempt}/30."
+            sleep 2
+          done
+
+          docker ps -a --filter name=gymquest
+          docker logs gymquest --tail 120
+          exit 1
