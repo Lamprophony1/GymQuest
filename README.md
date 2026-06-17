@@ -22,12 +22,13 @@ Incluye:
   - `Flex coin`: valida entrenamiento fuera de horario o recuperacion como si fuera 5am.
 - Health coin mensual automatica para participantes con genero femenino, no acumulable.
 - Admin para crear participantes, crear parejas, otorgar coins e invalidar check-ins o coins.
+- Login por participante con PIN corto en modo produccion, cookie HttpOnly y switch participante/admin para Rafa.
+- En desarrollo se puede conservar el selector de usuario con `VITE_AUTH_MODE=dev-selector`.
 - Motor de scoring con puntos base, bonus diario, bonus semanal, Perfect streak y Gym streak.
 - Persistencia SQLite local y seed inicial.
 
 No incluye todavia:
 
-- Login real o permisos fuertes.
 - Lago / side quest conectado a API y UI.
 - Motor persistido de insignias o achievements.
 - Evidencias/fotos.
@@ -81,6 +82,13 @@ Backend:
 & '.\.tools\dotnet\dotnet.exe' run --project src/GymChall.Api/GymChall.Api.csproj --urls http://127.0.0.1:5020
 ```
 
+Auth backend:
+
+- Desarrollo: `Auth:Mode=DevSelector` mantiene endpoints abiertos para el selector local.
+- Produccion: `Auth:Mode=PinLogin` exige cookie de sesion.
+- Bootstrap inicial de Rafa: configurar `Auth:BootstrapAdminPin` con un PIN de 4 a 6 digitos.
+- Opcional: `Auth:DataProtectionKeysPath` define donde guardar llaves de cookie; por defecto usa `.data-protection-keys/`.
+
 Frontend:
 
 ```powershell
@@ -89,6 +97,12 @@ $env:PATH = (Resolve-Path '..\.tools\node-v24.16.0-win-x64').Path + ';' + $env:P
 & '..\.tools\node-v24.16.0-win-x64\npm.cmd' install
 & '..\.tools\node-v24.16.0-win-x64\npm.cmd' run dev
 ```
+
+Auth frontend:
+
+- Desarrollo por defecto: selector local.
+- Produccion por defecto: pantalla de login PIN.
+- Override: `VITE_AUTH_MODE=dev-selector` o `VITE_AUTH_MODE=pin-login`.
 
 URLs locales:
 
@@ -123,6 +137,10 @@ $env:PATH = (Resolve-Path '..\.tools\node-v24.16.0-win-x64').Path + ';' + $env:P
 
 ```text
 GET  /health
+GET  /api/auth/login-options
+POST /api/auth/login
+GET  /api/auth/me
+POST /api/auth/logout
 GET  /api/challenge
 GET  /api/challenge/settings
 GET  /api/participants
@@ -135,6 +153,7 @@ POST /api/tokens/{id}/use
 POST /api/tokens/full-coverage
 POST /api/admin/check-ins/{id}/invalidate
 POST /api/admin/tokens/{id}/invalidate
+POST /api/admin/participants/{id}/pin
 GET  /api/admin/check-ins?limit=50
 GET  /api/admin/tokens?limit=50
 GET  /api/rankings/general?throughDate=YYYY-MM-DD
@@ -152,3 +171,4 @@ GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
 - Modelo de datos: `docs/planning/data-model.md`
 - Visual vigente: `docs/superpowers/specs/2026-06-16-gymchall-doodle-fit-visual-refresh.md`
 - Check-in y coins: `docs/superpowers/specs/2026-06-16-checkin-fichas-ui-rules.md`
+- Login PIN: `docs/superpowers/specs/2026-06-17-pin-login-auth-design.md`

@@ -1,32 +1,81 @@
 import { useEffect, useMemo, useState } from 'react';
 import { gymChallApi } from './api/client';
+import { getAuthMode } from './auth/authMode';
+import { useAuthSession } from './auth/useAuthSession';
 import { AppShell, type AppTab } from './components/AppShell';
 import { IdentitySelector } from './components/IdentitySelector';
 import { CheckInScreen } from './screens/CheckInScreen';
 import { AdminScreen } from './screens/AdminScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
+import { LoginScreen } from './screens/LoginScreen';
 import { RankingScreen } from './screens/RankingScreen';
 import { TokenScreen } from './screens/TokenScreen';
 import { useGymChallData } from './state/useGymChallData';
 import { useSelectedIdentity } from './state/useSelectedIdentity';
 
 export function App() {
-  const data = useGymChallData();
+  const authMode = useMemo(() => getAuthMode(), []);
+  const auth = useAuthSession(authMode);
+  const data = useGymChallData({
+    enabled: authMode === 'dev-selector' || Boolean(auth.participant),
+    includeAdmin: authMode === 'dev-selector' || auth.participant?.role === 1
+  });
   const { identity, setIdentity } = useSelectedIdentity(data.participants);
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
 
   const selectedParticipant = useMemo(
-    () => data.participants.find((participant) => participant.id === identity?.participantId) ?? null,
-    [data.participants, identity?.participantId]
+    () =>
+      data.participants.find((participant) => participant.id === identity?.participantId) ??
+      (authMode === 'pin-login' && auth.participant?.id === identity?.participantId ? auth.participant : null),
+    [auth.participant, authMode, data.participants, identity?.participantId]
   );
-  const isAdmin = identity?.mode === 'admin';
+  const canSwitchAdminMode = selectedParticipant?.role === 1;
+  const isAdmin = identity?.mode === 'admin' && canSwitchAdminMode;
   const visibleTab = (activeTab === 'admin' || activeTab === 'token') && !isAdmin ? 'dashboard' : activeTab;
+
+  useEffect(() => {
+    if (authMode !== 'pin-login') {
+      return;
+    }
+
+    if (!auth.participant) {
+      if (identity) {
+        setIdentity(null);
+      }
+      return;
+    }
+
+    const nextMode = identity?.participantId === auth.participant.id && identity.mode === 'admin' && auth.participant.role === 1
+      ? 'admin'
+      : 'participant';
+
+    if (identity?.participantId !== auth.participant.id || identity.mode !== nextMode) {
+      setIdentity({ participantId: auth.participant.id, mode: nextMode });
+    }
+  }, [auth.participant, authMode, identity, setIdentity]);
 
   useEffect(() => {
     if ((activeTab === 'admin' || activeTab === 'token') && !isAdmin) {
       setActiveTab('dashboard');
     }
   }, [activeTab, isAdmin]);
+
+  if (authMode === 'pin-login' && !auth.participant) {
+    return (
+      <LoginScreen
+        options={auth.loginOptions}
+        loading={auth.loading}
+        error={auth.error}
+        onLogin={async (request) => {
+          const participant = await auth.login(request);
+          if (participant) {
+            setIdentity({ participantId: participant.id, mode: 'participant' });
+            setActiveTab('dashboard');
+          }
+        }}
+      />
+    );
+  }
 
   if (data.loading && !data.challenge && data.participants.length === 0) {
     return (
@@ -64,6 +113,23 @@ export function App() {
       error={data.error}
       onTabChange={setActiveTab}
       onChangeIdentity={() => setIdentity(null)}
+      canSwitchAdminMode={canSwitchAdminMode}
+      onSwitchMode={(mode) => {
+        if (!selectedParticipant || (mode === 'admin' && selectedParticipant.role !== 1)) {
+          return;
+        }
+
+        setIdentity({ participantId: selectedParticipant.id, mode });
+      }}
+      onLogout={
+        authMode === 'pin-login'
+          ? async () => {
+              await auth.logout();
+              setIdentity(null);
+              setActiveTab('dashboard');
+            }
+          : undefined
+      }
     >
       {visibleTab === 'dashboard' ? (
         <DashboardScreen
@@ -115,6 +181,8 @@ export function App() {
           participants={data.participants}
           couples={data.couples}
           recentCheckIns={data.recentCheckIns}
+          calendarCheckIns={data.calendarCheckIns}
+          calendarWeekStart={data.calendarWeekStart}
           recentTokens={data.recentTokens}
           adminParticipantId={selectedParticipant.id}
           onCreateParticipant={async (request) => {
@@ -139,6 +207,11 @@ export function App() {
             });
             await data.refresh();
           }}
+          onSetParticipantPin={async (participantId, pin) => {
+            await gymChallApi.setParticipantPin(participantId, { pin });
+            await data.refresh();
+          }}
+          onCalendarWeekChange={data.setCalendarWeekStart}
         />
       ) : null}
     </AppShell>

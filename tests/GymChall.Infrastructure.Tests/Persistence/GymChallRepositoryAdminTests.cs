@@ -152,6 +152,57 @@ public sealed class GymChallRepositoryAdminTests
     }
 
     [Fact]
+    public async Task Lists_calendar_checkins_by_activity_date_including_rejected_rows()
+    {
+        await using var fixture = await DbFixture.CreateSeededAsync();
+        var repository = new GymChallRepository(fixture.Db);
+        var validId = Guid.Parse("40000000-0000-0000-0000-000000000101");
+        var rejectedId = Guid.Parse("40000000-0000-0000-0000-000000000102");
+        var outsideId = Guid.Parse("40000000-0000-0000-0000-000000000103");
+
+        await repository.AddCheckInAsync(new CheckInCreateDto(
+            validId,
+            SeedData.ChallengeId,
+            SeedData.RafaId,
+            new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)),
+            new DateOnly(2026, 6, 15),
+            CheckInTypeDto.GymMorning,
+            0,
+            SeedData.RafaId,
+            "5am"));
+        await repository.AddCheckInAsync(new CheckInCreateDto(
+            rejectedId,
+            SeedData.ChallengeId,
+            SeedData.ClariId,
+            new DateTimeOffset(2026, 6, 16, 19, 0, 0, TimeSpan.FromHours(-4)),
+            new DateOnly(2026, 6, 16),
+            CheckInTypeDto.GymSameDayRecovery,
+            0,
+            SeedData.ClariId,
+            "tarde"));
+        await repository.AddCheckInAsync(new CheckInCreateDto(
+            outsideId,
+            SeedData.ChallengeId,
+            SeedData.ObelarId,
+            new DateTimeOffset(2026, 6, 22, 5, 0, 0, TimeSpan.FromHours(-4)),
+            new DateOnly(2026, 6, 22),
+            CheckInTypeDto.GymMorning,
+            0,
+            SeedData.ObelarId,
+            "otra semana"));
+        await repository.InvalidateCheckInAsync(rejectedId, SeedData.RafaId, "test");
+
+        var rows = await repository.ListCalendarCheckInsAsync(
+            SeedData.ChallengeId,
+            new DateOnly(2026, 6, 15),
+            new DateOnly(2026, 6, 21));
+
+        Assert.Equal(new[] { validId, rejectedId }, rows.Select(row => row.Id).ToArray());
+        Assert.Contains(rows, row => row.Id == rejectedId && row.Status == "Rejected");
+        Assert.DoesNotContain(rows, row => row.Id == outsideId);
+    }
+
+    [Fact]
     public async Task Lists_recent_tokens_with_participant_names_status_and_limit()
     {
         await using var fixture = await DbFixture.CreateSeededAsync();

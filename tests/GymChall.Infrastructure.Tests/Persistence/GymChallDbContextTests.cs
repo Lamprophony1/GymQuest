@@ -67,4 +67,43 @@ public sealed class GymChallDbContextTests
         Assert.Equal(1, await db.Couples.CountAsync());
         Assert.Equal(1, await db.CoupleMemberships.CountAsync());
     }
+
+    [Fact]
+    public async Task Can_create_schema_and_save_auth_credential()
+    {
+        await using var connection = new SqliteConnection("DataSource=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<GymChallDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var db = new GymChallDbContext(options);
+        await db.Database.EnsureCreatedAsync();
+
+        var participantId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        db.Participants.Add(new ParticipantEntity
+        {
+            Id = participantId,
+            DisplayName = "Rafa",
+            Username = "rafa",
+            Role = ParticipantRole.Admin,
+            Active = true
+        });
+        db.AuthCredentials.Add(new AuthCredentialEntity
+        {
+            ParticipantId = participantId,
+            PinHash = "hash",
+            FailedAttemptCount = 1,
+            LockedUntil = new DateTimeOffset(2026, 6, 17, 10, 1, 0, TimeSpan.Zero),
+            PinUpdatedAt = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero)
+        });
+
+        await db.SaveChangesAsync();
+
+        var credential = await db.AuthCredentials.SingleAsync();
+        Assert.Equal(participantId, credential.ParticipantId);
+        Assert.Equal("hash", credential.PinHash);
+        Assert.Equal(1, credential.FailedAttemptCount);
+    }
 }

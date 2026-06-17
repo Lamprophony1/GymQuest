@@ -45,6 +45,27 @@ export interface Participant {
   active: boolean;
 }
 
+export interface LoginOption {
+  id: string;
+  displayName: string;
+  username: string;
+}
+
+export interface LoginRequest {
+  participantId: string;
+  pin: string;
+}
+
+export interface SetPinRequest {
+  pin: string;
+}
+
+export interface AuthenticatedParticipant extends Participant {}
+
+export interface AuthResponse {
+  participant: AuthenticatedParticipant;
+}
+
 export interface Couple {
   id: string;
   name: string;
@@ -102,6 +123,8 @@ export interface WeeklyRankingRow {
   weeklyBonusPoints: number;
   totalPoints: number;
   weeklyBonusType: string;
+  weeklyBonusCandidateType: string;
+  weeklyBonusCandidatePoints: number;
   requiredBusinessDays: number;
 }
 

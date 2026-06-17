@@ -1,4 +1,5 @@
 using GymChall.Application.Abstractions;
+using GymChall.Application.Auth;
 using GymChall.Application.Challenges;
 using GymChall.Domain.Scoring;
 using GymChall.Infrastructure.Persistence.Entities;
@@ -84,6 +85,40 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             .ToArrayAsync(cancellationToken);
     }
 
+    public async Task<AuthCredentialDto?> GetAuthCredentialAsync(Guid participantId, CancellationToken cancellationToken = default)
+    {
+        return await db.AuthCredentials
+            .Where(x => x.ParticipantId == participantId)
+            .Select(x => new AuthCredentialDto(x.ParticipantId, x.PinHash, x.FailedAttemptCount, x.LockedUntil, x.PinUpdatedAt))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task UpsertAuthCredentialAsync(AuthCredentialDto credential, CancellationToken cancellationToken = default)
+    {
+        var existing = await db.AuthCredentials.SingleOrDefaultAsync(x => x.ParticipantId == credential.ParticipantId, cancellationToken);
+        if (existing is null)
+        {
+            db.AuthCredentials.Add(new AuthCredentialEntity
+            {
+                ParticipantId = credential.ParticipantId,
+                PinHash = credential.PinHash,
+                FailedAttemptCount = credential.FailedAttemptCount,
+                LockedUntil = credential.LockedUntil,
+                PinUpdatedAt = credential.PinUpdatedAt
+            });
+        }
+        else
+        {
+            existing.PinHash = credential.PinHash;
+            existing.FailedAttemptCount = credential.FailedAttemptCount;
+            existing.LockedUntil = credential.LockedUntil;
+            existing.PinUpdatedAt = credential.PinUpdatedAt;
+            existing.UpdatedAt = DateTimeOffset.UtcNow;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<CoupleSummaryDto>> ListCouplesAsync(Guid challengeId, CancellationToken cancellationToken = default)
     {
         var couples = await db.Couples
@@ -156,6 +191,48 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             .OrderByDescending(x => x.CreatedAt)
             .ThenByDescending(x => x.OccurredAt)
             .Take(cappedLimit)
+            .Select(x => new AdminCheckInSummaryDto(
+                x.Id,
+                x.ParticipantId,
+                x.ParticipantName,
+                x.ActivityDate,
+                x.OccurredAt,
+                ToDto(x.Type),
+                x.Status.ToString(),
+                x.DurationMinutes,
+                x.Notes,
+                x.CreatedAt))
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<AdminCheckInSummaryDto>> ListCalendarCheckInsAsync(Guid challengeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        var rows = await db.CheckIns
+            .Where(x => x.ChallengeId == challengeId && x.ActivityDate >= from && x.ActivityDate <= to)
+            .Join(
+                db.Participants,
+                checkIn => checkIn.ParticipantId,
+                participant => participant.Id,
+                (checkIn, participant) => new { CheckIn = checkIn, Participant = participant })
+            .Select(x => new
+            {
+                x.CheckIn.Id,
+                x.CheckIn.ParticipantId,
+                ParticipantName = x.Participant.DisplayName,
+                x.CheckIn.ActivityDate,
+                x.CheckIn.OccurredAt,
+                x.CheckIn.Type,
+                x.CheckIn.Status,
+                x.CheckIn.DurationMinutes,
+                x.CheckIn.Notes,
+                x.CheckIn.CreatedAt
+            })
+            .ToArrayAsync(cancellationToken);
+
+        return rows
+            .OrderBy(x => x.ActivityDate)
+            .ThenBy(x => x.ParticipantName)
+            .ThenBy(x => x.OccurredAt)
             .Select(x => new AdminCheckInSummaryDto(
                 x.Id,
                 x.ParticipantId,

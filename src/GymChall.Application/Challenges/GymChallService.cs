@@ -18,10 +18,7 @@ public sealed class GymChallService(IGymChallRepository repository)
         var settings = await repository.GetSettingsAsync(challengeId, cancellationToken);
         var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
         var classified = CheckInClassifier.Classify(request.OccurredAt, request.RecoveryTargetDate, settings, snapshot.Challenge.Timezone);
-        if (classified.Type == CheckInTypeDto.GymWeekendRecovery)
-        {
-            EnsureNeedsCoverage(snapshot, request.ParticipantId, classified.ActivityDate);
-        }
+        EnsureNeedsCoverage(snapshot, request.ParticipantId, classified.ActivityDate);
 
         var checkInId = Guid.NewGuid();
         await repository.AddCheckInAsync(new CheckInCreateDto(checkInId, challengeId, request.ParticipantId, request.OccurredAt, classified.ActivityDate, classified.Type, 0, request.CreatedByParticipantId, request.Notes), cancellationToken);
@@ -183,6 +180,17 @@ public sealed class GymChallService(IGymChallRepository repository)
     {
         var challengeId = await RequireActiveChallengeId(cancellationToken);
         return await repository.ListRecentCheckInsAsync(challengeId, NormalizeAdminListLimit(limit), cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AdminCheckInSummaryDto>> ListCalendarCheckInsAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        if (to < from)
+        {
+            throw new InvalidOperationException("El rango de calendario no es valido.");
+        }
+
+        var challengeId = await RequireActiveChallengeId(cancellationToken);
+        return await repository.ListCalendarCheckInsAsync(challengeId, from, to, cancellationToken);
     }
 
     public async Task<IReadOnlyList<AdminTokenSummaryDto>> ListRecentFullCoverageTokensAsync(int? limit, CancellationToken cancellationToken = default)

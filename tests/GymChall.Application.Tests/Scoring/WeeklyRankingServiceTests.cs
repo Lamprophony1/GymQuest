@@ -40,6 +40,8 @@ public sealed class WeeklyRankingServiceTests
         var row = ranking.Rows.Single();
 
         Assert.Equal("Perfect", row.WeeklyBonusType);
+        Assert.Equal("Perfect", row.WeeklyBonusCandidateType);
+        Assert.Equal(12m, row.WeeklyBonusCandidatePoints);
         Assert.Equal(12m, row.WeeklyBonusPoints);
         Assert.Equal(32m, row.IndividualPoints);
         Assert.Equal(5m, row.DailyBonusPoints);
@@ -61,6 +63,8 @@ public sealed class WeeklyRankingServiceTests
         var row = ranking.Rows.Single();
 
         Assert.Equal("Complete", row.WeeklyBonusType);
+        Assert.Equal("Complete", row.WeeklyBonusCandidateType);
+        Assert.Equal(7m, row.WeeklyBonusCandidatePoints);
         Assert.Equal(7m, row.WeeklyBonusPoints);
         Assert.Equal(31m, row.IndividualPoints);
         Assert.Equal(4m, row.DailyBonusPoints);
@@ -86,11 +90,64 @@ public sealed class WeeklyRankingServiceTests
         var row = ranking.Rows.Single();
 
         Assert.Equal("None", row.WeeklyBonusType);
+        Assert.Equal("Perfect", row.WeeklyBonusCandidateType);
+        Assert.Equal(12m, row.WeeklyBonusCandidatePoints);
         Assert.Equal(0m, row.WeeklyBonusPoints);
         Assert.Equal(14m, row.IndividualPoints);
         Assert.Equal(2m, row.DailyBonusPoints);
         Assert.Equal(16m, row.TotalPoints);
         Assert.Equal(5, row.RequiredBusinessDays);
+    }
+
+    [Fact]
+    public void Current_week_candidate_stops_when_a_required_day_is_missing_so_far()
+    {
+        var ids = TestIds.Default;
+        var weekStart = new DateOnly(2026, 6, 15);
+        var throughDate = weekStart.AddDays(2);
+        var checkIns = new[]
+        {
+            new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart, CheckInTypeDto.GymMorning, 0),
+            new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.RafaId, weekStart.AddDays(1), CheckInTypeDto.GymMorning, 0),
+            new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart.AddDays(1), CheckInTypeDto.GymMorning, 0),
+            new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.RafaId, weekStart.AddDays(2), CheckInTypeDto.GymMorning, 0),
+            new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart.AddDays(2), CheckInTypeDto.GymMorning, 0)
+        };
+        var snapshot = BuildSnapshot(weekStart, weekStart.AddDays(4), checkIns, Array.Empty<FullCoverageTokenDto>());
+
+        var ranking = RankingService.CalculateWeeklyRanking(snapshot, weekStart, throughDate);
+        var row = ranking.Rows.Single();
+
+        Assert.Equal("None", row.WeeklyBonusType);
+        Assert.Equal("None", row.WeeklyBonusCandidateType);
+        Assert.Equal(0m, row.WeeklyBonusCandidatePoints);
+        Assert.Equal(0m, row.WeeklyBonusPoints);
+    }
+
+    [Fact]
+    public void Current_week_candidate_downgrades_to_complete_after_same_day_recovery()
+    {
+        var ids = TestIds.Default;
+        var weekStart = new DateOnly(2026, 6, 15);
+        var throughDate = weekStart.AddDays(2);
+        var checkIns = Enumerable.Range(0, 3)
+            .SelectMany(offset => new[]
+            {
+                new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.RafaId, weekStart.AddDays(offset), CheckInTypeDto.GymMorning, 0),
+                new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart.AddDays(offset), CheckInTypeDto.GymMorning, 0)
+            })
+            .Where(x => x.ParticipantId != ids.ClariId || x.ActivityDate != weekStart.AddDays(1))
+            .Append(new CheckInDto(Guid.NewGuid(), ids.ChallengeId, ids.ClariId, weekStart.AddDays(1), CheckInTypeDto.GymSameDayRecovery, 0))
+            .ToArray();
+        var snapshot = BuildSnapshot(weekStart, weekStart.AddDays(4), checkIns, Array.Empty<FullCoverageTokenDto>());
+
+        var ranking = RankingService.CalculateWeeklyRanking(snapshot, weekStart, throughDate);
+        var row = ranking.Rows.Single();
+
+        Assert.Equal("None", row.WeeklyBonusType);
+        Assert.Equal("Complete", row.WeeklyBonusCandidateType);
+        Assert.Equal(7m, row.WeeklyBonusCandidatePoints);
+        Assert.Equal(0m, row.WeeklyBonusPoints);
     }
 
     [Fact]

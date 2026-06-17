@@ -13,6 +13,8 @@ public sealed record WeeklyRankingRowDto(
     decimal WeeklyBonusPoints,
     decimal TotalPoints,
     string WeeklyBonusType,
+    string WeeklyBonusCandidateType,
+    decimal WeeklyBonusCandidatePoints,
     int RequiredBusinessDays);
 
 public static class RankingService
@@ -126,6 +128,7 @@ public static class RankingService
         var individualPoints = dailyPairs.Sum(pair => pair.First.Points + pair.Second.Points);
         var weeklyBonusPoints = 0m;
         var weeklyBonusType = WeeklyBonusType.None.ToString();
+        var candidate = CalculateWeeklyBonusCandidate(dailyPairs, snapshot.Settings);
 
         if (requiredBusinessDays > 0 && scoredDates.Count == requiredBusinessDays)
         {
@@ -145,7 +148,36 @@ public static class RankingService
             weeklyBonusPoints,
             total,
             weeklyBonusType,
+            candidate.Type,
+            candidate.Points,
             requiredBusinessDays);
+    }
+
+    private static (string Type, decimal Points) CalculateWeeklyBonusCandidate(
+        IReadOnlyList<(DailyScoreResult First, DailyScoreResult Second)> dailyPairs,
+        ChallengeSettings settings)
+    {
+        if (dailyPairs.Count == 0 || dailyPairs.Any(pair => !pair.First.IsCovered || !pair.Second.IsCovered))
+        {
+            return (WeeklyBonusType.None.ToString(), 0m);
+        }
+
+        if (dailyPairs.Any(pair => pair.First.CountsForRescuedWeek || pair.Second.CountsForRescuedWeek))
+        {
+            return (WeeklyBonusType.Rescued.ToString(), settings.RescuedWeekBonus);
+        }
+
+        if (dailyPairs.Any(pair => pair.First.CountsForCompleteWeek || pair.Second.CountsForCompleteWeek))
+        {
+            return (WeeklyBonusType.Complete.ToString(), settings.CompleteWeekBonus);
+        }
+
+        if (dailyPairs.All(pair => pair.First.CountsForPerfectWeek && pair.Second.CountsForPerfectWeek))
+        {
+            return (WeeklyBonusType.Perfect.ToString(), settings.PerfectWeekBonus);
+        }
+
+        return (WeeklyBonusType.None.ToString(), 0m);
     }
 
     private static DailyScoreResult ScoreParticipant(ChallengeSnapshotDto snapshot, Guid participantId, DateOnly date)

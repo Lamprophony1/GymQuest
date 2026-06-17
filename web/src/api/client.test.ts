@@ -23,6 +23,7 @@ describe('apiRequest', () => {
 
     expect(result).toEqual([{ displayName: 'Rafa' }]);
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/participants', {
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
   });
@@ -47,6 +48,40 @@ describe('apiRequest', () => {
     } as Response);
 
     await expect(apiRequest('/api/broken')).rejects.toThrow('API 500: Server Error');
+  });
+
+  test('posts PIN login credentials with cookies enabled', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        participant: { id: 'rafa-id', displayName: 'Rafa', username: 'rafa', role: 1, active: true }
+      })
+    } as Response);
+
+    await gymChallApi.login({ participantId: 'rafa-id', pin: '123456' });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/login', {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      body: JSON.stringify({ participantId: 'rafa-id', pin: '123456' })
+    });
+  });
+
+  test('requests admin calendar check-ins by date range', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => []
+    } as Response);
+
+    await gymChallApi.listCalendarCheckIns('2026-06-15', '2026-06-21');
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/admin/check-ins/calendar?from=2026-06-15&to=2026-06-21', {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
   });
 });
 

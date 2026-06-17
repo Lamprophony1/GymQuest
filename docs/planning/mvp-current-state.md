@@ -16,7 +16,10 @@ El MVP actual ya es una app usable para registrar check-ins, usar coins, ver ran
 
 ## Funcionalidades implementadas
 
-- Selector de identidad por confianza, sin login real.
+- Login por participante con PIN corto en produccion.
+- Selector de identidad por confianza disponible para desarrollo.
+- Cookie HttpOnly para sesion web.
+- Rafa entra como participante y puede cambiar entre modo participante y modo admin desde el icono de usuario.
 - Dashboard con ranking resumido, pareja propia, puntos, rachas, coins y acciones rapidas.
 - Ranking general por pareja.
 - Ranking semanal por pareja, separado en base, bonus diario y bonus semanal.
@@ -30,7 +33,7 @@ El MVP actual ya es una app usable para registrar check-ins, usar coins, ver ran
   - `Commit coin`: cobertura completa por compromiso obligatorio.
   - `Flex coin`: valida entrenamiento fuera de horario o recuperacion como cobertura 5am.
 - Health coin automatica mensual para participantes con genero femenino, no acumulable.
-- Admin puede crear participantes, crear parejas, otorgar coins, invalidar check-ins e invalidar coins.
+- Admin puede crear participantes, crear parejas, otorgar coins, invalidar check-ins, invalidar coins y asignar/resetear PINs.
 - Auditoria basica por invalidaciones administrativas.
 - Seed inicial del reto y participantes.
 - Tests de dominio, aplicacion, infraestructura, API y frontend.
@@ -77,6 +80,10 @@ El bonus semanal se calcula solo cuando la semana requerida esta completa dentro
 
 ```text
 GET  /health
+GET  /api/auth/login-options
+POST /api/auth/login
+GET  /api/auth/me
+POST /api/auth/logout
 GET  /api/challenge
 GET  /api/challenge/settings
 GET  /api/participants
@@ -89,6 +96,7 @@ POST /api/tokens/{id}/use
 POST /api/tokens/full-coverage
 POST /api/admin/check-ins/{id}/invalidate
 POST /api/admin/tokens/{id}/invalidate
+POST /api/admin/participants/{id}/pin
 GET  /api/admin/check-ins?limit=50
 GET  /api/admin/tokens?limit=50
 GET  /api/rankings/general?throughDate=YYYY-MM-DD
@@ -116,7 +124,7 @@ GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
 2. Insignias / achievements persistidos o calculados.
 3. Historial/calendario por participante y pareja.
 4. Admin pro: auditoria visible, filtros, edicion/correccion guiada.
-5. Autenticacion real si el reto sale del modo confianza.
+5. Hardening de despliegue: HTTPS obligatorio, rotacion de PINs, backups y monitoreo.
 6. Evidencias opcionales.
 7. Premios y cierre del reto.
 8. Exportaciones o resumen para compartir.
@@ -126,4 +134,5 @@ GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
 - Spec visual vigente: `docs/superpowers/specs/2026-06-16-gymchall-doodle-fit-visual-refresh.md`.
 - Spec historica de UI Sega: `docs/superpowers/specs/2026-06-16-gymchall-ui-mvp-design.md`.
 - Spec historica/intermedia de check-in y fichas: `docs/superpowers/specs/2026-06-16-checkin-fichas-ui-rules.md`.
+- Spec de login PIN: `docs/superpowers/specs/2026-06-17-pin-login-auth-design.md`.
 - Plan de esta consolidacion: `docs/superpowers/plans/2026-06-16-mvp-consolidation-docs.md`.

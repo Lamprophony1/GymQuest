@@ -8,6 +8,7 @@ public sealed class GymChallDbContext(DbContextOptions<GymChallDbContext> option
     public DbSet<ChallengeEntity> Challenges => Set<ChallengeEntity>();
     public DbSet<ChallengeSettingsEntity> ChallengeSettings => Set<ChallengeSettingsEntity>();
     public DbSet<ParticipantEntity> Participants => Set<ParticipantEntity>();
+    public DbSet<AuthCredentialEntity> AuthCredentials => Set<AuthCredentialEntity>();
     public DbSet<CoupleEntity> Couples => Set<CoupleEntity>();
     public DbSet<CoupleMembershipEntity> CoupleMemberships => Set<CoupleMembershipEntity>();
     public DbSet<CheckInEntity> CheckIns => Set<CheckInEntity>();
@@ -30,6 +31,13 @@ public sealed class GymChallDbContext(DbContextOptions<GymChallDbContext> option
         modelBuilder.Entity<ParticipantEntity>().Property(x => x.DisplayName).HasMaxLength(80);
         modelBuilder.Entity<ParticipantEntity>().Property(x => x.Username).HasMaxLength(80);
         modelBuilder.Entity<ParticipantEntity>().HasIndex(x => x.Username).IsUnique();
+
+        modelBuilder.Entity<AuthCredentialEntity>().HasKey(x => x.ParticipantId);
+        modelBuilder.Entity<AuthCredentialEntity>().Property(x => x.PinHash).HasMaxLength(256);
+        modelBuilder.Entity<AuthCredentialEntity>()
+            .HasOne(x => x.Participant)
+            .WithOne()
+            .HasForeignKey<AuthCredentialEntity>(x => x.ParticipantId);
 
         modelBuilder.Entity<CoupleEntity>().HasKey(x => x.Id);
         modelBuilder.Entity<CoupleEntity>().Property(x => x.Name).HasMaxLength(120);

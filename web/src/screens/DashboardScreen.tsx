@@ -1,7 +1,6 @@
 import { CircleDollarSign, Clock3, Dumbbell, Flame, HeartPulse, ShieldAlert, ShieldCheck, Trophy } from 'lucide-react';
 import type { AppTab } from '../components/AppShell';
 import { coinTone, coinTypes, formatCoupleName, formatPoints, tokenTypeLabel } from '../components/format';
-import { RankingList } from '../components/RankingList';
 import { ScorePanel } from '../components/ScorePanel';
 import { StatusPanel } from '../components/StatusPanel';
 import type { ChallengeSnapshot, Couple, ExceptionTokenType, Participant, RankingRow, WeeklyRanking } from '../api/types';
@@ -65,13 +64,12 @@ export function DashboardScreen({
         <h2 id="dashboard-title">{challenge?.challenge.name ?? 'Reto activo'}</h2>
         <div className="score-grid">
           <ScorePanel
-            eyebrow={ownCoupleName}
-            title="Puntos"
-            value={formatPoints(ownRanking?.totalPoints)}
-            suffix="pts"
-            meta={ownCouple ? 'En carrera' : 'Sin pareja activa'}
-            tone="brand"
-            icon={<Trophy />}
+            eyebrow="Lead"
+            title={leadTitle}
+            value={leaders.length ? '#1' : '-'}
+            meta={leadMeta}
+            tone="success"
+            icon={<ShieldAlert />}
           />
           <article className="score-panel score-panel--warning score-panel--streaks">
             <div className="score-panel__topline">
@@ -100,6 +98,15 @@ export function DashboardScreen({
               </div>
             </div>
           </article>
+          <ScorePanel
+            eyebrow={ownCoupleName}
+            title="Puntos"
+            value={formatPoints(ownRanking?.totalPoints)}
+            suffix="pts"
+            meta={ownCouple ? 'En carrera' : 'Sin pareja activa'}
+            tone="brand"
+            icon={<Trophy />}
+          />
           <article className="score-panel score-panel--info score-panel--coins">
             <div className="score-panel__topline">
               <div>
@@ -122,14 +129,6 @@ export function DashboardScreen({
             </div>
             <p className="score-panel__meta">{tokenCount ? `${tokenCount} disponibles` : 'Sin coins disponibles'}</p>
           </article>
-          <ScorePanel
-            eyebrow="Lead"
-            title={leadTitle}
-            value={leaders.length ? '#1' : '-'}
-            meta={leadMeta}
-            tone="success"
-            icon={<ShieldAlert />}
-          />
         </div>
         <div className="quick-actions">
           <button className="button button--success" type="button" onClick={() => onNavigate('checkin')}>
@@ -139,17 +138,8 @@ export function DashboardScreen({
         </div>
       </section>
 
-      <section className="panel-section" aria-labelledby="ranking-preview-title">
-        <div className="section-heading">
-          <span className="eyebrow">Arcade ladder</span>
-          <h2 id="ranking-preview-title">Ranking parejas</h2>
-        </div>
-        <RankingList rows={ranking} highlightCoupleId={ownCouple?.id} compact />
-      </section>
-
       <StatusPanel
         challenge={challenge}
-        selectedParticipant={selectedParticipant}
         ownCouple={ownCouple}
         ownRanking={ownRanking}
         weeklyRankings={weeklyRankings}

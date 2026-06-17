@@ -68,7 +68,7 @@ export function weeklyBreakdown(row: WeeklyRankingRow): string {
 
 export function weeklyBonusStatus(
   row: WeeklyRankingRow | null | undefined,
-  settings: ChallengeSettings | null | undefined
+  _settings: ChallengeSettings | null | undefined
 ): { title: string; description: string } {
   if (!row) {
     return {
@@ -84,16 +84,16 @@ export function weeklyBonusStatus(
     };
   }
 
-  if (row.totalPoints > 0) {
+  if (row.weeklyBonusCandidatePoints > 0 && row.weeklyBonusCandidateType !== 'None') {
     return {
-      title: 'Perfect week en juego',
-      description: `+${formatPoints(settings?.perfectWeekBonus ?? 12)} pts si finalizan la semana`
+      title: `${weeklyBonusLabel(row.weeklyBonusCandidateType)} en juego`,
+      description: `+${formatPoints(row.weeklyBonusCandidatePoints)} pts si finalizan la semana`
     };
   }
 
   return {
     title: 'Bonus semanal',
-    description: 'Todavia no hay bonus en juego'
+    description: 'Sin bonus semanal en juego'
   };
 }
 
@@ -153,12 +153,12 @@ export function reasonCategoryLabel(category: ExceptionReasonCategory): string {
 
 export function statusTone(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
   const normalized = status.toLowerCase();
-  if (normalized.includes('valid') || normalized.includes('applied')) {
-    return 'success';
+  if (normalized.includes('invalid') || normalized.includes('void') || normalized.includes('reject')) {
+    return 'danger';
   }
 
-  if (normalized.includes('invalid') || normalized.includes('void')) {
-    return 'danger';
+  if (normalized.includes('valid') || normalized.includes('applied')) {
+    return 'success';
   }
 
   if (normalized.includes('pending') || normalized.includes('available')) {

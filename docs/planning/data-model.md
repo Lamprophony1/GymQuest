@@ -60,6 +60,25 @@ Nota: `gymMinimumMinutes` queda para compatibilidad/fase futura. El check-in MVP
 - createdAt
 - updatedAt
 
+### AuthCredential
+
+Credencial local para login por PIN. El PIN nunca se guarda en texto plano.
+
+- participantId
+- pinHash
+- failedAttemptCount
+- lockedUntil nullable
+- pinUpdatedAt nullable
+- createdAt
+- updatedAt
+
+Reglas:
+
+- PIN numerico de 4 a 6 digitos.
+- Hash PBKDF2-SHA256 con sal por credencial.
+- 5 intentos fallidos bloquean temporalmente la credencial.
+- Solo admin puede asignar o resetear PINs.
+
 ### Couple
 
 - id

@@ -184,6 +184,38 @@ public sealed class GymChallApiTests
     }
 
     [Fact]
+    public async Task Admin_checkins_calendar_endpoint_returns_range_rows_and_keeps_rejected_visible()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+        var participants = await client.GetFromJsonAsync<List<ParticipantRow>>("/api/participants");
+        Assert.NotNull(participants);
+        var rafa = Assert.Single(participants, x => x.Username == "rafa");
+
+        var create = await client.PostAsJsonAsync("/api/check-ins", new
+        {
+            participantId = rafa.Id,
+            occurredAt = new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)),
+            createdByParticipantId = rafa.Id,
+            notes = "5am"
+        });
+        var created = await create.Content.ReadFromJsonAsync<CreatedRecord>();
+        await client.PostAsJsonAsync($"/api/admin/check-ins/{created!.Id}/invalidate", new
+        {
+            actorParticipantId = rafa.Id,
+            reason = "revision"
+        });
+
+        var rows = await client.GetFromJsonAsync<List<AdminCheckInRow>>("/api/admin/check-ins/calendar?from=2026-06-15&to=2026-06-21");
+
+        Assert.NotNull(rows);
+        var row = Assert.Single(rows);
+        Assert.Equal(created.Id, row.Id);
+        Assert.Equal("Rejected", row.Status);
+        Assert.Equal(new DateOnly(2026, 6, 15), row.ActivityDate);
+    }
+
+    [Fact]
     public async Task Admin_recent_tokens_endpoint_returns_recent_rows()
     {
         await using var app = CreateApp();
@@ -209,11 +241,84 @@ public sealed class GymChallApiTests
         Assert.Equal("Applied", row.Status);
     }
 
+    [Fact]
+    public async Task Pin_login_mode_requires_auth_for_challenge()
+    {
+        await using var app = CreatePinLoginApp();
+        using var client = app.CreateClient();
+
+        var response = await client.GetAsync("/api/challenge");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pin_login_allows_authenticated_user_to_load_challenge()
+    {
+        await using var app = CreatePinLoginApp();
+        using var client = app.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var options = await client.GetFromJsonAsync<List<LoginOptionRow>>("/api/auth/login-options");
+        Assert.NotNull(options);
+        var rafa = Assert.Single(options, option => option.Username == "rafa");
+
+        var login = await client.PostAsJsonAsync("/api/auth/login", new
+        {
+            participantId = rafa.Id,
+            pin = "123456"
+        });
+        var challenge = await client.GetAsync("/api/challenge");
+
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, challenge.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pin_login_rejects_admin_endpoint_for_non_admin_user()
+    {
+        await using var app = CreatePinLoginApp();
+        var adminClient = app.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var userClient = app.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var options = await adminClient.GetFromJsonAsync<List<LoginOptionRow>>("/api/auth/login-options");
+        Assert.NotNull(options);
+        var rafa = Assert.Single(options, option => option.Username == "rafa");
+        var clari = Assert.Single(options, option => option.Username == "clari");
+
+        await adminClient.PostAsJsonAsync("/api/auth/login", new { participantId = rafa.Id, pin = "123456" });
+        var reset = await adminClient.PostAsJsonAsync($"/api/admin/participants/{clari.Id}/pin", new { pin = "2468" });
+        await userClient.PostAsJsonAsync("/api/auth/login", new { participantId = clari.Id, pin = "2468" });
+
+        var forbidden = await userClient.PostAsJsonAsync("/api/admin/tokens", new
+        {
+            participantId = clari.Id,
+            type = 0,
+            reasonCategory = 0,
+            assignedByAdminId = clari.Id,
+            notes = "test"
+        });
+
+        Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+    }
+
     private static WebApplicationFactory<Program> CreateApp()
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"gymchall-api-tests-{Guid.NewGuid():N}.db");
         return new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:GymChall", $"Data Source={databasePath}"));
+    }
+
+    private static WebApplicationFactory<Program> CreatePinLoginApp()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"gymchall-api-tests-{Guid.NewGuid():N}.db");
+        return new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Production");
+                builder.UseSetting("ConnectionStrings:GymChall", $"Data Source={databasePath}");
+                builder.UseSetting("Auth:Mode", "PinLogin");
+                builder.UseSetting("Auth:BootstrapAdminPin", "123456");
+                builder.UseSetting("Auth:CookieSecure", "false");
+            });
     }
 
     private sealed record RankingRow(Guid CoupleId, string CoupleName, decimal TotalPoints, int MorningStreak, int GymStreak);
@@ -225,4 +330,5 @@ public sealed class GymChallApiTests
     private sealed record CreatedRecord(Guid Id);
     private sealed record AdminCheckInRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly ActivityDate, string Status);
     private sealed record AdminTokenRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly TargetDate, string Status);
+    private sealed record LoginOptionRow(Guid Id, string DisplayName, string Username);
 }

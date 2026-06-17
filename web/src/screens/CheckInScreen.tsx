@@ -99,6 +99,7 @@ export function CheckInScreen({ challenge, selectedParticipant, onSubmit, onUseT
 
   const selectedDate = occurredAt.slice(0, 10);
   const weekend = isWeekend(selectedDate);
+  const selectedDateCovered = !weekend && isCovered(challenge, selectedParticipant?.id, selectedDate);
   const recoveryOptions = useMemo(
     () =>
       businessDaysForWeek(selectedDate).filter(
@@ -137,6 +138,11 @@ export function CheckInScreen({ challenge, selectedParticipant, onSubmit, onUseT
     event.preventDefault();
     if (!selectedParticipant) {
       setError('Elegir jugador antes de registrar.');
+      return;
+    }
+
+    if (selectedDateCovered) {
+      setError('Ya entrenaste ese dia. Si fue un error, pedile al admin que rechace la marca.');
       return;
     }
 
@@ -216,6 +222,8 @@ export function CheckInScreen({ challenge, selectedParticipant, onSubmit, onUseT
             setOccurredAt(event.currentTarget.value);
             setRecoveryTargetDate('');
             setTokenTargetDate('');
+            setError(null);
+            setMessage(null);
           }}
         />
 

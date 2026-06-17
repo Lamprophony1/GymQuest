@@ -43,6 +43,10 @@ export function useSelectedIdentity(participants: Participant[]) {
       return;
     }
 
+    if (participants.length === 0) {
+      return;
+    }
+
     if (!participants.some((participant) => participant.id === identity.participantId)) {
       setIdentityState(null);
       saveSelectedIdentity(null);

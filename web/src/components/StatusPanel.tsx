@@ -1,10 +1,9 @@
-import { AlertTriangle, BadgeCheck, CircleDollarSign, Dumbbell, Flame, MapPinned, ShieldCheck } from 'lucide-react';
-import type { ChallengeSnapshot, Couple, Participant, RankingRow, WeeklyRanking } from '../api/types';
+import { AlertTriangle, BadgeCheck, Dumbbell, Flame, Route, ShieldCheck } from 'lucide-react';
+import type { ChallengeSnapshot, Couple, RankingRow, WeeklyRanking } from '../api/types';
 import { latestWeeklyRanking, weeklyBonusStatus } from './format';
 
 interface StatusPanelProps {
   challenge: ChallengeSnapshot | null;
-  selectedParticipant: Participant | null;
   ownCouple: Couple | null;
   ownRanking: RankingRow | null;
   weeklyRankings: WeeklyRanking[];
@@ -12,15 +11,12 @@ interface StatusPanelProps {
 
 export function StatusPanel({
   challenge,
-  selectedParticipant,
   ownCouple,
   ownRanking,
   weeklyRankings
 }: StatusPanelProps) {
   const latestWeek = latestWeeklyRanking(weeklyRankings);
   const ownWeek = latestWeek?.rows.find((row) => row.coupleId === ownCouple?.id) ?? null;
-  const participantTokens =
-    challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id && token.status === 1).length ?? 0;
   const isRedZone = ownWeek ? ownWeek.totalPoints < ownWeek.requiredBusinessDays * 2 : false;
   const bonus = weeklyBonusStatus(ownWeek, challenge?.settings);
 
@@ -58,13 +54,16 @@ export function StatusPanel({
             <p>{isRedZone ? 'Warning state' : 'Fuera de peligro'}</p>
           </div>
         </article>
-        <article className="status-card">
+        <article className="status-card status-card--soon">
           <span className="icon-frame icon-frame--info" aria-hidden="true">
-            {participantTokens > 0 ? <CircleDollarSign /> : <MapPinned />}
+            <Route />
           </span>
           <div>
-            <h3>Lago side quest</h3>
-            <p>{participantTokens > 0 ? `${participantTokens} coins disponibles` : 'Disponible como mision'}</p>
+            <div className="status-card__title-row">
+              <h3>Side quest</h3>
+              <span className="badge badge--neutral">Soon</span>
+            </div>
+            <p>Cardio opcional en desarrollo</p>
           </div>
         </article>
         <article className="status-card">

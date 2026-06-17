@@ -34,6 +34,7 @@ storage/
 *.db
 *.db-shm
 *.db-wal
+.data-protection-keys/
 
 # Generated artifacts
 .artifacts/
