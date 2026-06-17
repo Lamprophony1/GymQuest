@@ -2,6 +2,7 @@ import { CircleDollarSign, Dumbbell, LayoutDashboard, Shield, Trophy, UserRoundC
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Participant } from '../api/types';
 import type { SelectedIdentity } from '../state/useSelectedIdentity';
+import { BarbellMark } from './BrandMark';
 
 export type AppTab = 'dashboard' | 'ranking' | 'checkin' | 'token' | 'admin';
 
@@ -26,28 +27,6 @@ const playerNavItems: Array<{ tab: AppTab; label: string; icon: ReactNode }> = [
   { tab: 'ranking', label: 'Ranking', icon: <Trophy /> },
   { tab: 'checkin', label: 'Check-in', icon: <Dumbbell /> }
 ];
-
-function BarbellMark() {
-  return (
-    <svg
-      className="app-header__barbell"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M5 9v6" />
-      <path d="M8 7v10" />
-      <path d="M16 7v10" />
-      <path d="M19 9v6" />
-      <path d="M8 12h8" />
-      <path d="M3 12h2" />
-      <path d="M19 12h2" />
-    </svg>
-  );
-}
 
 export function AppShell({
   activeTab,
@@ -116,7 +95,7 @@ export function AppShell({
     <div className="app-shell">
       <header className={headerClassName}>
         <span className="app-header__brand-mark" aria-hidden="true">
-          <BarbellMark />
+          <BarbellMark className="app-header__barbell" />
         </span>
         <div className="app-header__content">
           <div className="app-header__title-row">

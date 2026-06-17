@@ -234,7 +234,9 @@ const loginOptions: LoginOption[] = [
 
 test('login screen uses participant select and custom numeric keypad', () => {
   const onLogin = vi.fn();
-  render(<LoginScreen options={loginOptions} loading={false} error={null} onLogin={onLogin} />);
+  const { container } = render(<LoginScreen options={loginOptions} loading={false} error={null} onLogin={onLogin} />);
+
+  expect(container.querySelector('.login-card__mark .login-card__barbell')).toBeInTheDocument();
 
   fireEvent.change(screen.getByLabelText('Participante'), { target: { value: 'clari-id' } });
   fireEvent.click(screen.getByRole('button', { name: '1' }));

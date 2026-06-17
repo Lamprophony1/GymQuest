@@ -45,6 +45,13 @@ describe('Doodle Fit visual system', () => {
     expect(styles).toContain('transform: translateY');
   });
 
+  test('keeps the login brand mark aligned with the app header identity', () => {
+    expect(styles).toContain('.login-card__mark svg');
+    expect(styles).toContain('.login-card__barbell');
+    expect(styles).toContain('background: var(--fresh)');
+    expect(styles).not.toContain('background: linear-gradient(145deg, var(--accent), var(--aqua))');
+  });
+
   test('keeps mobile date-time inputs inside form cards', () => {
     expect(styles).toContain('.arcade-form input[type="datetime-local"]');
     expect(styles).toContain('max-inline-size: 100%');

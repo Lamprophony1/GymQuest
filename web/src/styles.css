@@ -228,11 +228,21 @@ svg {
   height: 56px;
   margin-bottom: 18px;
   border: 2px solid var(--border);
-  border-radius: 18px 21px 16px 20px;
-  background: linear-gradient(145deg, var(--accent), var(--aqua));
-  color: var(--ink);
-  box-shadow: var(--shadow-sticker-sm);
+  border-radius: 18px;
+  background: var(--fresh);
+  color: var(--surface);
+  box-shadow: 2px 3px 0 var(--border);
   font-size: 1.55rem;
+}
+
+.login-card__mark svg {
+  width: 1.85rem;
+  height: 1.85rem;
+  stroke-width: 2.4;
+}
+
+.login-card__barbell {
+  display: block;
 }
 
 .login-form {
