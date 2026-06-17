@@ -50,4 +50,10 @@ describe('Doodle Fit visual system', () => {
     expect(styles).toContain('max-inline-size: 100%');
     expect(styles).toContain('::-webkit-date-and-time-value');
   });
+
+  test('anchors the mobile bottom nav to the viewport edge with safe-area padding', () => {
+    expect(styles).toContain('--safe-area-bottom: env(safe-area-inset-bottom, 0px)');
+    expect(styles).toContain('padding: 8px 8px calc(8px + var(--safe-area-bottom))');
+    expect(styles).toContain('transform: translateX(-50%)');
+  });
 });

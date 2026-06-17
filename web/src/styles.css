@@ -36,6 +36,8 @@
   --radius-md: 20px;
   --radius-sm: 14px;
   --app-width: 960px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --bottom-nav-height: 88px;
   color-scheme: light;
   font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--ink);
@@ -363,7 +365,7 @@ svg {
   width: min(100%, var(--app-width));
   min-height: 100vh;
   margin: 0 auto;
-  padding: 114px 16px 104px;
+  padding: 114px 16px calc(var(--bottom-nav-height) + 24px + var(--safe-area-bottom));
 }
 
 .app-header {
@@ -1797,22 +1799,22 @@ svg {
 
 .bottom-nav {
   position: fixed;
-  right: 0;
   bottom: 0;
-  left: 0;
+  left: 50%;
   z-index: 20;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
   gap: 8px;
-  width: min(100%, var(--app-width));
-  margin: 0 auto;
-  padding: 8px;
+  width: min(100vw, var(--app-width));
+  margin: 0;
+  padding: 8px 8px calc(8px + var(--safe-area-bottom));
   border: 2px solid var(--border);
   border-bottom: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 -10px 28px rgba(15, 111, 72, 0.14);
   backdrop-filter: blur(12px);
+  transform: translateX(-50%);
 }
 
 .bottom-nav__item {
@@ -1881,7 +1883,7 @@ svg {
 
 @media (min-width: 900px) {
   .app-shell {
-    padding: 122px 24px 120px;
+    padding: 122px 24px calc(var(--bottom-nav-height) + 32px + var(--safe-area-bottom));
   }
 
   .app-header {
