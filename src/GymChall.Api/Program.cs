@@ -54,6 +54,8 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+var spaRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+var spaIndexPath = Path.Combine(spaRoot, "index.html");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -75,11 +77,33 @@ app.MapGet("/health", () => Results.Ok(new
     status = "ok"
 }));
 
+if (Directory.Exists(spaRoot))
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthEndpoints(authSettings);
 app.MapGymChallEndpoints(authSettings);
+
+if (File.Exists(spaIndexPath))
+{
+    app.MapFallback(async context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api") ||
+            context.Request.Path.StartsWithSegments("/health"))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        context.Response.ContentType = "text/html; charset=utf-8";
+        await context.Response.SendFileAsync(spaIndexPath);
+    });
+}
 
 app.Run();
 

@@ -169,6 +169,7 @@ GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
 - Reglas de dominio: `docs/planning/domain-rules.md`
 - Motor de puntajes: `docs/planning/scoring-engine.md`
 - Modelo de datos: `docs/planning/data-model.md`
+- Despliegue CI/CD en VM + Cloudflare: `docs/deployment/github-cloudflare-vm.md`
 - Visual vigente: `docs/superpowers/specs/2026-06-16-gymchall-doodle-fit-visual-refresh.md`
 - Check-in y coins: `docs/superpowers/specs/2026-06-16-checkin-fichas-ui-rules.md`
 - Login PIN: `docs/superpowers/specs/2026-06-17-pin-login-auth-design.md`

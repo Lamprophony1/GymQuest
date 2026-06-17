@@ -1,0 +1,7 @@
+tunnel: gymquest-dc-pti
+credentials-file: /etc/cloudflared/gymquest-dc-pti.json
+
+ingress:
+  - hostname: rm.crg-dev.com
+    service: http://127.0.0.1:5020
+  - service: http_status:404

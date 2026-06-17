@@ -1,0 +1,19 @@
+services:
+  gymquest:
+    image: ${GYMQUEST_IMAGE:?Set GYMQUEST_IMAGE to a GHCR image tag}
+    container_name: gymquest
+    restart: unless-stopped
+    env_file:
+      - /opt/gymquest/gymquest.env
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      Auth__Mode: PinLogin
+      Auth__CookieSecure: "true"
+      Auth__DataProtectionKeysPath: /var/lib/gymquest/keys
+      ConnectionStrings__GymChall: Data Source=/var/lib/gymquest/data/gymchall.db
+    ports:
+      - 127.0.0.1:${GYMQUEST_HOST_PORT:-5020}:8080
+    volumes:
+      - /opt/gymquest/data:/var/lib/gymquest/data
+      - /opt/gymquest/keys:/var/lib/gymquest/keys
