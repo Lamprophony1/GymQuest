@@ -27,6 +27,28 @@ const playerNavItems: Array<{ tab: AppTab; label: string; icon: ReactNode }> = [
   { tab: 'checkin', label: 'Check-in', icon: <Dumbbell /> }
 ];
 
+function BarbellMark() {
+  return (
+    <svg
+      className="app-header__barbell"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 9v6" />
+      <path d="M8 7v10" />
+      <path d="M16 7v10" />
+      <path d="M19 9v6" />
+      <path d="M8 12h8" />
+      <path d="M3 12h2" />
+      <path d="M19 12h2" />
+    </svg>
+  );
+}
+
 export function AppShell({
   activeTab,
   identity,
@@ -94,7 +116,7 @@ export function AppShell({
     <div className="app-shell">
       <header className={headerClassName}>
         <span className="app-header__brand-mark" aria-hidden="true">
-          <Dumbbell />
+          <BarbellMark />
         </span>
         <div className="app-header__content">
           <div className="app-header__title-row">

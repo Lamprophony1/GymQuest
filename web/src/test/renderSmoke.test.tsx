@@ -425,7 +425,7 @@ test('app shell compacts header into a polished scorebar without player mode chr
 
   expect(screen.queryByText('Player mode')).not.toBeInTheDocument();
   expect(screen.queryByText('RM')).not.toBeInTheDocument();
-  expect(container.querySelector('.app-header__brand-mark .lucide-dumbbell')).toBeInTheDocument();
+  expect(container.querySelector('.app-header__brand-mark .app-header__barbell')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Proyecto RM' })).toBeInTheDocument();
   expect(screen.getByText('Rafa · Reto septiembre 2026')).toBeInTheDocument();
 

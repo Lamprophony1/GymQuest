@@ -33,11 +33,13 @@ describe('Doodle Fit visual system', () => {
   });
 
   test('uses a Doodle scorebar treatment for the compact app header', () => {
+    expect(styles).toContain('.app-header::before');
     expect(styles).toContain('.app-header__brand-mark');
     expect(styles).toContain('.app-header__brand-mark svg');
+    expect(styles).toContain('.app-header__barbell');
     expect(styles).toContain('.app-header__title-row');
     expect(styles).toContain('.app-header__meta-pill');
-    expect(styles).toContain('.app-header::after');
+    expect(styles).toContain('background: var(--lime-soft)');
     expect(styles).toContain('.app-header--compact .app-header__brand-mark');
     expect(styles).toContain('transform: translateY');
   });
