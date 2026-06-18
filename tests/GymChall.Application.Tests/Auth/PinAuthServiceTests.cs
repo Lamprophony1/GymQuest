@@ -80,6 +80,38 @@ public sealed class PinAuthServiceTests
         Assert.Null(credential.LockedUntil);
     }
 
+    [Fact]
+    public async Task Change_own_pin_requires_current_pin_and_stores_new_hash()
+    {
+        var repository = new FakeRepository();
+        var hasher = new PinHasher();
+        repository.Credentials[ClariId] = new AuthCredentialDto(ClariId, hasher.Hash("2468"), 2, null, Now.AddDays(-1));
+        var service = new PinAuthService(repository, hasher);
+
+        await service.ChangeOwnPinAsync(ClariId, "2468", "135790", Now);
+
+        var credential = repository.Credentials[ClariId];
+        Assert.True(hasher.Verify("135790", credential.PinHash));
+        Assert.False(hasher.Verify("2468", credential.PinHash));
+        Assert.Equal(0, credential.FailedAttemptCount);
+        Assert.Null(credential.LockedUntil);
+        Assert.Equal(Now, credential.PinUpdatedAt);
+    }
+
+    [Fact]
+    public async Task Change_own_pin_with_wrong_current_pin_increments_failed_attempts()
+    {
+        var repository = new FakeRepository();
+        var hasher = new PinHasher();
+        repository.Credentials[ClariId] = new AuthCredentialDto(ClariId, hasher.Hash("2468"), 0, null, Now.AddDays(-1));
+        var service = new PinAuthService(repository, hasher);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ChangeOwnPinAsync(ClariId, "1111", "135790", Now));
+
+        Assert.Equal(1, repository.Credentials[ClariId].FailedAttemptCount);
+        Assert.True(hasher.Verify("2468", repository.Credentials[ClariId].PinHash));
+    }
+
     private sealed class FakeRepository : IGymChallRepository
     {
         private readonly List<ParticipantSummaryDto> participants =
@@ -104,6 +136,12 @@ public sealed class PinAuthServiceTests
             Credentials[credential.ParticipantId] = credential;
             return Task.CompletedTask;
         }
+
+        public Task<ParticipantProfileDto?> GetParticipantProfileAsync(Guid participantId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<ParticipantProfileDto?>(null);
+
+        public Task UpdateParticipantProfileAsync(Guid participantId, double? weightKg, double? heightCm, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
 
         public Task<Guid?> GetActiveChallengeIdAsync(CancellationToken cancellationToken = default) => Task.FromResult<Guid?>(Guid.NewGuid());
         public Task CreateChallengeAsync(ChallengeCreateDto challenge, CancellationToken cancellationToken = default) => Task.CompletedTask;

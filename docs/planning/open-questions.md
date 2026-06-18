@@ -1,6 +1,6 @@
 # Decisiones cerradas y preguntas abiertas
 
-Actualizado: 2026-06-16.
+Actualizado: 2026-06-17.
 
 Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo queda como registro de decisiones y lista de pendientes futuros.
 
@@ -25,14 +25,19 @@ Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo
 15. El bonus semanal no se suma por dias futuros cargados antes de tiempo.
 16. El reto funciona por confianza; no hace falta validacion administrativa normal.
 17. Las parejas no se planean cambiar durante el reto, pero el modelo permite agregar parejas nuevas.
+18. Produccion usa login por participante con PIN corto y cookie HttpOnly.
+19. Rafa conserva rol admin, pero entra en modo participante y cambia a modo admin desde el icono de usuario.
+20. El calendario admin semanal es la vista principal para revisar marcas.
+21. La app publicada vive en `rm.crg-dev.com` mediante Cloudflare Tunnel y no toca el tunnel DoorLock.
 
 ## Pendientes para decidir
 
 - Nombre final visible de la app, si `Proyecto RM` deja de ser temporal.
 - Fecha exacta y reglas de cierre en septiembre.
 - Distribucion final de premios.
-- Si el login real sera necesario o si el modo confianza alcanza para todo el reto.
 - Si la evidencia sera opcional siempre o requerida para casos puntuales.
 - Como se vera y puntuara Lago en la UI.
 - Cuales seran las primeras insignias/achievements.
 - Formato del resumen semanal para WhatsApp.
+- Politica operativa de backups y restore de la VM.
+- Si conviene convertir la web en PWA instalable para los usuarios.

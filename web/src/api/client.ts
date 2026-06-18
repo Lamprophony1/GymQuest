@@ -4,6 +4,7 @@ import type {
   AuthResponse,
   ChallengeSettings,
   ChallengeSnapshot,
+  ChangePinRequest,
   Couple,
   CreateCoupleRequest,
   CreatedRecord,
@@ -14,9 +15,11 @@ import type {
   LoginOption,
   LoginRequest,
   Participant,
+  ParticipantProfile,
   RankingRow,
   RegisterCheckInRequest,
   SetPinRequest,
+  UpdateParticipantProfileRequest,
   UseTokenRequest,
   WeeklyRanking
 } from './types';
@@ -74,6 +77,13 @@ function jsonPost<TBody>(body: TBody): RequestInit {
   };
 }
 
+function jsonPut<TBody>(body: TBody): RequestInit {
+  return {
+    method: 'PUT',
+    body: JSON.stringify(body)
+  };
+}
+
 export const gymChallApi = {
   listLoginOptions: () => apiRequest<LoginOption[]>('/api/auth/login-options'),
   login: (request: LoginRequest) => apiRequest<AuthResponse>('/api/auth/login', jsonPost(request)),
@@ -89,11 +99,16 @@ export const gymChallApi = {
     }
   },
   logout: () => apiRequest<void>('/api/auth/logout', { method: 'POST' }),
+  changePin: (request: ChangePinRequest) => apiRequest<void>('/api/auth/change-pin', jsonPost(request)),
   setParticipantPin: (participantId: string, request: SetPinRequest) =>
     apiRequest<void>(`/api/admin/participants/${participantId}/pin`, jsonPost(request)),
   getChallenge: () => apiRequest<ChallengeSnapshot>('/api/challenge'),
   getSettings: () => apiRequest<ChallengeSettings>('/api/challenge/settings'),
   listParticipants: () => apiRequest<Participant[]>('/api/participants'),
+  getProfile: (participantId?: string) =>
+    apiRequest<ParticipantProfile>(`/api/profile${participantId ? `?participantId=${encodeURIComponent(participantId)}` : ''}`),
+  updateProfile: (request: UpdateParticipantProfileRequest) =>
+    apiRequest<ParticipantProfile>('/api/profile', jsonPut(request)),
   createParticipant: (request: CreateParticipantRequest) =>
     apiRequest<CreatedRecord>('/api/participants', jsonPost(request)),
   listCouples: () => apiRequest<Couple[]>('/api/couples'),

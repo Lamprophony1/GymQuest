@@ -195,6 +195,8 @@ Regla objetivo para la fase futura:
 
 El admin puede invalidar check-ins y coins. Cada invalidacion genera AuditLog. Los rankings se proyectan desde hechos base, por lo que reflejan los cambios al volver a consultar.
 
+La vista admin de calendario no guarda datos derivados. Consulta check-ins por rango semanal y permite invalidar marcas validas. Al invalidar, el registro queda fuera del snapshot de scoring y los rankings se actualizan en el siguiente refresh.
+
 ScoreRun persistido queda como fase futura.
 
 ## Tests minimos del motor

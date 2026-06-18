@@ -2,11 +2,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { AppShell } from '../components/AppShell';
 import { IdentitySelector } from '../components/IdentitySelector';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 import { RankingList } from '../components/RankingList';
 import { AdminScreen } from '../screens/AdminScreen';
 import { CheckInScreen } from '../screens/CheckInScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { RankingScreen } from '../screens/RankingScreen';
 import type {
   AdminCheckIn,
@@ -15,6 +17,7 @@ import type {
   ChallengeSnapshot,
   Couple,
   Participant,
+  ParticipantProfile,
   RankingRow,
   WeeklyRanking
 } from '../api/types';
@@ -36,6 +39,15 @@ const clari: Participant = {
   gender: 'female',
   active: true
 };
+
+const avatarParticipants: Participant[] = [
+  rafa,
+  clari,
+  { id: 'obelar-id', displayName: 'Obelar', username: 'obelar', role: 0, gender: 'male', active: true },
+  { id: 'chachi-id', displayName: 'Chachi', username: 'chachi', role: 0, gender: 'female', active: true },
+  { id: 'cieli-id', displayName: 'Cieli', username: 'cieli', role: 0, gender: 'female', active: true },
+  { id: 'naldo-id', displayName: 'Naldo', username: 'naldo', role: 0, gender: 'male', active: true }
+];
 
 const challenge: ChallengeSnapshot = {
   challenge: {
@@ -442,9 +454,61 @@ test('app shell compacts header into a polished scorebar without player mode chr
   expect(screen.queryByText(/Reto septiembre 2026/)).not.toBeInTheDocument();
 });
 
+test('app shell profile button uses the player avatar token in the header', () => {
+  render(
+    <AppShell
+      activeTab="dashboard"
+      identity={{ participantId: 'rafa-id', mode: 'participant' }}
+      isAdmin={false}
+      participant={rafa}
+      challengeName="Reto septiembre 2026"
+      onTabChange={() => undefined}
+      onChangeIdentity={() => undefined}
+    >
+      <div>Contenido</div>
+    </AppShell>
+  );
+
+  const profileButton = screen.getByRole('button', { name: /menu de usuario/i });
+
+  expect(profileButton).toHaveClass('profile-menu__button--avatar');
+  expect(profileButton.querySelector('.player-avatar--header')).toBeInTheDocument();
+  expect(profileButton.querySelector('img.player-avatar__image')).toHaveAttribute('src', '/avatars/rafa.png');
+  expect(profileButton.querySelector('.profile-menu__avatar-gear')).not.toBeInTheDocument();
+});
+
+test('player avatar renders configured sticker images for every seeded participant', () => {
+  const { container } = render(
+    <div>
+      {avatarParticipants.map((participant) => (
+        <PlayerAvatar key={participant.id} participant={participant} />
+      ))}
+      <PlayerAvatar
+        participant={{ id: 'guest-id', displayName: 'Invitado Nuevo', username: 'guest', role: 0, gender: null, active: true }}
+      />
+    </div>
+  );
+
+  for (const participant of avatarParticipants) {
+    const image = container.querySelector(`img[src="/avatars/${participant.username}.png"]`);
+    const avatar = image?.closest('.player-avatar');
+
+    expect(image).toBeInTheDocument();
+    if (participant.username === 'rafa') {
+      expect(avatar).not.toHaveClass('player-avatar--profile-subtle-zoom');
+    } else {
+      expect(avatar).toHaveClass('player-avatar--profile-subtle-zoom');
+    }
+  }
+
+  expect(container.querySelectorAll('img.player-avatar__image')).toHaveLength(avatarParticipants.length);
+  expect(screen.getByText('IN')).toBeInTheDocument();
+});
+
 test('app shell profile menu can switch an admin user between player and admin mode', () => {
   const onSwitchMode = vi.fn();
   const onLogout = vi.fn();
+  const onOpenProfile = vi.fn();
 
   render(
     <AppShell
@@ -456,6 +520,7 @@ test('app shell profile menu can switch an admin user between player and admin m
       challengeName="Reto septiembre 2026"
       onTabChange={() => undefined}
       onChangeIdentity={() => undefined}
+      onOpenProfile={onOpenProfile}
       onSwitchMode={onSwitchMode}
       onLogout={onLogout}
     >
@@ -464,6 +529,9 @@ test('app shell profile menu can switch an admin user between player and admin m
   );
 
   fireEvent.click(screen.getByRole('button', { name: /menu de usuario/i }));
+  fireEvent.click(screen.getByRole('button', { name: /mi perfil/i }));
+  expect(onOpenProfile).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole('button', { name: /menu de usuario/i }));
   fireEvent.click(screen.getByRole('button', { name: /modo admin/i }));
   expect(screen.queryByRole('button', { name: /cerrar sesion/i })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /menu de usuario/i }));
@@ -471,6 +539,97 @@ test('app shell profile menu can switch an admin user between player and admin m
 
   expect(onSwitchMode).toHaveBeenCalledWith('admin');
   expect(onLogout).toHaveBeenCalledTimes(1);
+});
+
+test('profile screen saves private metrics and changes PIN', async () => {
+  const loadedProfile: ParticipantProfile = {
+    ...rafa,
+    weightKg: null,
+    heightCm: null,
+    bodyMassIndex: null
+  };
+  const savedProfile: ParticipantProfile = {
+    ...rafa,
+    weightKg: 82.4,
+    heightCm: 178,
+    bodyMassIndex: 26
+  };
+  const onLoadProfile = vi.fn().mockResolvedValue(loadedProfile);
+  const onSaveProfile = vi.fn().mockResolvedValue(savedProfile);
+  const onChangePin = vi.fn().mockResolvedValue(undefined);
+
+  render(
+    <ProfileScreen
+      participant={rafa}
+      onLoadProfile={onLoadProfile}
+      onSaveProfile={onSaveProfile}
+      onChangePin={onChangePin}
+    />
+  );
+
+  await screen.findByText('@rafa');
+
+  expect(document.querySelector('.profile-player-card .player-avatar--profile-token')).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText(/peso kg/i), { target: { value: '82.4' } });
+  fireEvent.change(screen.getByLabelText(/altura cm/i), { target: { value: '178' } });
+
+  expect(screen.getByText('26')).toBeInTheDocument();
+  expect(screen.getByText('Sobrepeso')).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /guardar datos/i }));
+
+  await waitFor(() => {
+    expect(onSaveProfile).toHaveBeenCalledWith({
+      participantId: 'rafa-id',
+      weightKg: 82.4,
+      heightCm: 178
+    });
+  });
+
+  fireEvent.change(screen.getByLabelText(/pin actual/i), { target: { value: '123456' } });
+  fireEvent.change(screen.getByLabelText(/^nuevo pin$/i), { target: { value: '2468' } });
+  fireEvent.change(screen.getByLabelText(/confirmar pin/i), { target: { value: '2468' } });
+  fireEvent.click(screen.getByRole('button', { name: /cambiar pin/i }));
+
+  await waitFor(() => {
+    expect(onChangePin).toHaveBeenCalledWith({
+      participantId: 'rafa-id',
+      currentPin: '123456',
+      newPin: '2468'
+    });
+  });
+});
+
+test('profile screen rejects profile data that belongs to a different participant', async () => {
+  const rafaProfile: ParticipantProfile = {
+    ...rafa,
+    weightKg: 82.4,
+    heightCm: 178,
+    bodyMassIndex: 26
+  };
+  const onLoadProfile = vi.fn().mockResolvedValue(rafaProfile);
+  const onSaveProfile = vi.fn().mockResolvedValue(rafaProfile);
+  const onChangePin = vi.fn().mockResolvedValue(undefined);
+
+  render(
+    <ProfileScreen
+      participant={clari}
+      onLoadProfile={onLoadProfile}
+      onSaveProfile={onSaveProfile}
+      onChangePin={onChangePin}
+    />
+  );
+
+  await screen.findByText('@clari');
+
+  expect(screen.getByText('Clari')).toBeInTheDocument();
+  expect(screen.queryByText('Rafa')).not.toBeInTheDocument();
+  expect(screen.queryByDisplayValue('82.4')).not.toBeInTheDocument();
+  expect(screen.queryByDisplayValue('178')).not.toBeInTheDocument();
+  expect(screen.getByText(/no coincide con el participante seleccionado/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /guardar datos/i })).toBeDisabled();
+  expect(screen.getByRole('button', { name: /cambiar pin/i })).toBeDisabled();
 });
 
 test('admin screen renders recent check-ins and token sections', () => {

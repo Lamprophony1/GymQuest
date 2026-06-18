@@ -1,7 +1,9 @@
 # Proyecto RM PIN Login Auth Design
 
 Fecha: 2026-06-17
-Estado: aprobado para spec, pendiente de plan de implementacion
+Estado: implementado en el MVP publicado
+
+> Estado actual: esta spec fue ejecutada. Produccion usa login por participante con PIN, cookie HttpOnly y switch participante/admin para Rafa. Para el estado completo, usar `docs/planning/mvp-current-state.md`.
 
 ## Objetivo
 
@@ -130,11 +132,13 @@ El icono de usuario/perfil abre un menu compacto.
 Para participante normal:
 
 - Ver nombre.
+- Abrir `Mi perfil`.
 - Cerrar sesion.
 
 Para admin:
 
 - Ver nombre.
+- Abrir `Mi perfil`.
 - Cambiar a modo admin.
 - Cambiar a modo participante.
 - Cerrar sesion.
@@ -155,6 +159,7 @@ GET  /api/auth/login-options
 POST /api/auth/login
 POST /api/auth/logout
 GET  /api/auth/me
+POST /api/auth/change-pin
 GET  /health
 ```
 
@@ -184,6 +189,15 @@ GET  /api/admin/check-ins
 GET  /api/admin/tokens
 POST /api/admin/participants/{id}/pin
 ```
+
+Perfil privado:
+
+```text
+GET /api/profile
+PUT /api/profile
+```
+
+En modo produccion el participante sale de la sesion. En modo desarrollo se puede pasar `participantId` para probar desde el selector local.
 
 `POST /api/tokens/full-coverage` queda como endpoint legacy. En produccion debe quedar protegido o retirarse del flujo visible.
 
@@ -250,6 +264,23 @@ Reglas:
 - Solo admin autenticado.
 - PIN de 4 a 6 digitos.
 - Solo numeros.
+
+### Cambiar PIN propio
+
+Request participante:
+
+```json
+{
+  "currentPin": "123456",
+  "newPin": "2468"
+}
+```
+
+Reglas:
+
+- Requiere PIN actual correcto.
+- PIN nuevo de 4 a 6 digitos, solo numeros.
+- Resetea intentos fallidos al completarse.
 
 ## Cambios en requests existentes
 

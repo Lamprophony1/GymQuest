@@ -62,6 +62,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<GymChallDbContext>();
     await db.Database.EnsureCreatedAsync();
     await DatabaseSchema.EnsureAuthSchemaAsync(db);
+    await DatabaseSchema.EnsureParticipantProfileSchemaAsync(db);
     await SeedData.EnsureSeededAsync(db);
 
     if (!string.IsNullOrWhiteSpace(authSettings.BootstrapAdminPin))

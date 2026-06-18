@@ -1,5 +1,7 @@
 # MVP Consolidation Docs Implementation Plan
 
+> Estado actual: primera consolidacion ejecutada. Este plan queda como registro historico; el estado vigente se reparte entre `README.md`, `docs/planning/mvp-current-state.md` y `docs/planning/post-mvp-roadmap.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Bring the repository documentation and lightweight contract tests in line with the current Proyecto RM MVP.

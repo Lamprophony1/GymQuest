@@ -58,7 +58,21 @@ Incluye:
 - Header mobile refinado.
 - Lenguaje visible `Coins` en vez de `fichas`.
 
-## Fase 4 - Proximo bloque recomendado
+## Fase 4 - Publicacion y control operativo
+
+Estado: completada para MVP publicado.
+
+Incluye:
+
+- Login PIN en produccion.
+- Cookie HttpOnly y permisos server-side.
+- Rafa entra como participante y puede cambiar a modo admin desde usuario.
+- CI/CD con GitHub Actions, GHCR, self-hosted runner y Docker Compose.
+- Cloudflare Tunnel para `https://rm.crg-dev.com`.
+- Admin calendario semanal de check-ins por participante.
+- Ajustes mobile reales: header fijo, bottom nav estable, safe area y datetime input contenido.
+
+## Fase 5 - Proximo bloque funcional recomendado
 
 Estado: pendiente.
 
@@ -72,7 +86,7 @@ Alcance probable:
 - UI para registrar actividad de lago.
 - Tests de dominio, API y frontend.
 
-## Fase 5 - Gamificacion avanzada
+## Fase 6 - Gamificacion avanzada
 
 Estado: pendiente.
 
@@ -84,7 +98,7 @@ Estado: pendiente.
 - Ranking de recuperaciones para estadisticas/desempates.
 - Remontada contra semana anterior.
 
-## Fase 6 - Experiencia social y cierre
+## Fase 7 - Experiencia social y cierre
 
 Estado: pendiente.
 
@@ -95,4 +109,4 @@ Estado: pendiente.
 - Exportacion CSV/PDF.
 - Evidencias opcionales.
 - Premios y cierre del reto.
-- Autenticacion real si deja de alcanzar el modo confianza.
+- Rotacion de PINs y politicas operativas si el grupo crece.

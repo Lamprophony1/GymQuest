@@ -56,9 +56,13 @@ Nota: `gymMinimumMinutes` queda para compatibilidad/fase futura. El check-in MVP
 - username
 - role: admin | participant
 - gender nullable
+- weightKg nullable, privado del participante
+- heightCm nullable, privado del participante
 - active
 - createdAt
 - updatedAt
+
+`bodyMassIndex` no se persiste: se calcula al consultar el perfil privado del participante.
 
 ### AuthCredential
 
@@ -78,6 +82,7 @@ Reglas:
 - Hash PBKDF2-SHA256 con sal por credencial.
 - 5 intentos fallidos bloquean temporalmente la credencial.
 - Solo admin puede asignar o resetear PINs.
+- Cada participante puede cambiar su propio PIN desde su perfil si conoce el PIN actual.
 
 ### Couple
 
@@ -168,6 +173,28 @@ Estados visibles:
 - createdAt
 
 Actualmente se usa para invalidaciones administrativas.
+
+## Consultas administrativas implementadas
+
+El MVP no persiste una entidad separada para calendario. La vista admin semanal se construye desde `CheckIn` y `Participant`.
+
+Endpoint actual:
+
+```text
+GET /api/admin/check-ins/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD
+```
+
+Devuelve check-ins del rango solicitado, incluyendo validos y rechazados, con:
+
+- participante;
+- fecha de actividad;
+- fecha/hora original de marcacion;
+- tipo clasificado por backend;
+- estado;
+- notas;
+- fecha de creacion.
+
+El frontend filtra por estado y tipo. El filtro inicial visible es `Validos`.
 
 ## Entidades futuras
 
@@ -335,6 +362,7 @@ BadgeAward:
 
 - CheckIn(challengeId, participantId, activityDate).
 - ExceptionToken(challengeId, participantId, targetDate).
+- CheckIn(challengeId, activityDate).
 - LakeActivity(challengeId, coupleId, activityDate).
 - LakeActivityParticipant(lakeActivityId, participantId).
 - AuditLog(challengeId, entityType, entityId).

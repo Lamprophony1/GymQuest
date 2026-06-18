@@ -45,6 +45,12 @@ export interface Participant {
   active: boolean;
 }
 
+export interface ParticipantProfile extends Participant {
+  weightKg?: number | null;
+  heightCm?: number | null;
+  bodyMassIndex?: number | null;
+}
+
 export interface LoginOption {
   id: string;
   displayName: string;
@@ -58,6 +64,12 @@ export interface LoginRequest {
 
 export interface SetPinRequest {
   pin: string;
+}
+
+export interface ChangePinRequest {
+  participantId?: string | null;
+  currentPin: string;
+  newPin: string;
 }
 
 export interface AuthenticatedParticipant extends Participant {}
@@ -164,6 +176,12 @@ export interface CreateCoupleRequest {
   name: string;
   firstParticipantId: string;
   secondParticipantId: string;
+}
+
+export interface UpdateParticipantProfileRequest {
+  participantId?: string | null;
+  weightKg?: number | null;
+  heightCm?: number | null;
 }
 
 export interface RegisterCheckInRequest {
