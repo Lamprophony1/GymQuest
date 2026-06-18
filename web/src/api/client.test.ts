@@ -83,6 +83,45 @@ describe('apiRequest', () => {
       headers: { 'Content-Type': 'application/json' }
     });
   });
+
+  test('reads and updates private profile data', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ id: 'rafa-id', weightKg: 82.4, heightCm: 178, bodyMassIndex: 26 })
+    } as Response);
+
+    await gymChallApi.getProfile('rafa-id');
+    await gymChallApi.updateProfile({ participantId: 'rafa-id', weightKg: 82.4, heightCm: 178 });
+
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(1, '/api/profile?participantId=rafa-id', {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(2, '/api/profile', {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT',
+      body: JSON.stringify({ participantId: 'rafa-id', weightKg: 82.4, heightCm: 178 })
+    });
+  });
+
+  test('posts own PIN change request with cookies enabled', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      statusText: 'No Content'
+    } as Response);
+
+    await gymChallApi.changePin({ participantId: 'rafa-id', currentPin: '123456', newPin: '2468' });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/change-pin', {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      body: JSON.stringify({ participantId: 'rafa-id', currentPin: '123456', newPin: '2468' })
+    });
+  });
 });
 
 describe('formatApiDate', () => {

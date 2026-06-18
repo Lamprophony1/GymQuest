@@ -1,5 +1,7 @@
 # PIN Login Auth Implementation Plan
 
+> Estado actual: implementado en el MVP publicado. Se conserva como registro de ejecucion; la fuente vigente es `docs/planning/mvp-current-state.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add production-ready participant PIN login while preserving the current fast identity selector for development.

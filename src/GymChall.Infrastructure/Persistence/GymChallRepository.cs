@@ -85,6 +85,49 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             .ToArrayAsync(cancellationToken);
     }
 
+    public async Task<ParticipantProfileDto?> GetParticipantProfileAsync(Guid participantId, CancellationToken cancellationToken = default)
+    {
+        var participant = await db.Participants
+            .AsNoTracking()
+            .Where(x => x.Id == participantId)
+            .Select(x => new
+            {
+                x.Id,
+                x.DisplayName,
+                x.Username,
+                x.Role,
+                x.Gender,
+                x.Active,
+                x.WeightKg,
+                x.HeightCm
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return participant is null
+            ? null
+            : new ParticipantProfileDto(
+                participant.Id,
+                participant.DisplayName,
+                participant.Username,
+                participant.Role == ParticipantRole.Admin ? ParticipantRoleDto.Admin : ParticipantRoleDto.Participant,
+                participant.Gender,
+                participant.Active,
+                participant.WeightKg,
+                participant.HeightCm,
+                CalculateBodyMassIndex(participant.WeightKg, participant.HeightCm));
+    }
+
+    public async Task UpdateParticipantProfileAsync(Guid participantId, double? weightKg, double? heightCm, CancellationToken cancellationToken = default)
+    {
+        var participant = await db.Participants.SingleOrDefaultAsync(x => x.Id == participantId, cancellationToken) ??
+            throw new InvalidOperationException("Perfil no encontrado.");
+
+        participant.WeightKg = weightKg;
+        participant.HeightCm = heightCm;
+        participant.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<AuthCredentialDto?> GetAuthCredentialAsync(Guid participantId, CancellationToken cancellationToken = default)
     {
         return await db.AuthCredentials
@@ -491,5 +534,16 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             ExceptionTokenStatusDto.Rejected => ExceptionTokenStatus.Rejected,
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported token status.")
         };
+    }
+
+    private static double? CalculateBodyMassIndex(double? weightKg, double? heightCm)
+    {
+        if (weightKg is null || heightCm is null || weightKg <= 0 || heightCm <= 0)
+        {
+            return null;
+        }
+
+        var heightM = heightCm.Value / 100d;
+        return Math.Round(weightKg.Value / (heightM * heightM), 1, MidpointRounding.AwayFromZero);
     }
 }

@@ -23,6 +23,42 @@ public static class GymChallEndpoints
             return Results.Ok(await service.ListParticipantsAsync(cancellationToken));
         }).RequireAuthIfPin(authSettings);
 
+        app.MapGet("/api/profile", async (Guid? participantId, ClaimsPrincipal user, GymChallService service, CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var resolvedParticipantId = CurrentParticipantIdOr(participantId, user, authSettings);
+                if (resolvedParticipantId is null)
+                {
+                    return Results.BadRequest(new { message = "Participante requerido." });
+                }
+
+                return Results.Ok(await service.GetParticipantProfileAsync(resolvedParticipantId.Value, cancellationToken));
+            }
+            catch (InvalidOperationException exception)
+            {
+                return Results.BadRequest(new { message = exception.Message });
+            }
+        }).RequireAuthIfPin(authSettings);
+
+        app.MapPut("/api/profile", async (UpdateParticipantProfileRequest request, ClaimsPrincipal user, GymChallService service, CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var resolvedParticipantId = CurrentParticipantIdOr(request.ParticipantId, user, authSettings);
+                if (resolvedParticipantId is null)
+                {
+                    return Results.BadRequest(new { message = "Participante requerido." });
+                }
+
+                return Results.Ok(await service.UpdateParticipantProfileAsync(resolvedParticipantId.Value, request, cancellationToken));
+            }
+            catch (InvalidOperationException exception)
+            {
+                return Results.BadRequest(new { message = exception.Message });
+            }
+        }).RequireAuthIfPin(authSettings);
+
         app.MapPost("/api/participants", async (CreateParticipantRequest request, GymChallService service, CancellationToken cancellationToken) =>
         {
             var id = await service.CreateParticipantAsync(request, cancellationToken);
@@ -141,6 +177,11 @@ public static class GymChallEndpoints
     }
 
     private static Guid CurrentParticipantIdOr(Guid fallback, ClaimsPrincipal user, AuthSettings authSettings)
+    {
+        return CurrentParticipantIdOr((Guid?)fallback, user, authSettings) ?? fallback;
+    }
+
+    private static Guid? CurrentParticipantIdOr(Guid? fallback, ClaimsPrincipal user, AuthSettings authSettings)
     {
         return authSettings.IsPinLogin ? user.RequireParticipantId() : fallback;
     }

@@ -8,6 +8,7 @@ import { CheckInScreen } from './screens/CheckInScreen';
 import { AdminScreen } from './screens/AdminScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { ProfileScreen } from './screens/ProfileScreen';
 import { RankingScreen } from './screens/RankingScreen';
 import { TokenScreen } from './screens/TokenScreen';
 import { useGymChallData } from './state/useGymChallData';
@@ -113,6 +114,7 @@ export function App() {
       error={data.error}
       onTabChange={setActiveTab}
       onChangeIdentity={() => setIdentity(null)}
+      onOpenProfile={() => setActiveTab('profile')}
       canSwitchAdminMode={canSwitchAdminMode}
       onSwitchMode={(mode) => {
         if (!selectedParticipant || (mode === 'admin' && selectedParticipant.role !== 1)) {
@@ -148,6 +150,14 @@ export function App() {
           ranking={data.ranking}
           weeklyRankings={data.weeklyRankings}
           selectedParticipantId={selectedParticipant.id}
+        />
+      ) : null}
+      {visibleTab === 'profile' ? (
+        <ProfileScreen
+          participant={selectedParticipant}
+          onLoadProfile={gymChallApi.getProfile}
+          onSaveProfile={gymChallApi.updateProfile}
+          onChangePin={gymChallApi.changePin}
         />
       ) : null}
       {visibleTab === 'checkin' ? (

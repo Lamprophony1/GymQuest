@@ -149,6 +149,29 @@ public sealed class GymChallService(IGymChallRepository repository)
         return repository.ListParticipantsAsync(cancellationToken);
     }
 
+    public async Task<ParticipantProfileDto> GetParticipantProfileAsync(Guid participantId, CancellationToken cancellationToken = default)
+    {
+        var profile = await repository.GetParticipantProfileAsync(participantId, cancellationToken) ??
+            throw new InvalidOperationException("Perfil no encontrado.");
+
+        if (!profile.Active)
+        {
+            throw new InvalidOperationException("Perfil no disponible.");
+        }
+
+        return profile;
+    }
+
+    public async Task<ParticipantProfileDto> UpdateParticipantProfileAsync(Guid participantId, UpdateParticipantProfileRequest request, CancellationToken cancellationToken = default)
+    {
+        EnsureProfileMetric(request.WeightKg, "peso", 20, 400);
+        EnsureProfileMetric(request.HeightCm, "altura", 80, 250);
+
+        await GetParticipantProfileAsync(participantId, cancellationToken);
+        await repository.UpdateParticipantProfileAsync(participantId, request.WeightKg, request.HeightCm, cancellationToken);
+        return await GetParticipantProfileAsync(participantId, cancellationToken);
+    }
+
     public async Task<Guid> CreateParticipantAsync(CreateParticipantRequest request, CancellationToken cancellationToken = default)
     {
         var participantId = Guid.NewGuid();
@@ -287,6 +310,19 @@ public sealed class GymChallService(IGymChallRepository repository)
     private static bool SameMonth(DateOnly first, DateOnly second)
     {
         return first.Year == second.Year && first.Month == second.Month;
+    }
+
+    private static void EnsureProfileMetric(double? value, string label, double min, double max)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        if (double.IsNaN(value.Value) || double.IsInfinity(value.Value) || value < min || value > max)
+        {
+            throw new InvalidOperationException($"El {label} no parece valido.");
+        }
     }
 
     private static DateOnly TodayInTimezone(string timezone)

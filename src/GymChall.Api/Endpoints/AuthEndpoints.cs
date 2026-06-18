@@ -58,6 +58,29 @@ public static class AuthEndpoints
             return Results.NoContent();
         });
 
+        app.MapPost("/api/auth/change-pin", async (
+            ChangePinRequest request,
+            ClaimsPrincipal user,
+            PinAuthService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var participantId = settings.IsPinLogin ? user.RequireParticipantId() : request.ParticipantId;
+                if (participantId is null || participantId == Guid.Empty)
+                {
+                    return Results.BadRequest(new { message = "Participante requerido." });
+                }
+
+                await service.ChangeOwnPinAsync(participantId.Value, request.CurrentPin, request.NewPin, cancellationToken: cancellationToken);
+                return Results.NoContent();
+            }
+            catch (InvalidOperationException exception)
+            {
+                return Results.BadRequest(new { message = exception.Message });
+            }
+        }).RequireAuthIfPin(settings);
+
         app.MapPost("/api/admin/participants/{id:guid}/pin", async (
             Guid id,
             SetPinRequest request,

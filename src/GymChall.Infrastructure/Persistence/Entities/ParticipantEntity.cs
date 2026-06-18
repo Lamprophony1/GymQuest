@@ -11,6 +11,8 @@ public sealed class ParticipantEntity
     public ParticipantRole Role { get; set; }
     public string? Gender { get; set; }
     public bool Active { get; set; } = true;
+    public double? WeightKg { get; set; }
+    public double? HeightCm { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

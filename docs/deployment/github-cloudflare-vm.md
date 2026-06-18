@@ -2,6 +2,8 @@
 
 Este documento describe el despliegue recomendado para publicar el MVP en `rm.crg-dev.com` usando GitHub Actions, GHCR, Docker Compose y Cloudflare Tunnel.
 
+Estado actual: implementado y en uso para el MVP publicado.
+
 ## Arquitectura
 
 ```text
@@ -41,6 +43,7 @@ GymQuest debe usar recursos nuevos:
 - hostname: `rm.crg-dev.com`
 - tunnel: `gymquest-dc-pti`
 - servicio local: `http://127.0.0.1:5020`
+- runner GitHub: `gymquest-dc-vm`
 
 ## Archivos del repo
 
@@ -164,6 +167,31 @@ El workflow:
 6. Ejecuta `docker compose up -d --pull always`.
 7. Verifica `http://127.0.0.1:5020/health`.
 
+## Flujo actual de publicacion
+
+Para publicar cambios:
+
+```powershell
+git push origin main
+```
+
+Ese push dispara `.github/workflows/ci-cd.yml`. El job `deploy` corre en el self-hosted runner con label `gymquest`.
+
+La imagen queda publicada como:
+
+```text
+ghcr.io/lamprophony1/gymquest:<sha>
+ghcr.io/lamprophony1/gymquest:latest
+```
+
+El contenedor productivo se llama `gymquest` y expone solo loopback en la VM:
+
+```text
+127.0.0.1:5020 -> container:8080
+```
+
+Cloudflare Tunnel publica ese servicio en HTTPS.
+
 ## Verificaciones
 
 En la VM:
@@ -203,3 +231,12 @@ Las llaves de cookie viven en:
 ```
 
 Respaldar ambos directorios. Sin las llaves, los usuarios pueden tener que volver a iniciar sesion despues de restaurar.
+
+## Pendientes operativos
+
+- Automatizar backup de `/opt/gymquest/data/gymchall.db`.
+- Automatizar backup de `/opt/gymquest/keys`.
+- Definir retencion y ubicacion del backup fuera de la VM.
+- Documentar restore probado.
+- Agregar monitoreo simple del health check.
+- Rotar el PIN bootstrap inicial si aun sigue siendo un valor temporal.

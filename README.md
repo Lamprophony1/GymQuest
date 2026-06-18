@@ -9,7 +9,13 @@ Repositorio del MVP tecnico de la app de desafio fitness por parejas.
 
 ## Estado Actual
 
-El MVP ya permite usar el reto desde una SPA React conectada a una API .NET con SQLite local.
+El MVP ya permite usar el reto desde una SPA React conectada a una API .NET con SQLite local. Tambien esta publicado para uso real en:
+
+```text
+https://rm.crg-dev.com
+```
+
+El deploy actual corre en una VM Ubuntu del datacenter mediante Docker, GitHub Actions self-hosted runner, GHCR y Cloudflare Tunnel.
 
 Incluye:
 
@@ -22,10 +28,13 @@ Incluye:
   - `Flex coin`: valida entrenamiento fuera de horario o recuperacion como si fuera 5am.
 - Health coin mensual automatica para participantes con genero femenino, no acumulable.
 - Admin para crear participantes, crear parejas, otorgar coins e invalidar check-ins o coins.
+- Admin con calendario semanal de check-ins por participante, filtros por estado/tipo, columna de jugador fija y anulacion directa de marcas validas.
 - Login por participante con PIN corto en modo produccion, cookie HttpOnly y switch participante/admin para Rafa.
+- Perfil privado desde el icono de usuario, con peso, altura, IMC calculado y cambio de PIN propio.
 - En desarrollo se puede conservar el selector de usuario con `VITE_AUTH_MODE=dev-selector`.
 - Motor de scoring con puntos base, bonus diario, bonus semanal, Perfect streak y Gym streak.
 - Persistencia SQLite local y seed inicial.
+- Header, bottom nav e inputs ajustados para mobile Safari.
 
 No incluye todavia:
 
@@ -141,9 +150,12 @@ GET  /api/auth/login-options
 POST /api/auth/login
 GET  /api/auth/me
 POST /api/auth/logout
+POST /api/auth/change-pin
 GET  /api/challenge
 GET  /api/challenge/settings
 GET  /api/participants
+GET  /api/profile
+PUT  /api/profile
 POST /api/participants
 GET  /api/couples
 POST /api/couples
@@ -155,6 +167,7 @@ POST /api/admin/check-ins/{id}/invalidate
 POST /api/admin/tokens/{id}/invalidate
 POST /api/admin/participants/{id}/pin
 GET  /api/admin/check-ins?limit=50
+GET  /api/admin/check-ins/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD
 GET  /api/admin/tokens?limit=50
 GET  /api/rankings/general?throughDate=YYYY-MM-DD
 GET  /api/rankings/weeks?throughDate=YYYY-MM-DD
@@ -166,6 +179,7 @@ GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
 ## Docs Relevantes
 
 - Estado actual del MVP: `docs/planning/mvp-current-state.md`
+- Roadmap post-MVP: `docs/planning/post-mvp-roadmap.md`
 - Reglas de dominio: `docs/planning/domain-rules.md`
 - Motor de puntajes: `docs/planning/scoring-engine.md`
 - Modelo de datos: `docs/planning/data-model.md`

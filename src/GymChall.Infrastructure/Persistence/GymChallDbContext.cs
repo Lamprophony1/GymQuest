@@ -30,6 +30,8 @@ public sealed class GymChallDbContext(DbContextOptions<GymChallDbContext> option
         modelBuilder.Entity<ParticipantEntity>().HasKey(x => x.Id);
         modelBuilder.Entity<ParticipantEntity>().Property(x => x.DisplayName).HasMaxLength(80);
         modelBuilder.Entity<ParticipantEntity>().Property(x => x.Username).HasMaxLength(80);
+        modelBuilder.Entity<ParticipantEntity>().Property(x => x.WeightKg).HasColumnType("REAL");
+        modelBuilder.Entity<ParticipantEntity>().Property(x => x.HeightCm).HasColumnType("REAL");
         modelBuilder.Entity<ParticipantEntity>().HasIndex(x => x.Username).IsUnique();
 
         modelBuilder.Entity<AuthCredentialEntity>().HasKey(x => x.ParticipantId);

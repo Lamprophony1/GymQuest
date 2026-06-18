@@ -89,6 +89,8 @@ El usuario registra fecha y hora. El backend decide el tipo:
 
 El formulario no envia `type` ni `durationMinutes`.
 
+La UI evita marcaciones duplicadas para dias habiles ya cubiertos por un check-in valido o una coin aplicada. Si aun asi llegaran datos duplicados por admin/importacion/fase futura, el scoring prioriza la cobertura valida de mayor prioridad.
+
 ## Bonus diario
 
 La pareja suma +1 solo si ambos integrantes cumplen una de estas condiciones para el dia original:
@@ -145,7 +147,7 @@ Reglas objetivo para la fase futura:
 
 El reto funciona por confianza. Los registros cargados se consideran validos por defecto. No hace falta validacion administrativa normal.
 
-El admin puede corregir registros si hay errores. Toda correccion debe quedar en auditoria y debe permitir recalcular puntajes.
+El admin puede invalidar registros si hay errores. La vista principal de revision es un calendario semanal de check-ins por participante, con filtro de validos/rechazados/tipo. Toda invalidacion queda en auditoria y permite recalcular puntajes desde hechos base.
 
 La evidencia queda como dato opcional para fases futuras o para casos donde el grupo quiera adjuntar foto, comentario o captura.
 

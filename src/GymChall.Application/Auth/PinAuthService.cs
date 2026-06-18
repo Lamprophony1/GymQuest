@@ -69,6 +69,42 @@ public sealed class PinAuthService(IGymChallRepository repository, PinHasher has
             cancellationToken);
     }
 
+    public async Task ChangeOwnPinAsync(Guid participantId, string currentPin, string newPin, DateTimeOffset? now = null, CancellationToken cancellationToken = default)
+    {
+        var currentTime = now ?? DateTimeOffset.UtcNow;
+        EnsureValidPin(currentPin);
+        EnsureValidPin(newPin);
+        await FindActiveParticipant(participantId, cancellationToken);
+
+        var credential = await repository.GetAuthCredentialAsync(participantId, cancellationToken) ??
+            throw new InvalidOperationException("PIN actual incorrecto.");
+
+        if (credential.LockedUntil is not null && credential.LockedUntil > currentTime)
+        {
+            throw new InvalidOperationException("PIN bloqueado temporalmente.");
+        }
+
+        if (!hasher.Verify(currentPin, credential.PinHash))
+        {
+            var failedAttempts = credential.FailedAttemptCount + 1;
+            var lockedUntil = failedAttempts >= MaxFailedAttempts ? currentTime.Add(LockoutDuration) : (DateTimeOffset?)null;
+            await repository.UpsertAuthCredentialAsync(credential with
+            {
+                FailedAttemptCount = failedAttempts,
+                LockedUntil = lockedUntil
+            }, cancellationToken);
+            throw new InvalidOperationException("PIN actual incorrecto.");
+        }
+
+        await repository.UpsertAuthCredentialAsync(credential with
+        {
+            PinHash = hasher.Hash(newPin),
+            FailedAttemptCount = 0,
+            LockedUntil = null,
+            PinUpdatedAt = currentTime
+        }, cancellationToken);
+    }
+
     public async Task EnsureBootstrapPinAsync(Guid participantId, string pin, DateTimeOffset? now = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(pin))

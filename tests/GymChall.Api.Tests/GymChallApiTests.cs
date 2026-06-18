@@ -71,6 +71,35 @@ public sealed class GymChallApiTests
     }
 
     [Fact]
+    public async Task Profile_endpoint_updates_private_metrics_without_exposing_them_in_participants()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+        var participants = await client.GetFromJsonAsync<List<ParticipantRow>>("/api/participants");
+        Assert.NotNull(participants);
+        var rafa = Assert.Single(participants, x => x.Username == "rafa");
+
+        var update = await client.PutAsJsonAsync("/api/profile", new
+        {
+            participantId = rafa.Id,
+            weightKg = 82.4,
+            heightCm = 178
+        });
+        var profile = await client.GetFromJsonAsync<ParticipantProfileRow>($"/api/profile?participantId={rafa.Id}");
+        var participantJson = await client.GetStringAsync("/api/participants");
+
+        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+        Assert.NotNull(profile);
+        Assert.Equal(rafa.Id, profile.Id);
+        Assert.Equal(82.4, profile.WeightKg);
+        Assert.Equal(178, profile.HeightCm);
+        Assert.Equal(26, profile.BodyMassIndex);
+        Assert.DoesNotContain("weightKg", participantJson, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("heightCm", participantJson, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("bodyMassIndex", participantJson, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Couples_endpoints_list_and_create_couples()
     {
         await using var app = CreateApp();
@@ -300,6 +329,37 @@ public sealed class GymChallApiTests
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
     }
 
+    [Fact]
+    public async Task Pin_login_allows_player_to_change_own_pin()
+    {
+        await using var app = CreatePinLoginApp();
+        var adminClient = app.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var userClient = app.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var freshClient = app.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var options = await adminClient.GetFromJsonAsync<List<LoginOptionRow>>("/api/auth/login-options");
+        Assert.NotNull(options);
+        var rafa = Assert.Single(options, option => option.Username == "rafa");
+        var clari = Assert.Single(options, option => option.Username == "clari");
+
+        await adminClient.PostAsJsonAsync("/api/auth/login", new { participantId = rafa.Id, pin = "123456" });
+        var reset = await adminClient.PostAsJsonAsync($"/api/admin/participants/{clari.Id}/pin", new { pin = "2468" });
+        await userClient.PostAsJsonAsync("/api/auth/login", new { participantId = clari.Id, pin = "2468" });
+
+        var change = await userClient.PostAsJsonAsync("/api/auth/change-pin", new
+        {
+            participantId = rafa.Id,
+            currentPin = "2468",
+            newPin = "135790"
+        });
+        var oldLogin = await freshClient.PostAsJsonAsync("/api/auth/login", new { participantId = clari.Id, pin = "2468" });
+        var newLogin = await freshClient.PostAsJsonAsync("/api/auth/login", new { participantId = clari.Id, pin = "135790" });
+
+        Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, change.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, oldLogin.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, newLogin.StatusCode);
+    }
+
     private static WebApplicationFactory<Program> CreateApp()
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"gymchall-api-tests-{Guid.NewGuid():N}.db");
@@ -331,4 +391,5 @@ public sealed class GymChallApiTests
     private sealed record AdminCheckInRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly ActivityDate, string Status);
     private sealed record AdminTokenRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly TargetDate, string Status);
     private sealed record LoginOptionRow(Guid Id, string DisplayName, string Username);
+    private sealed record ParticipantProfileRow(Guid Id, string DisplayName, string Username, int Role, string? Gender, bool Active, double? WeightKg, double? HeightCm, double? BodyMassIndex);
 }

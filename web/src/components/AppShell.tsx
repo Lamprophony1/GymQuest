@@ -1,10 +1,11 @@
-import { CircleDollarSign, Dumbbell, LayoutDashboard, Shield, Trophy, UserRoundCog } from 'lucide-react';
+import { CircleDollarSign, Dumbbell, LayoutDashboard, Settings, Shield, Trophy, UserRoundCog } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Participant } from '../api/types';
 import type { SelectedIdentity } from '../state/useSelectedIdentity';
 import { BarbellMark } from './BrandMark';
+import { PlayerAvatar } from './PlayerAvatar';
 
-export type AppTab = 'dashboard' | 'ranking' | 'checkin' | 'token' | 'admin';
+export type AppTab = 'dashboard' | 'ranking' | 'checkin' | 'token' | 'admin' | 'profile';
 
 interface AppShellProps {
   activeTab: AppTab;
@@ -18,6 +19,7 @@ interface AppShellProps {
   children: ReactNode;
   onTabChange: (tab: AppTab) => void;
   onChangeIdentity: () => void;
+  onOpenProfile?: () => void;
   onSwitchMode?: (mode: SelectedIdentity['mode']) => void;
   onLogout?: () => void;
 }
@@ -40,6 +42,7 @@ export function AppShell({
   children,
   onTabChange,
   onChangeIdentity,
+  onOpenProfile,
   onSwitchMode,
   onLogout
 }: AppShellProps) {
@@ -111,13 +114,17 @@ export function AppShell({
         </div>
         <div className="profile-menu" ref={profileMenuRef}>
           <button
-            className="icon-button"
+            className={`icon-button profile-menu__button${participant ? ' profile-menu__button--avatar' : ''}`}
             type="button"
             onClick={() => setProfileOpen((current) => !current)}
             aria-expanded={profileOpen}
             aria-label="Menu de usuario"
           >
-            <UserRoundCog aria-hidden="true" />
+            {participant ? (
+              <PlayerAvatar participant={participant} variant="header" />
+            ) : (
+              <UserRoundCog aria-hidden="true" />
+            )}
           </button>
           {profileOpen ? (
             <div className="profile-menu__panel" role="menu">
@@ -125,6 +132,17 @@ export function AppShell({
                 <strong>{participantName}</strong>
                 <span>@{participant?.username ?? 'sin-user'}</span>
               </div>
+              <button
+                className="profile-menu__item profile-menu__item--profile"
+                type="button"
+                onClick={() => {
+                  setProfileOpen(false);
+                  onOpenProfile?.();
+                }}
+              >
+                <Settings aria-hidden="true" />
+                Mi perfil
+              </button>
               {canSwitchAdminMode ? (
                 <div className="profile-menu__modes" aria-label="Modo de vista">
                   <button

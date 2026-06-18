@@ -4,6 +4,14 @@
 
 ## Estado actual
 
+Documento historico. La UI MVP ya fue implementada, el login PIN ya existe y el MVP esta publicado en `https://rm.crg-dev.com`.
+
+Para el estado vigente usar:
+
+- `docs/planning/mvp-current-state.md`
+- `docs/planning/mvp-phases.md`
+- `docs/planning/post-mvp-roadmap.md`
+
 La Fase 1 backend esta cerrada para un MVP usable.
 
 Ya existe:
@@ -35,23 +43,25 @@ dotnet test GymChall.sln
 
 Resultado esperado actual: build sin warnings/errores y 62 tests pasando.
 
-## Proximo bloque recomendado
+## Proximo bloque recomendado historico
 
-El siguiente bloque deberia ser una **spec de UI MVP mobile-first** antes de implementar frontend.
+El siguiente bloque de este documento era una **spec de UI MVP mobile-first** antes de implementar frontend.
+
+Ese bloque ya esta cerrado. No usar esta seccion como plan vigente.
 
 Objetivo del bloque: definir la experiencia minima que permita usar el reto desde una app/pagina mobile-first consumiendo la API existente.
 
 ## Alcance recomendado para la UI MVP
 
-### Vista participante
+### Vista participante historica
 
 - Ver ranking general por pareja.
 - Ver ranking semanal como motivacion secundaria.
 - Registrar check-in 5am o recuperacion del mismo dia.
-- Registrar ficha simple de cobertura total.
+- Registrar ficha simple de cobertura total, hoy reemplazada visualmente por coins.
 - Ver pareja propia y estado basico del reto.
 
-### Vista admin simple
+### Vista admin simple historica
 
 - Ver participantes.
 - Crear participantes.
@@ -59,13 +69,13 @@ Objetivo del bloque: definir la experiencia minima que permita usar el reto desd
 - Crear parejas.
 - Invalidar check-ins o fichas cargadas por error, con motivo opcional.
 
-### Navegacion inicial
+### Navegacion inicial historica
 
-Como todavia no hay autenticacion, la UI puede arrancar con un selector simple de participante/admin para operar en modo confianza.
+Como todavia no habia autenticacion, la UI podia arrancar con un selector simple de participante/admin para operar en modo confianza.
 
-No implementar autenticacion real en este bloque.
+Decision actual: produccion usa login PIN; desarrollo conserva el selector.
 
-## Fuera de alcance para el proximo bloque
+## Fuera de alcance para ese bloque historico
 
 - Recuperaciones de fin de semana vinculadas.
 - Ficha de mover horario.
@@ -75,7 +85,7 @@ No implementar autenticacion real en este bloque.
 - Notificaciones.
 - Insignias.
 - Graficos complejos.
-- Autenticacion real.
+- Autenticacion real, ya implementada despues.
 
 ## Primer paso de la proxima sesion
 
@@ -89,7 +99,7 @@ Iniciar brainstorming/spec de UI:
 6. Guardar spec en `docs/superpowers/specs/YYYY-MM-DD-gymchall-ui-mvp-design.md`.
 7. Despues de aprobar la spec, escribir plan de implementacion.
 
-## Decision pendiente inicial
+## Decision pendiente inicial historica
 
 La primera decision de producto para la proxima sesion:
 
@@ -97,7 +107,7 @@ La primera decision de producto para la proxima sesion:
 ¿La UI MVP debe empezar como una SPA web responsive en el mismo repo, o como una app separada?
 ```
 
-Recomendacion actual: **SPA web responsive en el mismo repo**. Es mas simple para iterar rapido, probar contra la API local y llegar antes a una version usable.
+Decision tomada: **SPA web responsive en el mismo repo**.
 
 ## Endpoints disponibles para UI
 
