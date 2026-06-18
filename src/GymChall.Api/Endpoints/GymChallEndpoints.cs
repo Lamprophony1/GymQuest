@@ -155,22 +155,25 @@ public static class GymChallEndpoints
             return Results.Ok(await service.ListRecentFullCoverageTokensAsync(limit, cancellationToken));
         }).RequireAdminIfPin(authSettings);
 
-        app.MapGet("/api/rankings/general", async (DateOnly? throughDate, GymChallService service, CancellationToken cancellationToken) =>
+        app.MapGet("/api/rankings/general", async (DateOnly? throughDate, DateTimeOffset? asOf, GymChallService service, CancellationToken cancellationToken) =>
         {
-            var date = throughDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
-            return Results.Ok(await service.GetGeneralRankingAsync(date, cancellationToken));
+            return throughDate is { } date
+                ? Results.Ok(await service.GetGeneralRankingAsync(date, cancellationToken))
+                : Results.Ok(await service.GetLiveGeneralRankingAsync(asOf, cancellationToken));
         }).RequireAuthIfPin(authSettings);
 
-        app.MapGet("/api/rankings/weeks", async (DateOnly? throughDate, GymChallService service, CancellationToken cancellationToken) =>
+        app.MapGet("/api/rankings/weeks", async (DateOnly? throughDate, DateTimeOffset? asOf, GymChallService service, CancellationToken cancellationToken) =>
         {
-            var date = throughDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
-            return Results.Ok(await service.GetWeeklyRankingsAsync(date, cancellationToken));
+            return throughDate is { } date
+                ? Results.Ok(await service.GetWeeklyRankingsAsync(date, cancellationToken))
+                : Results.Ok(await service.GetLiveWeeklyRankingsAsync(asOf, cancellationToken));
         }).RequireAuthIfPin(authSettings);
 
-        app.MapGet("/api/rankings/weeks/{weekStartDate}", async (DateOnly weekStartDate, DateOnly? throughDate, GymChallService service, CancellationToken cancellationToken) =>
+        app.MapGet("/api/rankings/weeks/{weekStartDate}", async (DateOnly weekStartDate, DateOnly? throughDate, DateTimeOffset? asOf, GymChallService service, CancellationToken cancellationToken) =>
         {
-            var date = throughDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
-            return Results.Ok(await service.GetWeeklyRankingAsync(weekStartDate, date, cancellationToken));
+            return throughDate is { } date
+                ? Results.Ok(await service.GetWeeklyRankingAsync(weekStartDate, date, cancellationToken))
+                : Results.Ok(await service.GetLiveWeeklyRankingAsync(weekStartDate, asOf, cancellationToken));
         }).RequireAuthIfPin(authSettings);
 
         return app;

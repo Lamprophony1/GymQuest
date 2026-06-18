@@ -124,6 +124,9 @@ El sistema maneja rachas separadas:
 
 Reglas:
 
+- La fecha del reto se evalua en `America/Asuncion`.
+- Perfect streak recien considera perdido el dia actual despues de las 06:30.
+- Gym streak recien considera perdido un dia sin cobertura al dia siguiente.
 - Check-in 5am cuenta para ambas rachas.
 - Health coin y Commit coin salvan la cobertura del dia y preservan la racha.
 - Flex coin preserva ambas rachas cuando se usa con entrenamiento fuera de horario o recuperacion valida.

@@ -121,6 +121,15 @@ public sealed class GymChallService(IGymChallRepository repository)
         return RankingService.CalculateGeneralRanking(snapshot, throughDate);
     }
 
+    public async Task<IReadOnlyList<CoupleRankingRow>> GetLiveGeneralRankingAsync(DateTimeOffset? asOf = null, CancellationToken cancellationToken = default)
+    {
+        var challengeId = await RequireActiveChallengeId(cancellationToken);
+        await EnsureMonthlyHealthTokensAsync(challengeId, cancellationToken);
+        var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
+        var evaluation = RankingEvaluationDates.FromAsOf(snapshot.Challenge, asOf ?? DateTimeOffset.UtcNow);
+        return RankingService.CalculateGeneralRanking(snapshot, evaluation);
+    }
+
     public async Task<IReadOnlyList<WeeklyRankingDto>> GetWeeklyRankingsAsync(DateOnly throughDate, CancellationToken cancellationToken = default)
     {
         var challengeId = await RequireActiveChallengeId(cancellationToken);
@@ -129,12 +138,30 @@ public sealed class GymChallService(IGymChallRepository repository)
         return RankingService.CalculateWeeklyRankings(snapshot, throughDate);
     }
 
+    public async Task<IReadOnlyList<WeeklyRankingDto>> GetLiveWeeklyRankingsAsync(DateTimeOffset? asOf = null, CancellationToken cancellationToken = default)
+    {
+        var challengeId = await RequireActiveChallengeId(cancellationToken);
+        await EnsureMonthlyHealthTokensAsync(challengeId, cancellationToken);
+        var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
+        var evaluation = RankingEvaluationDates.FromAsOf(snapshot.Challenge, asOf ?? DateTimeOffset.UtcNow);
+        return RankingService.CalculateWeeklyRankings(snapshot, evaluation.ScoreThroughDate);
+    }
+
     public async Task<WeeklyRankingDto> GetWeeklyRankingAsync(DateOnly weekStartDate, DateOnly throughDate, CancellationToken cancellationToken = default)
     {
         var challengeId = await RequireActiveChallengeId(cancellationToken);
         await EnsureMonthlyHealthTokensAsync(challengeId, cancellationToken);
         var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
         return RankingService.CalculateWeeklyRanking(snapshot, weekStartDate, throughDate);
+    }
+
+    public async Task<WeeklyRankingDto> GetLiveWeeklyRankingAsync(DateOnly weekStartDate, DateTimeOffset? asOf = null, CancellationToken cancellationToken = default)
+    {
+        var challengeId = await RequireActiveChallengeId(cancellationToken);
+        await EnsureMonthlyHealthTokensAsync(challengeId, cancellationToken);
+        var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
+        var evaluation = RankingEvaluationDates.FromAsOf(snapshot.Challenge, asOf ?? DateTimeOffset.UtcNow);
+        return RankingService.CalculateWeeklyRanking(snapshot, weekStartDate, evaluation.ScoreThroughDate);
     }
 
     public async Task<ChallengeSnapshotDto> GetActiveChallengeAsync(CancellationToken cancellationToken = default)
@@ -327,18 +354,36 @@ public sealed class GymChallService(IGymChallRepository repository)
 
     private static DateOnly TodayInTimezone(string timezone)
     {
+        var now = DateTimeOffset.UtcNow;
+
         try
         {
             var zone = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-            return DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, zone).DateTime);
+            return DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
+        }
+        catch (TimeZoneNotFoundException) when (timezone == "America/Asuncion")
+        {
+            try
+            {
+                var zone = TimeZoneInfo.FindSystemTimeZoneById("Paraguay Standard Time");
+                return DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                return DateOnly.FromDateTime(now.UtcDateTime);
+            }
+            catch (InvalidTimeZoneException)
+            {
+                return DateOnly.FromDateTime(now.UtcDateTime);
+            }
         }
         catch (TimeZoneNotFoundException)
         {
-            return DateOnly.FromDateTime(DateTime.UtcNow);
+            return DateOnly.FromDateTime(now.UtcDateTime);
         }
         catch (InvalidTimeZoneException)
         {
-            return DateOnly.FromDateTime(DateTime.UtcNow);
+            return DateOnly.FromDateTime(now.UtcDateTime);
         }
     }
 }

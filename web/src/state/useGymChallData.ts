@@ -68,15 +68,14 @@ export function useGymChallData({ enabled = true, includeAdmin = true }: UseGymC
     setState((current) => ({ ...current, loading: true, error: null }));
 
     try {
-      const today = new Date();
       const calendarWeekEnd = addDaysToDateOnly(calendarWeekStart, 6);
       const [challenge, participants, couples, ranking, weeklyRankings, recentCheckIns, calendarCheckIns, recentTokens] =
         await Promise.all([
           gymChallApi.getChallenge(),
           gymChallApi.listParticipants(),
           gymChallApi.listCouples(),
-          gymChallApi.getGeneralRanking(today),
-          gymChallApi.getWeeklyRankings(today),
+          gymChallApi.getGeneralRanking(),
+          gymChallApi.getWeeklyRankings(),
           includeAdmin ? gymChallApi.listRecentCheckIns() : Promise.resolve([]),
           includeAdmin ? gymChallApi.listCalendarCheckIns(calendarWeekStart, calendarWeekEnd) : Promise.resolve([]),
           includeAdmin ? gymChallApi.listRecentTokens() : Promise.resolve([])

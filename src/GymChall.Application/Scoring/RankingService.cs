@@ -4,6 +4,82 @@ using GymChall.Domain.Scoring;
 namespace GymChall.Application.Scoring;
 
 public sealed record CoupleRankingRow(Guid CoupleId, string CoupleName, decimal TotalPoints, int MorningStreak, int GymStreak);
+public sealed record RankingEvaluationDates(
+    DateOnly ScoreThroughDate,
+    DateOnly MorningStreakExpiredThroughDate,
+    DateOnly GymStreakExpiredThroughDate)
+{
+    private static readonly TimeSpan MorningStreakDeadline = new(6, 30, 0);
+
+    public static RankingEvaluationDates ForFixedThroughDate(DateOnly throughDate)
+    {
+        return new RankingEvaluationDates(throughDate, throughDate, throughDate);
+    }
+
+    public static RankingEvaluationDates FromAsOf(ChallengeDto challenge, DateTimeOffset asOf)
+    {
+        var localAsOf = ConvertToTimezone(asOf, challenge.Timezone);
+        var localDate = DateOnly.FromDateTime(localAsOf.DateTime);
+        var scoreThroughDate = Min(challenge.EndDate, localDate);
+        var morningExpiredThroughDate = localAsOf.TimeOfDay > MorningStreakDeadline
+            ? localDate
+            : localDate.AddDays(-1);
+        var gymExpiredThroughDate = localDate.AddDays(-1);
+
+        return new RankingEvaluationDates(
+            scoreThroughDate,
+            Min(challenge.EndDate, morningExpiredThroughDate),
+            Min(challenge.EndDate, gymExpiredThroughDate));
+    }
+
+    private static DateTimeOffset ConvertToTimezone(DateTimeOffset dateTime, string timezone)
+    {
+        var zone = ResolveTimezone(timezone);
+        return zone is null ? dateTime : TimeZoneInfo.ConvertTime(dateTime, zone);
+    }
+
+    private static TimeZoneInfo? ResolveTimezone(string timezone)
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(timezone);
+        }
+        catch (TimeZoneNotFoundException) when (timezone == "America/Asuncion")
+        {
+            return ResolveWindowsParaguayTimezone();
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return null;
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return null;
+        }
+    }
+
+    private static TimeZoneInfo? ResolveWindowsParaguayTimezone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Paraguay Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return null;
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return null;
+        }
+    }
+
+    private static DateOnly Min(DateOnly first, DateOnly second)
+    {
+        return first <= second ? first : second;
+    }
+}
+
 public sealed record WeeklyRankingDto(DateOnly WeekStartDate, DateOnly WeekEndDate, IReadOnlyList<WeeklyRankingRowDto> Rows);
 public sealed record WeeklyRankingRowDto(
     Guid CoupleId,
@@ -21,11 +97,16 @@ public static class RankingService
 {
     public static IReadOnlyList<CoupleRankingRow> CalculateGeneralRanking(ChallengeSnapshotDto snapshot, DateOnly throughDate)
     {
-        var dates = BusinessDates(snapshot.Challenge.StartDate, Min(snapshot.Challenge.EndDate, throughDate)).ToArray();
+        return CalculateGeneralRanking(snapshot, RankingEvaluationDates.ForFixedThroughDate(throughDate));
+    }
+
+    public static IReadOnlyList<CoupleRankingRow> CalculateGeneralRanking(ChallengeSnapshotDto snapshot, RankingEvaluationDates evaluation)
+    {
+        var dates = BusinessDates(snapshot.Challenge.StartDate, Min(snapshot.Challenge.EndDate, evaluation.ScoreThroughDate)).ToArray();
 
         return snapshot.Couples
             .Where(couple => couple.Active && couple.ParticipantIds.Count == 2)
-            .Select(couple => CalculateCouple(snapshot, couple, dates))
+            .Select(couple => CalculateCouple(snapshot, couple, dates, evaluation))
             .OrderByDescending(row => row.TotalPoints)
             .ThenBy(row => row.CoupleName)
             .ToArray();
@@ -67,7 +148,11 @@ public static class RankingService
         return new WeeklyRankingDto(weekStartDate, weekEndDate, rows);
     }
 
-    private static CoupleRankingRow CalculateCouple(ChallengeSnapshotDto snapshot, CoupleDto couple, IReadOnlyList<DateOnly> dates)
+    private static CoupleRankingRow CalculateCouple(
+        ChallengeSnapshotDto snapshot,
+        CoupleDto couple,
+        IReadOnlyList<DateOnly> dates,
+        RankingEvaluationDates evaluation)
     {
         var firstId = couple.ParticipantIds[0];
         var secondId = couple.ParticipantIds[1];
@@ -86,7 +171,7 @@ public static class RankingService
             {
                 morningStreak++;
             }
-            else
+            else if (date <= evaluation.MorningStreakExpiredThroughDate)
             {
                 morningStreak = 0;
             }
@@ -95,7 +180,7 @@ public static class RankingService
             {
                 gymStreak++;
             }
-            else
+            else if (date <= evaluation.GymStreakExpiredThroughDate)
             {
                 gymStreak = 0;
             }

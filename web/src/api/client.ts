@@ -25,6 +25,7 @@ import type {
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+const CHALLENGE_TIMEZONE = 'America/Asuncion';
 
 export class ApiError extends Error {
   constructor(
@@ -66,8 +67,22 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   return (await response.json()) as T;
 }
 
-export function formatApiDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+export function formatApiDate(date: Date, timeZone = CHALLENGE_TIMEZONE): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
+  const day = parts.find((part) => part.type === 'day')?.value;
+
+  if (!year || !month || !day) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  return `${year}-${month}-${day}`;
 }
 
 function jsonPost<TBody>(body: TBody): RequestInit {
@@ -127,12 +142,18 @@ export const gymChallApi = {
   listCalendarCheckIns: (from: string, to: string) =>
     apiRequest<AdminCheckIn[]>(`/api/admin/check-ins/calendar?from=${from}&to=${to}`),
   listRecentTokens: (limit = 50) => apiRequest<AdminToken[]>(`/api/admin/tokens?limit=${limit}`),
-  getGeneralRanking: (throughDate: Date) =>
-    apiRequest<RankingRow[]>(`/api/rankings/general?throughDate=${formatApiDate(throughDate)}`),
-  getWeeklyRankings: (throughDate: Date) =>
-    apiRequest<WeeklyRanking[]>(`/api/rankings/weeks?throughDate=${formatApiDate(throughDate)}`),
-  getWeeklyRanking: (weekStartDate: string, throughDate: Date) =>
+  getGeneralRanking: (throughDate?: Date) =>
+    apiRequest<RankingRow[]>(
+      throughDate ? `/api/rankings/general?throughDate=${formatApiDate(throughDate)}` : '/api/rankings/general'
+    ),
+  getWeeklyRankings: (throughDate?: Date) =>
+    apiRequest<WeeklyRanking[]>(
+      throughDate ? `/api/rankings/weeks?throughDate=${formatApiDate(throughDate)}` : '/api/rankings/weeks'
+    ),
+  getWeeklyRanking: (weekStartDate: string, throughDate?: Date) =>
     apiRequest<WeeklyRanking>(
-      `/api/rankings/weeks/${weekStartDate}?throughDate=${formatApiDate(throughDate)}`
+      throughDate
+        ? `/api/rankings/weeks/${weekStartDate}?throughDate=${formatApiDate(throughDate)}`
+        : `/api/rankings/weeks/${weekStartDate}`
     )
 };

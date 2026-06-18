@@ -46,6 +46,43 @@ public sealed class GymChallApiTests
     }
 
     [Fact]
+    public async Task Ranking_endpoint_without_through_date_uses_live_asuncion_streak_windows()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+        var participants = await client.GetFromJsonAsync<List<ParticipantRow>>("/api/participants");
+        Assert.NotNull(participants);
+        var rafa = Assert.Single(participants, x => x.Username == "rafa");
+        var clari = Assert.Single(participants, x => x.Username == "clari");
+
+        foreach (var date in Enumerable.Range(0, 3).Select(offset => new DateOnly(2026, 6, 15).AddDays(offset)))
+        {
+            await client.PostAsJsonAsync("/api/check-ins", new
+            {
+                participantId = rafa.Id,
+                occurredAt = new DateTimeOffset(date.Year, date.Month, date.Day, 5, 5, 0, TimeSpan.FromHours(-3)),
+                createdByParticipantId = rafa.Id,
+                notes = "5am"
+            });
+            await client.PostAsJsonAsync("/api/check-ins", new
+            {
+                participantId = clari.Id,
+                occurredAt = new DateTimeOffset(date.Year, date.Month, date.Day, 5, 5, 0, TimeSpan.FromHours(-3)),
+                createdByParticipantId = rafa.Id,
+                notes = "5am"
+            });
+        }
+
+        var asOf = Uri.EscapeDataString("2026-06-18T09:31:00Z");
+        var rows = await client.GetFromJsonAsync<List<RankingRow>>($"/api/rankings/general?asOf={asOf}");
+
+        Assert.NotNull(rows);
+        var ownRow = Assert.Single(rows, row => row.CoupleName.Contains("Rafa", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(0, ownRow.MorningStreak);
+        Assert.Equal(3, ownRow.GymStreak);
+    }
+
+    [Fact]
     public async Task Participants_endpoints_list_and_create_participants()
     {
         await using var app = CreateApp();

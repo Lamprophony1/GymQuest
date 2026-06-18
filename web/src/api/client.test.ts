@@ -84,6 +84,26 @@ describe('apiRequest', () => {
     });
   });
 
+  test('requests live rankings without client-side dates by default', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => []
+    } as Response);
+
+    await gymChallApi.getGeneralRanking();
+    await gymChallApi.getWeeklyRankings();
+
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(1, '/api/rankings/general', {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(2, '/api/rankings/weeks', {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+  });
+
   test('reads and updates private profile data', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -127,5 +147,9 @@ describe('apiRequest', () => {
 describe('formatApiDate', () => {
   test('formats dates as YYYY-MM-DD', () => {
     expect(formatApiDate(new Date('2026-06-15T10:30:00.000Z'))).toBe('2026-06-15');
+  });
+
+  test('formats late Paraguay nights without rolling into the UTC date', () => {
+    expect(formatApiDate(new Date('2026-06-18T02:30:00.000Z'))).toBe('2026-06-17');
   });
 });

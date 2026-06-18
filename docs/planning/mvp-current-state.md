@@ -91,6 +91,9 @@ El bonus semanal se calcula solo cuando la semana requerida esta completa dentro
 
 - `Perfect streak`: racha de pareja donde ambos sostienen cobertura tipo 5am/perfecta.
 - `Gym streak`: racha de pareja donde ambos sostienen dia de gym cubierto.
+- Las rachas se evaluan con fecha/hora de `America/Asuncion`.
+- Perfect streak cae por el dia actual recien despues de las 06:30.
+- Gym streak cae por un dia sin cobertura recien al dia siguiente.
 - Health y Commit coins salvan la cobertura del dia.
 - Flex coin salva la cobertura y rachas cuando se usa con entrenamiento fuera de horario o recuperacion.
 - Recuperacion del mismo dia sin coin cuenta para Gym streak, pero no para Perfect streak.
