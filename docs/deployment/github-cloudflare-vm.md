@@ -177,6 +177,12 @@ git push origin main
 
 Ese push dispara `.github/workflows/ci-cd.yml`. El job `deploy` corre en el self-hosted runner con label `gymquest`.
 
+Politica vigente del MVP:
+
+- antes de pushear, correr pruebas relevantes localmente cuando el cambio toca codigo;
+- si CI/CD queda en `success`, el cambio queda publicado automaticamente;
+- verificar produccion con `GET https://rm.crg-dev.com/health`.
+
 La imagen queda publicada como:
 
 ```text
@@ -206,6 +212,7 @@ Desde fuera:
 
 ```bash
 curl -I https://rm.crg-dev.com
+curl -fsS https://rm.crg-dev.com/health
 ```
 
 En navegador:
@@ -215,6 +222,8 @@ https://rm.crg-dev.com
 ```
 
 Debe abrir la pantalla de login PIN.
+
+Nota: usar `GET /health` para health externo. Algunos clientes pueden recibir respuesta distinta con `HEAD /health`.
 
 ## Backups
 

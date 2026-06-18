@@ -5,7 +5,7 @@
 Separar hechos base de resultados derivados.
 
 - Hechos base actuales: challenge, settings, participantes, parejas, check-ins, coins/tokens y audit logs.
-- Hechos base futuros: lago, evidencia, premios y badges.
+- Hechos base futuros: Side quest/cardio opcional, evidencia, premios y badges.
 - Derivados actuales: rankings, bonus semanales y rachas calculadas al consultar.
 - Derivados futuros: daily scores, weekly scores, score runs, snapshots de rachas e insignias persistidas.
 
@@ -63,6 +63,18 @@ Nota: `gymMinimumMinutes` queda para compatibilidad/fase futura. El check-in MVP
 - updatedAt
 
 `bodyMassIndex` no se persiste: se calcula al consultar el perfil privado del participante.
+
+### Avatar assets
+
+Los avatares del MVP no son entidad de base de datos. Son assets estaticos del frontend:
+
+```text
+web/public/avatars/{username}.png
+```
+
+La UI resuelve el avatar por `username`. Si no existe imagen para un participante, muestra iniciales como fallback.
+
+Esto mantiene simple el MVP; una fase futura podria mover avatares a storage administrado si se permite carga desde la app.
 
 ### AuthCredential
 
@@ -198,9 +210,9 @@ El frontend filtra por estado y tipo. El filtro inicial visible es `Validos`.
 
 ## Entidades futuras
 
-### LakeActivity
+### LakeActivity / SideQuestActivity
 
-El lago se modelara como actividad separada. Para que cuente como pareja, ambos deben pertenecer a la misma LakeActivity.
+El modelo futuro puede conservar temporalmente nombres tecnicos `LakeActivity` por historia del dominio, pero el producto visible sera `Side quest` o cardio opcional. Para que cuente como pareja, ambos deben pertenecer a la misma actividad.
 
 - id
 - challengeId
@@ -335,6 +347,11 @@ Los cambios de premios son permitidos y deben auditarse.
 - currentCount
 - bestCount
 - calculatedAt
+
+Nota: las rachas actuales se calculan al consultar rankings. En ranking live, el calculo usa `America/Asuncion` y ventanas de vencimiento:
+
+- Perfect streak: el dia actual vence despues de las 06:30.
+- Gym streak: un dia sin cobertura vence al dia siguiente.
 
 ### BadgeDefinition / BadgeAward
 

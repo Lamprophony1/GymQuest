@@ -2,7 +2,7 @@
 
 ## Contexto
 
-`GymChall` administra el reto visible como `Reto septiembre 2026`. Compiten parejas, no individuos. Cada pareja suma puntos individuales de sus integrantes, bonus diarios, bonus semanales y, en una fase futura, puntos de lago.
+`GymChall` administra el reto visible como `Reto septiembre 2026`. Compiten parejas, no individuos. Cada pareja suma puntos individuales de sus integrantes, bonus diarios, bonus semanales y, en una fase futura, puntos de Side quest/cardio opcional.
 
 La app visible se muestra temporalmente como `Proyecto RM`.
 
@@ -25,7 +25,7 @@ La app visible se muestra temporalmente como `Proyecto RM`.
 2. Coin valida que cubre el dia.
 3. Recuperacion el mismo dia.
 4. Recuperacion sabado/domingo.
-5. Lago asociado a entrenamiento valido, pendiente para fase posterior.
+5. Side quest/cardio opcional asociado a entrenamiento valido, pendiente para fase posterior.
 
 Actividades externas como pilates, futbol, padel, basquet, bici, caminatas, clases aparte o entrenamiento en casa no suman puntos competitivos en el MVP. Pueden registrarse como nota social/saludable en una fase futura.
 
@@ -104,14 +104,16 @@ La recuperacion sin coin, tanto tarde/noche como sabado/domingo, suma puntos ind
 
 ## Bonus semanal
 
-Un solo bonus por pareja por semana. La semana se evalua sobre los dias habiles dentro del reto y hasta el `throughDate` consultado.
+Un solo bonus por pareja por semana. La semana se evalua sobre los dias habiles dentro del reto.
+
+En consultas historicas se usa `throughDate`. En consultas live, el backend deriva la fecha vigente desde la hora actual del reto en `America/Asuncion`.
 
 - `Perfect`: +12 si ambos tienen todos los dias habiles cubiertos por 5am o coin valida.
 - `Complete`: +7 si ambos completan los dias habiles con una o mas recuperaciones tarde/noche sin coin.
 - `Rescued`: +4 si para completar los dias habiles se uso sabado/domingo sin coin.
 - `None`: 0 si la pareja no completa todos los dias habiles requeridos.
 
-El bonus semanal no se suma por adelantado con dias futuros. Si se cargan dias posteriores a la fecha consultada, no afectan el ranking de `throughDate`.
+El bonus semanal no se suma por adelantado con dias futuros. Si se cargan dias posteriores a la fecha consultada o vigente, no afectan el ranking de esa fecha.
 
 Si hay mezcla de recuperacion tarde y fin de semana, gana la categoria mas baja: `Rescued`.
 
@@ -127,19 +129,20 @@ Reglas:
 - La fecha del reto se evalua en `America/Asuncion`.
 - Perfect streak recien considera perdido el dia actual despues de las 06:30.
 - Gym streak recien considera perdido un dia sin cobertura al dia siguiente.
+- En consultas historicas con `throughDate`, ambas rachas se evaluan cerradas hasta esa fecha fija.
 - Check-in 5am cuenta para ambas rachas.
 - Health coin y Commit coin salvan la cobertura del dia y preservan la racha.
 - Flex coin preserva ambas rachas cuando se usa con entrenamiento fuera de horario o recuperacion valida.
 - Recuperacion del mismo dia sin coin cuenta para Gym streak, pero no para Perfect streak.
 - Recuperacion de fin de semana sin coin completa semana, pero no preserva la racha del dia perdido.
 
-## Lago
+## Side quest / cardio opcional
 
-El motor de dominio tiene base para puntuar lago, pero el MVP no lo conecta todavia a persistencia, API ni UI.
+El motor de dominio tiene una base tecnica inicial llamada `LakeScoringCalculator`, pero el producto visible ya no debe limitar el concepto a lago. El modulo futuro debe presentarse como Side quest/cardio opcional y puede incluir caminatas, plaza u otros cardios acordados.
 
 Reglas objetivo para la fase futura:
 
-- Maximo puntuable: 2 vueltas por pareja por semana.
+- Maximo puntuable: 2 actividades por pareja por semana.
 - Si va una sola persona: +1 para la pareja.
 - Si va la pareja junta: +3 para la pareja.
 - Para contar como pareja junta, ambos deben estar en la misma actividad.
@@ -165,7 +168,7 @@ La distribucion de premios puede cambiar despues de iniciado el reto. Todo cambi
 3. Mayor cantidad de semanas perfectas.
 4. Menor cantidad de recuperaciones de fin de semana sin coin.
 5. Menor cantidad de recuperaciones tarde/noche sin coin.
-6. Mayor cantidad de vueltas al lago puntuables.
+6. Mayor cantidad de actividades Side quest puntuables.
 7. Mini reto final definido por el grupo.
 
 Las coins validas no penalizan desempates.

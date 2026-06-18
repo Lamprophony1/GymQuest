@@ -1,6 +1,6 @@
 # Decisiones cerradas y preguntas abiertas
 
-Actualizado: 2026-06-17.
+Actualizado: 2026-06-18.
 
 Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo queda como registro de decisiones y lista de pendientes futuros.
 
@@ -21,7 +21,7 @@ Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo
 11. Health coin mensual: se otorga automaticamente a participantes con genero femenino, por mes calendario, no acumulable.
 12. Admin puede otorgar Health, Commit y Flex coins manualmente.
 13. Correcciones administrativas: el admin puede invalidar registros; todo cambio debe quedar auditado.
-14. Semanas parciales: se evaluan solo los dias habiles dentro del reto y hasta el `throughDate`.
+14. Semanas parciales: se evaluan solo los dias habiles dentro del reto y hasta la fecha evaluada (`throughDate` historico o fecha live).
 15. El bonus semanal no se suma por dias futuros cargados antes de tiempo.
 16. El reto funciona por confianza; no hace falta validacion administrativa normal.
 17. Las parejas no se planean cambiar durante el reto, pero el modelo permite agregar parejas nuevas.
@@ -29,6 +29,12 @@ Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo
 19. Rafa conserva rol admin, pero entra en modo participante y cambia a modo admin desde el icono de usuario.
 20. El calendario admin semanal es la vista principal para revisar marcas.
 21. La app publicada vive en `rm.crg-dev.com` mediante Cloudflare Tunnel y no toca el tunnel DoorLock.
+22. Perfect streak se evalua en `America/Asuncion` y el dia actual vence despues de las 06:30.
+23. Gym streak se evalua en `America/Asuncion` y un dia sin cobertura vence al dia siguiente.
+24. Los rankings normales se consultan live sin `throughDate`; `throughDate` queda para historico/debug.
+25. El perfil privado incluye peso, altura, IMC calculado y cambio de PIN propio.
+26. Los avatares actuales son assets estaticos por `username`, no datos persistidos.
+27. Todo push a `main` debe pasar CI/CD antes de publicar en la VM.
 
 ## Pendientes para decidir
 
@@ -36,7 +42,8 @@ Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo
 - Fecha exacta y reglas de cierre en septiembre.
 - Distribucion final de premios.
 - Si la evidencia sera opcional siempre o requerida para casos puntuales.
-- Como se vera y puntuara Lago en la UI.
+- Como se vera y puntuara Side quest/cardio opcional en la UI.
+- Si el nuevo Side quest suma puntos competitivos desde la primera version o si inicia como registro visible sin impacto en ranking.
 - Cuales seran las primeras insignias/achievements.
 - Formato del resumen semanal para WhatsApp.
 - Politica operativa de backups y restore de la VM.

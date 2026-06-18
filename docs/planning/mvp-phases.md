@@ -67,23 +67,27 @@ Incluye:
 - Login PIN en produccion.
 - Cookie HttpOnly y permisos server-side.
 - Rafa entra como participante y puede cambiar a modo admin desde usuario.
+- Perfil privado con peso, altura, IMC referencial y cambio de PIN propio.
+- Avatares sticker por participante en header y perfil.
 - CI/CD con GitHub Actions, GHCR, self-hosted runner y Docker Compose.
 - Cloudflare Tunnel para `https://rm.crg-dev.com`.
 - Admin calendario semanal de check-ins por participante.
 - Ajustes mobile reales: header fijo, bottom nav estable, safe area y datetime input contenido.
+- Rankings live en `America/Asuncion` con vencimiento de Perfect streak despues de 06:30 y Gym streak al dia siguiente.
 
 ## Fase 5 - Proximo bloque funcional recomendado
 
 Estado: pendiente.
 
-Opcion recomendada: Lago / Side quest.
+Opcion recomendada: Side quest / cardio opcional.
 
 Alcance probable:
 
-- Persistir actividades de lago.
-- Endpoints de lago.
-- Integracion de puntos de lago al ranking.
-- UI para registrar actividad de lago.
+- Persistir actividades de side quest/cardio.
+- Endpoints de side quest.
+- Decidir si suma puntos competitivos desde la primera version.
+- Integracion opcional de puntos al ranking.
+- UI para registrar actividad.
 - Tests de dominio, API y frontend.
 
 ## Fase 6 - Gamificacion avanzada
@@ -94,7 +98,7 @@ Estado: pendiente.
 - Insignias de estado.
 - Zona Roja mas accionable.
 - Ranking de lunes.
-- Ranking de lago.
+- Ranking de Side quest.
 - Ranking de recuperaciones para estadisticas/desempates.
 - Remontada contra semana anterior.
 

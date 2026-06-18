@@ -8,6 +8,7 @@ Calcular puntajes, rankings, rachas, bonus semanales y futuros desempates desde 
 
 - Challenge.
 - ChallengeSettings vigente.
+- Timezone del reto.
 - Participantes activos.
 - Parejas activas.
 - Check-ins validos o rechazados por admin.
@@ -15,7 +16,7 @@ Calcular puntajes, rankings, rachas, bonus semanales y futuros desempates desde 
 
 Inputs futuros:
 
-- Actividades de lago.
+- Actividades de Side quest/cardio opcional.
 - Evidencias opcionales.
 - Premios y auditoria de cierre.
 - Insignias persistidas.
@@ -38,7 +39,7 @@ Outputs futuros:
 - WeeklyScore persistido.
 - ScoreRun.
 - Insignias.
-- Ranking de lago.
+- Ranking de Side quest.
 - Desempates finales persistidos.
 
 ## Clasificacion de check-ins
@@ -152,7 +153,7 @@ Para cada pareja y fecha:
 1. Tomar los scores diarios de ambos miembros.
 2. Sumar puntos individuales.
 3. Si ambos tienen `countsForDailyCoupleBonus = true`, sumar dailyCoupleBonus.
-4. Sumar lago elegible del dia cuando esa fase exista.
+4. Sumar Side quest elegible del dia cuando esa fase exista.
 5. Guardar o proyectar CoupleDailyScore.
 
 La recuperacion sin coin nunca activa el bonus diario.
@@ -162,14 +163,19 @@ La recuperacion sin coin nunca activa el bonus diario.
 Para cada pareja y semana:
 
 1. Tomar solo dias habiles dentro del rango real del reto.
-2. Tomar solo dias hasta el `throughDate` consultado.
+2. Tomar solo dias hasta la fecha evaluada.
 3. Verificar que ambos integrantes completen todos los dias requeridos.
 4. Si no estan todos los dias requeridos, `weeklyBonusType = None`.
 5. Si ambos tienen todos los dias por morning/full_token/moved_schedule, `weeklyBonusType = Perfect`.
 6. Si completaron todos los dias y hubo same_day_recovery pero no weekend_recovery, `weeklyBonusType = Complete`.
 7. Si para completar se uso weekend_recovery, `weeklyBonusType = Rescued`.
 
-El bonus semanal no se otorga por dias futuros cargados antes de tiempo si el `throughDate` todavia no llego a esos dias.
+La fecha evaluada puede venir de dos modos:
+
+- `throughDate`: consulta historica fija.
+- live: hora actual convertida al timezone del reto.
+
+El bonus semanal no se otorga por dias futuros cargados antes de tiempo si la fecha evaluada todavia no llego a esos dias.
 
 ## Rachas
 
@@ -177,16 +183,20 @@ El bonus semanal no se otorga por dias futuros cargados antes de tiempo si el `t
 - Gym streak usa `countsForGymStreak`.
 - En el MVP, las rachas visibles son de pareja: avanzan si ambos miembros cumplen la condicion para el mismo dia.
 - Las coins validas preservan rachas segun su cobertura.
+- En ranking live, la fecha se calcula en `America/Asuncion`.
+- Perfect streak no considera perdido el dia actual hasta despues de las 06:30.
+- Gym streak no considera perdido un dia sin cobertura hasta el dia siguiente.
+- En ranking historico con `throughDate`, las rachas se calculan cerradas hasta esa fecha.
 
-## Lago
+## Side quest / cardio opcional
 
-El dominio tiene calculador de lago, pero todavia no hay API/UI/persistencia de lago.
+El dominio tiene un calculador inicial de lago, pero el modulo visible futuro debe ser Side quest/cardio opcional. Todavia no hay API/UI/persistencia para esta fase.
 
 Regla objetivo para la fase futura:
 
 1. Ordenar actividades validas por fecha/creacion.
 2. Filtrar actividades asociadas a gym/entrenamiento valido.
-3. Para mode = couple, exigir que ambos miembros esten en la misma LakeActivity.
+3. Para mode = couple, exigir que ambos miembros esten en la misma actividad.
 4. Tomar solo las primeras N puntuables segun settings.
 5. Asignar puntos: solo = 1, pareja = 3.
 6. Actividades extra pueden generar insignias pero no puntos.
@@ -211,8 +221,11 @@ ScoreRun persistido queda como fase futura.
 8. Flex coin que mueve entrenamiento al fin de semana clasifica como moved_schedule, no como rescue.
 9. No permite recuperar dos veces el mismo dia perdido.
 10. No permite usar Flex coin para un check-in dentro de ventana 5am.
-11. Semana parcial evalua solo dias habiles dentro del reto y hasta `throughDate`.
+11. Semana parcial evalua solo dias habiles dentro del reto y hasta la fecha evaluada.
 12. Semana perfecta vence a complete si no hay recuperaciones.
 13. Mezcla con weekend recovery baja a rescued.
 14. Coins validas no penalizan desempates.
 15. Correccion admin invalida registros y el ranking cambia al recalcular.
+16. Ranking live nocturno usa fecha de `America/Asuncion`, no UTC.
+17. Perfect streak cae despues de 06:30 si falta el dia actual.
+18. Gym streak cae al dia siguiente si falta cobertura.

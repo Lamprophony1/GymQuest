@@ -25,7 +25,12 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
 - Perfil privado del participante desde el icono de usuario:
   - peso y altura editables;
   - IMC calculado automaticamente;
+  - categoria IMC referencial: bajo peso, peso saludable, sobrepeso u obesidad;
   - cambio de PIN propio con PIN actual.
+- Avatares sticker por participante:
+  - se muestran en el header y en `Mi perfil`;
+  - se sirven desde `web/public/avatars`;
+  - si falta un avatar, la UI vuelve a iniciales.
 - Dashboard con ranking resumido, pareja propia, puntos, rachas, coins y acciones rapidas.
 - Ranking general por pareja.
 - Ranking semanal por pareja, separado en base, bonus diario y bonus semanal.
@@ -57,6 +62,14 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
   - Cloudflare Tunnel `gymquest-dc-pti`;
   - hostname `rm.crg-dev.com`.
 - Tests de dominio, aplicacion, infraestructura, API y frontend.
+
+## Cambios recientes incorporados
+
+- Perfil privado y cambio de PIN propio estan publicados.
+- Avatares por participante quedaron cargados como assets estaticos.
+- El frontend dejo de enviar `throughDate` para rankings normales; el backend calcula rankings live segun `America/Asuncion`.
+- Perfect streak y Gym streak tienen ventanas de vencimiento diferenciadas.
+- El deploy directo a `main` dispara CI/CD y publica si todas las pruebas pasan.
 
 ## Scoring implementado
 
@@ -126,10 +139,17 @@ POST /api/admin/participants/{id}/pin
 GET  /api/admin/check-ins?limit=50
 GET  /api/admin/check-ins/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD
 GET  /api/admin/tokens?limit=50
-GET  /api/rankings/general?throughDate=YYYY-MM-DD
-GET  /api/rankings/weeks?throughDate=YYYY-MM-DD
-GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
+GET  /api/rankings/general
+GET  /api/rankings/weeks
+GET  /api/rankings/weeks/{weekStartDate}
 ```
+
+Los rankings aceptan parametros opcionales:
+
+- `throughDate=YYYY-MM-DD`: calcula una fecha historica fija.
+- `asOf=YYYY-MM-DDTHH:mm:ssZ`: simula la hora live para pruebas o debug.
+
+Si no se envia ningun parametro, el backend usa la hora actual convertida al timezone del reto.
 
 ### Check-in request actual
 
@@ -147,7 +167,7 @@ GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
 
 ## Pendientes despues del cierre del MVP
 
-1. Lago / Side quest conectado a persistencia, API, scoring y UI.
+1. Side quest / cardio opcional conectado a persistencia, API, scoring y UI.
 2. Insignias / achievements persistidos o calculados.
 3. Admin pro: auditoria visible completa, edicion/correccion guiada y mejores acciones de recuperacion.
 4. Hardening operativo: backups automaticos, monitoreo, rotacion de PINs y runbook de restore.

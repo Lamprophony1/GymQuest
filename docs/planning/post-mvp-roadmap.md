@@ -1,6 +1,6 @@
 # Roadmap post-MVP
 
-Actualizado: 2026-06-17.
+Actualizado: 2026-06-18.
 
 ## Estado de partida
 
@@ -12,9 +12,11 @@ El MVP esta publicado en `https://rm.crg-dev.com` y ya cubre el uso diario del r
 - check-in;
 - coins;
 - admin calendario;
+- perfil privado, cambio de PIN y avatares;
+- rachas live con timezone `America/Asuncion`;
 - deploy CI/CD hacia VM + Cloudflare Tunnel.
 
-El plan final cambio respecto al plan inicial: autenticacion, publicacion y calendario admin ya estan implementados. El siguiente bloque de producto deberia enfocarse en funciones nuevas, no en infraestructura basica.
+El plan final cambio respecto al plan inicial: autenticacion, publicacion, calendario admin, perfiles privados, avatares y ajuste de rachas live ya estan implementados. El siguiente bloque deberia enfocarse en operar el MVP publicado y despues agregar funciones nuevas.
 
 ## Prioridad 1 - Operacion segura del MVP
 
@@ -28,12 +30,13 @@ Alcance recomendado:
 - Health check externo simple.
 - Rotacion de PINs si algun PIN temporal quedo expuesto.
 - Mini guia para admin: revisar calendario, invalidar marcas, otorgar coins y resetear PIN.
+- Checklist de deploy: tests verdes, push a `main`, CI/CD success, `GET /health` externo.
 
 Resultado esperado: app usable con menor riesgo operativo.
 
 ## Prioridad 2 - Side quest
 
-Objetivo: reemplazar el concepto visual pendiente de Lago por `Side quest` real, orientado a cardio opcional.
+Objetivo: convertir el placeholder `Side quest` en una funcion real de cardio opcional.
 
 Decision vigente de UI:
 
@@ -43,7 +46,7 @@ Decision vigente de UI:
 
 Alcance tecnico recomendado:
 
-- Entidad persistida para side quest/cardio.
+- Entidad persistida para side quest/cardio, no ligada solamente a lago.
 - Participantes asociados a la actividad.
 - API para registrar y listar.
 - Scoring de side quest.
@@ -51,7 +54,7 @@ Alcance tecnico recomendado:
 - Vista admin/correccion.
 - Tests de dominio, API y frontend.
 
-Pregunta pendiente: si side quest suma puntos competitivos desde el inicio o si primero funciona como actividad visible sin impacto en ranking.
+Pregunta pendiente: si Side quest suma puntos competitivos desde el inicio o si primero funciona como actividad visible sin impacto en ranking.
 
 ## Prioridad 3 - Achievements e insignias
 

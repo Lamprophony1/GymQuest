@@ -30,15 +30,17 @@ Incluye:
 - Admin para crear participantes, crear parejas, otorgar coins e invalidar check-ins o coins.
 - Admin con calendario semanal de check-ins por participante, filtros por estado/tipo, columna de jugador fija y anulacion directa de marcas validas.
 - Login por participante con PIN corto en modo produccion, cookie HttpOnly y switch participante/admin para Rafa.
-- Perfil privado desde el icono de usuario, con peso, altura, IMC calculado y cambio de PIN propio.
+- Perfil privado desde el icono de usuario, con peso, altura, IMC calculado, categoria referencial y cambio de PIN propio.
+- Avatares sticker por participante en header y perfil, servidos como assets estaticos.
 - En desarrollo se puede conservar el selector de usuario con `VITE_AUTH_MODE=dev-selector`.
 - Motor de scoring con puntos base, bonus diario, bonus semanal, Perfect streak y Gym streak.
+- Rankings live calculados en `America/Asuncion`, con gracia de rachas: Perfect streak cae despues de 06:30 y Gym streak al dia siguiente.
 - Persistencia SQLite local y seed inicial.
 - Header, bottom nav e inputs ajustados para mobile Safari.
 
 No incluye todavia:
 
-- Lago / side quest conectado a API y UI.
+- Side quest / cardio opcional conectado a API y UI.
 - Motor persistido de insignias o achievements.
 - Evidencias/fotos.
 - Notificaciones.
@@ -55,9 +57,11 @@ Prioridad competitiva:
 2. Coin valida que cubre el dia.
 3. Recuperacion del mismo dia.
 4. Recuperacion de fin de semana.
-5. Lago, pendiente para una fase posterior.
+5. Side quest/cardio opcional, pendiente para una fase posterior.
 
 La API sigue siendo la fuente de verdad para puntajes y rankings. El frontend solo registra acciones y muestra los resultados calculados.
+
+Los rankings normales se consultan sin fecha explicita para que el backend use la hora vigente del reto en `America/Asuncion`. `throughDate` queda disponible para consultas historicas o pruebas.
 
 ## Estructura
 
@@ -169,12 +173,17 @@ POST /api/admin/participants/{id}/pin
 GET  /api/admin/check-ins?limit=50
 GET  /api/admin/check-ins/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD
 GET  /api/admin/tokens?limit=50
-GET  /api/rankings/general?throughDate=YYYY-MM-DD
-GET  /api/rankings/weeks?throughDate=YYYY-MM-DD
-GET  /api/rankings/weeks/{weekStartDate}?throughDate=YYYY-MM-DD
+GET  /api/rankings/general
+GET  /api/rankings/weeks
+GET  /api/rankings/weeks/{weekStartDate}
 ```
 
 `POST /api/tokens/full-coverage` se mantiene por compatibilidad con el primer MVP. El flujo actual preferido es otorgar coins con admin y aplicarlas con `POST /api/tokens/{id}/use`.
+
+Los endpoints de ranking aceptan parametros opcionales:
+
+- `throughDate=YYYY-MM-DD`: consulta historica fija.
+- `asOf=YYYY-MM-DDTHH:mm:ssZ`: consulta live simulada para pruebas/debug; si no se envia, usa `DateTimeOffset.UtcNow` convertido al timezone del reto.
 
 ## Docs Relevantes
 
