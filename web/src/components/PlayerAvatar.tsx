@@ -7,8 +7,8 @@ interface PlayerAvatarProps {
 }
 
 const avatarSources: Record<string, string> = {
-  chachi: '/avatars/chachi.png',
-  cieli: '/avatars/cieli.png',
+  chachi: '/avatars/chachi.png?v=20260619-2',
+  cieli: '/avatars/cieli.png?v=20260619-2',
   clari: '/avatars/clari.png',
   naldo: '/avatars/naldo.png',
   obelar: '/avatars/obelar.png',

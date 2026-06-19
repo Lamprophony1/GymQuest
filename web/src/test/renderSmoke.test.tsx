@@ -490,7 +490,7 @@ test('player avatar renders configured sticker images for every seeded participa
   );
 
   for (const participant of avatarParticipants) {
-    const image = container.querySelector(`img[src="/avatars/${participant.username}.png"]`);
+    const image = container.querySelector(`img[src^="/avatars/${participant.username}.png"]`);
     const avatar = image?.closest('.player-avatar');
 
     expect(image).toBeInTheDocument();
