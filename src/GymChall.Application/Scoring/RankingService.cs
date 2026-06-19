@@ -103,10 +103,16 @@ public static class RankingService
     public static IReadOnlyList<CoupleRankingRow> CalculateGeneralRanking(ChallengeSnapshotDto snapshot, RankingEvaluationDates evaluation)
     {
         var dates = BusinessDates(snapshot.Challenge.StartDate, Min(snapshot.Challenge.EndDate, evaluation.ScoreThroughDate)).ToArray();
+        var weeklyBonusPointsByCouple = CalculateWeeklyBonusPointsByCouple(snapshot, evaluation.ScoreThroughDate);
 
         return snapshot.Couples
             .Where(couple => couple.Active && couple.ParticipantIds.Count == 2)
-            .Select(couple => CalculateCouple(snapshot, couple, dates, evaluation))
+            .Select(couple => CalculateCouple(
+                snapshot,
+                couple,
+                dates,
+                evaluation,
+                weeklyBonusPointsByCouple.GetValueOrDefault(couple.Id)))
             .OrderByDescending(row => row.TotalPoints)
             .ThenBy(row => row.CoupleName)
             .ToArray();
@@ -152,11 +158,12 @@ public static class RankingService
         ChallengeSnapshotDto snapshot,
         CoupleDto couple,
         IReadOnlyList<DateOnly> dates,
-        RankingEvaluationDates evaluation)
+        RankingEvaluationDates evaluation,
+        decimal weeklyBonusPoints)
     {
         var firstId = couple.ParticipantIds[0];
         var secondId = couple.ParticipantIds[1];
-        var total = 0m;
+        var total = weeklyBonusPoints;
         var morningStreak = 0;
         var gymStreak = 0;
 
@@ -187,6 +194,16 @@ public static class RankingService
         }
 
         return new CoupleRankingRow(couple.Id, couple.Name, total, morningStreak, gymStreak);
+    }
+
+    private static IReadOnlyDictionary<Guid, decimal> CalculateWeeklyBonusPointsByCouple(
+        ChallengeSnapshotDto snapshot,
+        DateOnly throughDate)
+    {
+        return CalculateWeeklyRankings(snapshot, throughDate)
+            .SelectMany(week => week.Rows)
+            .GroupBy(row => row.CoupleId)
+            .ToDictionary(group => group.Key, group => group.Sum(row => row.WeeklyBonusPoints));
     }
 
     private static WeeklyRankingRowDto CalculateWeeklyCouple(

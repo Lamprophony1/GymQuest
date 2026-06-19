@@ -100,6 +100,8 @@ El bonus semanal se calcula solo cuando la semana requerida esta completa dentro
 - `Rescued`: ambos completan la semana usando al menos una recuperacion de fin de semana sin coin.
 - `None`: falta cobertura para completar la semana.
 
+Una vez otorgado, el bonus semanal impacta el ranking semanal y tambien el ranking general/scoreboard. El estado "en juego" solo se muestra como proyeccion y no suma puntos.
+
 ### Rachas
 
 - `Perfect streak`: racha de pareja donde ambos sostienen cobertura tipo 5am/perfecta.

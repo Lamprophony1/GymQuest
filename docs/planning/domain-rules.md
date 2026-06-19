@@ -115,6 +115,8 @@ En consultas historicas se usa `throughDate`. En consultas live, el backend deri
 
 El bonus semanal no se suma por adelantado con dias futuros. Si se cargan dias posteriores a la fecha consultada o vigente, no afectan el ranking de esa fecha.
 
+Cuando el bonus semanal queda otorgado, suma tanto en el ranking semanal como en el ranking general/scoreboard. El bonus candidato o "en juego" nunca suma al ranking general hasta que la semana requerida cierre dentro de la fecha evaluada.
+
 Si hay mezcla de recuperacion tarde y fin de semana, gana la categoria mas baja: `Rescued`.
 
 ## Rachas

@@ -94,6 +94,22 @@ public sealed class RankingServiceTests
     }
 
     [Fact]
+    public void General_ranking_adds_weekly_bonus_after_required_week_is_complete()
+    {
+        var snapshot = BuildTwoPersonSnapshot(
+            startDate: new DateOnly(2026, 6, 15),
+            endDate: new DateOnly(2026, 6, 19),
+            checkIns: MorningCheckInsThrough(new DateOnly(2026, 6, 19)));
+
+        var ranking = RankingService.CalculateGeneralRanking(snapshot, throughDate: new DateOnly(2026, 6, 19));
+
+        var row = Assert.Single(ranking);
+        Assert.Equal(49m, row.TotalPoints);
+        Assert.Equal(5, row.MorningStreak);
+        Assert.Equal(5, row.GymStreak);
+    }
+
+    [Fact]
     public void Live_ranking_uses_challenge_timezone_instead_of_utc_date_at_night()
     {
         var snapshot = BuildTwoPersonSnapshot(

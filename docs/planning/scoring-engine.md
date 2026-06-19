@@ -177,6 +177,8 @@ La fecha evaluada puede venir de dos modos:
 
 El bonus semanal no se otorga por dias futuros cargados antes de tiempo si la fecha evaluada todavia no llego a esos dias.
 
+El ranking semanal muestra el desglose `base + bonus diario + bonus semanal`. El ranking general suma los puntos diarios acumulados mas los bonus semanales ya otorgados para semanas completas dentro de la fecha evaluada. Los candidatos semanales no afectan el general.
+
 ## Rachas
 
 - Perfect streak usa `countsForMorningStreak`.
