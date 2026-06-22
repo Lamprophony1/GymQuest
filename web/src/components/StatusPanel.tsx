@@ -1,6 +1,6 @@
 import { AlertTriangle, BadgeCheck, Dumbbell, Flame, Route, ShieldCheck } from 'lucide-react';
 import type { ChallengeSnapshot, Couple, RankingRow, WeeklyRanking } from '../api/types';
-import { latestWeeklyRanking, weeklyBonusStatus } from './format';
+import { isWeeklyRedZone, latestWeeklyRanking, weeklyBonusStatus } from './format';
 
 interface StatusPanelProps {
   challenge: ChallengeSnapshot | null;
@@ -17,7 +17,7 @@ export function StatusPanel({
 }: StatusPanelProps) {
   const latestWeek = latestWeeklyRanking(weeklyRankings);
   const ownWeek = latestWeek?.rows.find((row) => row.coupleId === ownCouple?.id) ?? null;
-  const isRedZone = ownWeek ? ownWeek.totalPoints < ownWeek.requiredBusinessDays * 2 : false;
+  const isRedZone = isWeeklyRedZone(ownWeek);
   const bonus = weeklyBonusStatus(ownWeek, challenge?.settings);
 
   return (

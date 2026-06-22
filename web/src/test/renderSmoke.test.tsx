@@ -384,6 +384,24 @@ test('dashboard shows the weekly bonus still in play before the week closes', ()
   expect(screen.getByText('+12 pts si finalizan la semana')).toBeInTheDocument();
 });
 
+test('dashboard keeps a coin-covered Monday out of red zone even when weekly points are still low', () => {
+  render(
+    <DashboardScreen
+      challenge={challenge}
+      participants={[rafa, clari]}
+      couples={[couple]}
+      ranking={ranking}
+      weeklyRankings={weeklyRankings}
+      selectedParticipant={rafa}
+      onNavigate={() => undefined}
+    />
+  );
+
+  expect(screen.getByText('Perfect week en juego')).toBeInTheDocument();
+  expect(screen.getByText('Fuera de peligro')).toBeInTheDocument();
+  expect(screen.queryByText('Warning state')).not.toBeInTheDocument();
+});
+
 test('dashboard does not show weekly bonus in play after a missed required day', () => {
   render(
     <DashboardScreen
@@ -399,6 +417,7 @@ test('dashboard does not show weekly bonus in play after a missed required day',
 
   expect(screen.getByText('Bonus semanal')).toBeInTheDocument();
   expect(screen.getByText('Sin bonus semanal en juego')).toBeInTheDocument();
+  expect(screen.getByText('Warning state')).toBeInTheDocument();
   expect(screen.queryByText('Perfect week en juego')).not.toBeInTheDocument();
 });
 

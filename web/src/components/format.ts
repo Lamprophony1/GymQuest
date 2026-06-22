@@ -97,6 +97,14 @@ export function weeklyBonusStatus(
   };
 }
 
+export function isWeeklyRedZone(row: WeeklyRankingRow | null | undefined): boolean {
+  if (!row || row.weeklyBonusPoints > 0) {
+    return false;
+  }
+
+  return row.weeklyBonusCandidateType === 'None';
+}
+
 export function checkInTypeLabel(type: CheckInType): string {
   switch (type) {
     case 0:
