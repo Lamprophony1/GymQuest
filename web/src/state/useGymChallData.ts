@@ -7,6 +7,7 @@ import type {
   Couple,
   Participant,
   RankingRow,
+  WeeklyCalendarEvent,
   WeeklyRanking
 } from '../api/types';
 import { addDaysToDateOnly, startOfWeekMonday } from '../utils/date';
@@ -18,6 +19,7 @@ export interface GymChallDataState {
   ranking: RankingRow[];
   weeklyRankings: WeeklyRanking[];
   recentCheckIns: AdminCheckIn[];
+  calendarEvents: WeeklyCalendarEvent[];
   calendarCheckIns: AdminCheckIn[];
   recentTokens: AdminToken[];
   loading: boolean;
@@ -37,6 +39,7 @@ function createEmptyState(loading: boolean): GymChallDataState {
     ranking: [],
     weeklyRankings: [],
     recentCheckIns: [],
+    calendarEvents: [],
     calendarCheckIns: [],
     recentTokens: [],
     loading,
@@ -52,6 +55,7 @@ export function useGymChallData({ enabled = true, includeAdmin = true }: UseGymC
     ranking: [],
     weeklyRankings: [],
     recentCheckIns: [],
+    calendarEvents: [],
     calendarCheckIns: [],
     recentTokens: [],
     loading: true,
@@ -69,7 +73,7 @@ export function useGymChallData({ enabled = true, includeAdmin = true }: UseGymC
 
     try {
       const calendarWeekEnd = addDaysToDateOnly(calendarWeekStart, 6);
-      const [challenge, participants, couples, ranking, weeklyRankings, recentCheckIns, calendarCheckIns, recentTokens] =
+      const [challenge, participants, couples, ranking, weeklyRankings, recentCheckIns, calendarEvents, calendarCheckIns, recentTokens] =
         await Promise.all([
           gymChallApi.getChallenge(),
           gymChallApi.listParticipants(),
@@ -77,6 +81,7 @@ export function useGymChallData({ enabled = true, includeAdmin = true }: UseGymC
           gymChallApi.getGeneralRanking(),
           gymChallApi.getWeeklyRankings(),
           includeAdmin ? gymChallApi.listRecentCheckIns() : Promise.resolve([]),
+          gymChallApi.listWeeklyCalendarEvents(calendarWeekStart, calendarWeekEnd),
           includeAdmin ? gymChallApi.listCalendarCheckIns(calendarWeekStart, calendarWeekEnd) : Promise.resolve([]),
           includeAdmin ? gymChallApi.listRecentTokens() : Promise.resolve([])
         ]);
@@ -88,6 +93,7 @@ export function useGymChallData({ enabled = true, includeAdmin = true }: UseGymC
         ranking,
         weeklyRankings,
         recentCheckIns,
+        calendarEvents,
         calendarCheckIns,
         recentTokens,
         loading: false,

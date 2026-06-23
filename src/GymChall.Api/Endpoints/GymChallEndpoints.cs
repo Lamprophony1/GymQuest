@@ -150,6 +150,11 @@ public static class GymChallEndpoints
             return Results.Ok(await service.ListCalendarCheckInsAsync(from, to, cancellationToken));
         }).RequireAdminIfPin(authSettings);
 
+        app.MapGet("/api/calendar/weekly", async (DateOnly from, DateOnly to, GymChallService service, CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.ListWeeklyCalendarEventsAsync(from, to, cancellationToken));
+        }).RequireAuthIfPin(authSettings);
+
         app.MapGet("/api/admin/tokens", async (int? limit, GymChallService service, CancellationToken cancellationToken) =>
         {
             return Results.Ok(await service.ListRecentFullCoverageTokensAsync(limit, cancellationToken));

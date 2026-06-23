@@ -86,7 +86,7 @@ public sealed class GymChallRepositoryAdminTests
     }
 
     [Fact]
-    public async Task Invalidate_token_marks_rejected_and_writes_audit_log()
+    public async Task Invalidate_available_token_marks_rejected_and_writes_audit_log()
     {
         await using var fixture = await DbFixture.CreateSeededAsync();
         var repository = new GymChallRepository(fixture.Db);
@@ -99,7 +99,7 @@ public sealed class GymChallRepositoryAdminTests
             new DateOnly(2026, 6, 16),
             ExceptionTokenTypeDto.Health,
             ExceptionReasonCategoryDto.Health,
-            ExceptionTokenStatusDto.Applied,
+            ExceptionTokenStatusDto.Available,
             SeedData.RafaId,
             "salud"));
 
@@ -110,6 +110,40 @@ public sealed class GymChallRepositoryAdminTests
         Assert.Equal(ExceptionTokenStatus.Rejected, token.Status);
         Assert.Equal("invalidate_token", audit.Action);
         Assert.Contains("error de carga", audit.NewValueJson);
+    }
+
+    [Fact]
+    public async Task Invalidate_applied_token_returns_it_to_available_and_removes_calendar_event()
+    {
+        await using var fixture = await DbFixture.CreateSeededAsync();
+        var repository = new GymChallRepository(fixture.Db);
+        var tokenId = Guid.Parse("30000000-0000-0000-0000-000000000003");
+
+        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
+            tokenId,
+            SeedData.ChallengeId,
+            SeedData.ClariId,
+            new DateOnly(2026, 6, 16),
+            ExceptionTokenTypeDto.Mandatory,
+            ExceptionReasonCategoryDto.MandatoryTrip,
+            ExceptionTokenStatusDto.Applied,
+            SeedData.RafaId,
+            "feriado"));
+
+        await repository.InvalidateFullCoverageTokenAsync(tokenId, SeedData.RafaId, "se devuelve coin");
+
+        var token = await fixture.Db.ExceptionTokens.SingleAsync(x => x.Id == tokenId);
+        var audit = await fixture.Db.AuditLogs.SingleAsync(x => x.EntityId == tokenId);
+        var calendarRows = await repository.ListWeeklyCalendarEventsAsync(
+            SeedData.ChallengeId,
+            new DateOnly(2026, 6, 15),
+            new DateOnly(2026, 6, 21));
+
+        Assert.Equal(ExceptionTokenStatus.Available, token.Status);
+        Assert.Equal("invalidate_token", audit.Action);
+        Assert.Contains("Applied", audit.OldValueJson);
+        Assert.Contains("Available", audit.NewValueJson);
+        Assert.DoesNotContain(calendarRows, row => row.Id == tokenId);
     }
 
     [Fact]
@@ -200,6 +234,83 @@ public sealed class GymChallRepositoryAdminTests
         Assert.Equal(new[] { validId, rejectedId }, rows.Select(row => row.Id).ToArray());
         Assert.Contains(rows, row => row.Id == rejectedId && row.Status == "Rejected");
         Assert.DoesNotContain(rows, row => row.Id == outsideId);
+    }
+
+    [Fact]
+    public async Task Lists_weekly_calendar_events_with_valid_checkins_and_applied_tokens_only()
+    {
+        await using var fixture = await DbFixture.CreateSeededAsync();
+        var repository = new GymChallRepository(fixture.Db);
+        var checkInId = Guid.Parse("40000000-0000-0000-0000-000000000201");
+        var rejectedCheckInId = Guid.Parse("40000000-0000-0000-0000-000000000202");
+        var appliedTokenId = Guid.Parse("40000000-0000-0000-0000-000000000203");
+        var availableTokenId = Guid.Parse("40000000-0000-0000-0000-000000000204");
+
+        await repository.AddCheckInAsync(new CheckInCreateDto(
+            checkInId,
+            SeedData.ChallengeId,
+            SeedData.RafaId,
+            new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)),
+            new DateOnly(2026, 6, 15),
+            CheckInTypeDto.GymMorning,
+            0,
+            SeedData.RafaId,
+            "5am"));
+        await repository.AddCheckInAsync(new CheckInCreateDto(
+            rejectedCheckInId,
+            SeedData.ChallengeId,
+            SeedData.ClariId,
+            new DateTimeOffset(2026, 6, 16, 19, 0, 0, TimeSpan.FromHours(-4)),
+            new DateOnly(2026, 6, 16),
+            CheckInTypeDto.GymSameDayRecovery,
+            0,
+            SeedData.ClariId,
+            "anulada"));
+        await repository.InvalidateCheckInAsync(rejectedCheckInId, SeedData.RafaId, "test");
+        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
+            appliedTokenId,
+            SeedData.ChallengeId,
+            SeedData.ClariId,
+            new DateOnly(2026, 6, 16),
+            ExceptionTokenTypeDto.Mandatory,
+            ExceptionReasonCategoryDto.MandatoryTrip,
+            ExceptionTokenStatusDto.Applied,
+            SeedData.RafaId,
+            "feriado"));
+        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
+            availableTokenId,
+            SeedData.ChallengeId,
+            SeedData.CieliId,
+            new DateOnly(2026, 6, 17),
+            ExceptionTokenTypeDto.Health,
+            ExceptionReasonCategoryDto.Health,
+            ExceptionTokenStatusDto.Available,
+            SeedData.RafaId,
+            "disponible"));
+
+        var rows = await repository.ListWeeklyCalendarEventsAsync(
+            SeedData.ChallengeId,
+            new DateOnly(2026, 6, 15),
+            new DateOnly(2026, 6, 21));
+
+        Assert.Equal(new[] { checkInId, appliedTokenId }, rows.Select(row => row.Id).ToArray());
+        Assert.Contains(rows, row =>
+            row.Id == checkInId &&
+            row.Kind == WeeklyCalendarEventKindDto.CheckIn &&
+            row.ParticipantName == "Rafa" &&
+            row.Status == "Valid" &&
+            row.CheckInType == CheckInTypeDto.GymMorning &&
+            row.CoinType is null);
+        Assert.Contains(rows, row =>
+            row.Id == appliedTokenId &&
+            row.Kind == WeeklyCalendarEventKindDto.Coin &&
+            row.ParticipantName == "Clari" &&
+            row.Status == "Applied" &&
+            row.ActivityDate == new DateOnly(2026, 6, 16) &&
+            row.CheckInType is null &&
+            row.CoinType == ExceptionTokenTypeDto.Mandatory);
+        Assert.DoesNotContain(rows, row => row.Id == rejectedCheckInId);
+        Assert.DoesNotContain(rows, row => row.Id == availableTokenId);
     }
 
     [Fact]

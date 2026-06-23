@@ -7,6 +7,7 @@ public enum CheckInTypeDto { GymMorning = 0, GymSameDayRecovery = 1, GymWeekendR
 public enum ExceptionTokenTypeDto { Health = 0, Mandatory = 1, ScheduleChange = 2 }
 public enum ExceptionTokenStatusDto { Applied = 0, Available = 1, Corrected = 2, Rejected = 3 }
 public enum ExceptionReasonCategoryDto { Health = 0, Period = 1, WorkTrip = 2, MandatoryTrip = 3, OtherApproved = 4 }
+public enum WeeklyCalendarEventKindDto { CheckIn = 0, Coin = 1 }
 
 public sealed record ChallengeCreateDto(Guid Id, string Name, DateOnly StartDate, DateOnly EndDate, Guid AdminParticipantId, string Timezone);
 public sealed record ParticipantCreateDto(Guid Id, string DisplayName, string Username, ParticipantRoleDto Role, string? Gender);
@@ -48,6 +49,18 @@ public sealed record AdminTokenSummaryDto(
     string Status,
     string? Notes,
     DateTimeOffset CreatedAt);
+public sealed record WeeklyCalendarEventDto(
+    Guid Id,
+    Guid ParticipantId,
+    string ParticipantName,
+    DateOnly ActivityDate,
+    DateTimeOffset? OccurredAt,
+    WeeklyCalendarEventKindDto Kind,
+    string Label,
+    string Status,
+    CheckInTypeDto? CheckInType,
+    ExceptionTokenTypeDto? CoinType,
+    string? Notes);
 public sealed record ChallengeSettingsDto(
     decimal MondayMorningPoints,
     decimal WeekdayMorningPoints,

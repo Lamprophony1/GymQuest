@@ -8,6 +8,7 @@ import { CheckInScreen } from './screens/CheckInScreen';
 import { AdminScreen } from './screens/AdminScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { MarkingsScreen } from './screens/MarkingsScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { RankingScreen } from './screens/RankingScreen';
 import { TokenScreen } from './screens/TokenScreen';
@@ -175,6 +176,14 @@ export function App() {
           }}
         />
       ) : null}
+      {visibleTab === 'markings' ? (
+        <MarkingsScreen
+          participants={data.participants}
+          calendarEvents={data.calendarEvents}
+          calendarWeekStart={data.calendarWeekStart}
+          onCalendarWeekChange={data.setCalendarWeekStart}
+        />
+      ) : null}
       {visibleTab === 'token' ? (
         <TokenScreen
           participants={data.participants}
@@ -191,6 +200,7 @@ export function App() {
           participants={data.participants}
           couples={data.couples}
           recentCheckIns={data.recentCheckIns}
+          calendarEvents={data.calendarEvents}
           calendarCheckIns={data.calendarCheckIns}
           calendarWeekStart={data.calendarWeekStart}
           recentTokens={data.recentTokens}

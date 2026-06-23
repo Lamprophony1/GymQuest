@@ -84,6 +84,21 @@ describe('apiRequest', () => {
     });
   });
 
+  test('requests weekly calendar events by date range', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => []
+    } as Response);
+
+    await gymChallApi.listWeeklyCalendarEvents('2026-06-15', '2026-06-21');
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/calendar/weekly?from=2026-06-15&to=2026-06-21', {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+  });
+
   test('requests live rankings without client-side dates by default', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,

@@ -1,11 +1,11 @@
-import { CircleDollarSign, Dumbbell, LayoutDashboard, Settings, Shield, Trophy, UserRoundCog } from 'lucide-react';
+import { CalendarDays, CircleDollarSign, Dumbbell, LayoutDashboard, Settings, Shield, Trophy, UserRoundCog } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Participant } from '../api/types';
 import type { SelectedIdentity } from '../state/useSelectedIdentity';
 import { BarbellMark } from './BrandMark';
 import { PlayerAvatar } from './PlayerAvatar';
 
-export type AppTab = 'dashboard' | 'ranking' | 'checkin' | 'token' | 'admin' | 'profile';
+export type AppTab = 'dashboard' | 'ranking' | 'checkin' | 'markings' | 'token' | 'admin' | 'profile';
 
 interface AppShellProps {
   activeTab: AppTab;
@@ -27,6 +27,7 @@ interface AppShellProps {
 const playerNavItems: Array<{ tab: AppTab; label: string; icon: ReactNode }> = [
   { tab: 'dashboard', label: 'Panel', icon: <LayoutDashboard /> },
   { tab: 'ranking', label: 'Ranking', icon: <Trophy /> },
+  { tab: 'markings', label: 'Marcaciones', icon: <CalendarDays /> },
   { tab: 'checkin', label: 'Check-in', icon: <Dumbbell /> }
 ];
 

@@ -21,6 +21,7 @@ import type {
   SetPinRequest,
   UpdateParticipantProfileRequest,
   UseTokenRequest,
+  WeeklyCalendarEvent,
   WeeklyRanking
 } from './types';
 
@@ -141,6 +142,8 @@ export const gymChallApi = {
   listRecentCheckIns: (limit = 50) => apiRequest<AdminCheckIn[]>(`/api/admin/check-ins?limit=${limit}`),
   listCalendarCheckIns: (from: string, to: string) =>
     apiRequest<AdminCheckIn[]>(`/api/admin/check-ins/calendar?from=${from}&to=${to}`),
+  listWeeklyCalendarEvents: (from: string, to: string) =>
+    apiRequest<WeeklyCalendarEvent[]>(`/api/calendar/weekly?from=${from}&to=${to}`),
   listRecentTokens: (limit = 50) => apiRequest<AdminToken[]>(`/api/admin/tokens?limit=${limit}`),
   getGeneralRanking: (throughDate?: Date) =>
     apiRequest<RankingRow[]>(

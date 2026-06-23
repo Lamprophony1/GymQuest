@@ -1,36 +1,33 @@
 import {
   Ban,
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   Plus,
   Shield,
   SlidersHorizontal,
   Users
 } from 'lucide-react';
-import { type CSSProperties, type FormEvent, type ReactNode, type UIEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 import type {
   AdminCheckIn,
   AdminToken,
-  CheckInType,
   Couple,
   CreateCoupleRequest,
   CreateParticipantRequest,
   Participant,
-  ParticipantRole
+  ParticipantRole,
+  WeeklyCalendarEvent
 } from '../api/types';
 import { checkInTypeLabel, formatShortDate, reasonCategoryLabel, statusTone, tokenTypeLabel } from '../components/format';
-import { addDaysToDateOnly, buildWeekDays, startOfWeekMonday } from '../utils/date';
+import { WeeklyMarkingsCalendar } from '../components/WeeklyMarkingsCalendar';
 
 type AdminSection = 'calendar' | 'records' | 'setup';
-type CalendarStatusFilter = 'all' | 'valid' | 'rejected';
-type CalendarTypeFilter = 'all' | `${CheckInType}`;
 
 interface AdminScreenProps {
   participants: Participant[];
   couples: Couple[];
   recentCheckIns: AdminCheckIn[];
+  calendarEvents: WeeklyCalendarEvent[];
   calendarCheckIns: AdminCheckIn[];
   calendarWeekStart: string;
   recentTokens: AdminToken[];
@@ -43,46 +40,27 @@ interface AdminScreenProps {
   onCalendarWeekChange: (weekStart: string) => void;
 }
 
-const weekDayLabels = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
-
-function formatWeekRange(weekStart: string): string {
-  return `Semana ${formatShortDate(weekStart)} - ${formatShortDate(addDaysToDateOnly(weekStart, 6))}`;
-}
-
-function formatCheckInTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '--:--';
-  }
-
-  return new Intl.DateTimeFormat('es-PY', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  }).format(date);
-}
-
-function matchesStatusFilter(checkIn: AdminCheckIn, filter: CalendarStatusFilter): boolean {
-  if (filter === 'all') {
-    return true;
-  }
-
-  const tone = statusTone(checkIn.status);
-  return filter === 'valid' ? tone === 'success' : tone === 'danger';
-}
-
-function matchesTypeFilter(checkIn: AdminCheckIn, filter: CalendarTypeFilter): boolean {
-  if (filter === 'all') {
-    return true;
-  }
-
-  return checkIn.type === Number(filter);
+function adminCheckInToCalendarEvent(checkIn: AdminCheckIn): WeeklyCalendarEvent {
+  return {
+    id: checkIn.id,
+    participantId: checkIn.participantId,
+    participantName: checkIn.participantName,
+    activityDate: checkIn.activityDate,
+    occurredAt: checkIn.occurredAt,
+    kind: 0,
+    label: checkIn.type.toString(),
+    status: checkIn.status,
+    checkInType: checkIn.type,
+    coinType: null,
+    notes: checkIn.notes
+  };
 }
 
 export function AdminScreen({
   participants,
   couples,
   recentCheckIns,
+  calendarEvents,
   calendarCheckIns,
   calendarWeekStart,
   recentTokens,
@@ -95,10 +73,6 @@ export function AdminScreen({
   onCalendarWeekChange
 }: AdminScreenProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>('calendar');
-  const [calendarStatusFilter, setCalendarStatusFilter] = useState<CalendarStatusFilter>('valid');
-  const [calendarTypeFilter, setCalendarTypeFilter] = useState<CalendarTypeFilter>('all');
-  const [calendarScrolledX, setCalendarScrolledX] = useState(false);
-  const [calendarScrolledY, setCalendarScrolledY] = useState(false);
   const [participantForm, setParticipantForm] = useState({
     displayName: '',
     username: '',
@@ -118,44 +92,15 @@ export function AdminScreen({
   const [error, setError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
 
-  const weekDays = useMemo(() => buildWeekDays(calendarWeekStart), [calendarWeekStart]);
-  const filteredCalendarCheckIns = useMemo(
-    () =>
-      calendarCheckIns.filter(
-        (checkIn) => matchesStatusFilter(checkIn, calendarStatusFilter) && matchesTypeFilter(checkIn, calendarTypeFilter)
-      ),
-    [calendarCheckIns, calendarStatusFilter, calendarTypeFilter]
-  );
-  const calendarCheckInsBySlot = useMemo(() => {
-    const slots = new Map<string, AdminCheckIn[]>();
-
-    for (const checkIn of filteredCalendarCheckIns) {
-      const key = `${checkIn.participantId}:${checkIn.activityDate}`;
-      const current = slots.get(key) ?? [];
-      current.push(checkIn);
-      slots.set(key, current);
-    }
-
-    for (const rows of slots.values()) {
-      rows.sort((first, second) => first.occurredAt.localeCompare(second.occurredAt));
-    }
-
-    return slots;
-  }, [filteredCalendarCheckIns]);
-  const visibleValidCheckIns = filteredCalendarCheckIns.filter((checkIn) => statusTone(checkIn.status) === 'success').length;
-  const visibleRejectedCheckIns = filteredCalendarCheckIns.filter((checkIn) => statusTone(checkIn.status) === 'danger').length;
-  const calendarPlayerNameChars = Math.min(
-    10,
-    Math.max(5, ...participants.map((participant) => participant.displayName.trim().length))
-  );
-  const calendarScrollerStyle = {
-    '--calendar-player-name-ch': `${calendarPlayerNameChars}ch`
-  } as CSSProperties;
-  const calendarScrollerClassName = [
-    'admin-calendar__scroller',
-    calendarScrolledX ? 'admin-calendar__scroller--x-scrolled' : '',
-    calendarScrolledY ? 'admin-calendar__scroller--y-scrolled' : ''
-  ].filter(Boolean).join(' ');
+  const adminCalendarEvents = useMemo(() => {
+    const eventIds = new Set(calendarEvents.map((event) => event.id));
+    return [
+      ...calendarEvents,
+      ...calendarCheckIns
+        .filter((checkIn) => !eventIds.has(checkIn.id))
+        .map(adminCheckInToCalendarEvent)
+    ];
+  }, [calendarCheckIns, calendarEvents]);
 
   useEffect(() => {
     setCoupleForm((current) => ({
@@ -239,15 +184,6 @@ export function AdminScreen({
     );
   }
 
-  function handleCalendarScroll(event: UIEvent<HTMLDivElement>) {
-    const target = event.currentTarget;
-    const nextScrolledX = target.scrollLeft > 12;
-    const nextScrolledY = target.scrollTop > 12;
-
-    setCalendarScrolledX((current) => (current === nextScrolledX ? current : nextScrolledX));
-    setCalendarScrolledY((current) => (current === nextScrolledY ? current : nextScrolledY));
-  }
-
   function renderTab(id: AdminSection, label: string, icon: ReactNode) {
     const selected = activeSection === id;
 
@@ -265,45 +201,6 @@ export function AdminScreen({
         {label}
       </button>
     );
-  }
-
-  function renderCalendarCell(participant: Participant, date: string) {
-    const rows = calendarCheckInsBySlot.get(`${participant.id}:${date}`) ?? [];
-
-    if (!rows.length) {
-      return <span className="calendar-empty">Sin marca</span>;
-    }
-
-    return rows.map((checkIn) => {
-      const tone = statusTone(checkIn.status);
-      const canInvalidate = checkIn.status.toLowerCase() === 'valid';
-
-      return (
-        <div className={`calendar-entry calendar-entry--${tone}`} key={checkIn.id}>
-          <div className="calendar-entry__main">
-            <strong>{formatCheckInTime(checkIn.occurredAt)}</strong>
-            <span>{checkInTypeLabel(checkIn.type)}</span>
-          </div>
-          <span className={`badge badge--${tone}`}>{checkIn.status}</span>
-          {checkIn.notes ? <small>{checkIn.notes}</small> : null}
-          <button
-            className="icon-button icon-button--danger calendar-entry__action"
-            type="button"
-            aria-label={`Invalidar check-in de ${checkIn.participantName}`}
-            disabled={busyAction === checkIn.id || !canInvalidate}
-            onClick={() =>
-              runAdminAction(
-                checkIn.id,
-                () => onInvalidateCheckIn(checkIn.id, `Admin ${adminParticipantId}`),
-                'Check-in invalidado.'
-              )
-            }
-          >
-            <Ban aria-hidden="true" />
-          </button>
-        </div>
-      );
-    });
   }
 
   return (
@@ -336,107 +233,28 @@ export function AdminScreen({
       </nav>
 
       {activeSection === 'calendar' ? (
-        <section
-          className="panel-section admin-calendar"
-          id="admin-calendar"
-          role="tabpanel"
-          aria-labelledby="admin-calendar-tab"
-        >
-          <div className="section-heading section-heading--with-action">
-            <div>
-              <span className="eyebrow">Check-ins</span>
-              <h2>Calendario semanal</h2>
-            </div>
-            <div className="calendar-summary" aria-label="Resumen visible">
-              <span>{visibleValidCheckIns} validos</span>
-              <span>{visibleRejectedCheckIns} rejected</span>
-            </div>
-          </div>
-
-          <div className="calendar-toolbar" aria-label="Navegacion semanal">
-            <button
-              className="icon-button"
-              type="button"
-              aria-label="Semana anterior"
-              onClick={() => onCalendarWeekChange(addDaysToDateOnly(calendarWeekStart, -7))}
-            >
-              <ChevronLeft aria-hidden="true" />
-            </button>
-            <strong>{formatWeekRange(calendarWeekStart)}</strong>
-            <button
-              className="icon-button"
-              type="button"
-              aria-label="Semana siguiente"
-              onClick={() => onCalendarWeekChange(addDaysToDateOnly(calendarWeekStart, 7))}
-            >
-              <ChevronRight aria-hidden="true" />
-            </button>
-            <button className="button button--tertiary calendar-toolbar__today" type="button" onClick={() => onCalendarWeekChange(startOfWeekMonday())}>
-              Hoy
-            </button>
-          </div>
-
-          <div className="calendar-filters">
-            <label htmlFor="calendar-status-filter">
-              Estado
-              <select
-                id="calendar-status-filter"
-                value={calendarStatusFilter}
-                onChange={(event) => setCalendarStatusFilter(event.currentTarget.value as CalendarStatusFilter)}
-              >
-                <option value="all">Todos</option>
-                <option value="valid">Validos</option>
-                <option value="rejected">Anulados</option>
-              </select>
-            </label>
-            <label htmlFor="calendar-type-filter">
-              Tipo
-              <select
-                id="calendar-type-filter"
-                value={calendarTypeFilter}
-                onChange={(event) => setCalendarTypeFilter(event.currentTarget.value as CalendarTypeFilter)}
-              >
-                <option value="all">Todos</option>
-                <option value="0">5am</option>
-                <option value="1">Recup. dia</option>
-                <option value="2">Recup. finde</option>
-              </select>
-            </label>
-          </div>
-
-          <div
-            className={calendarScrollerClassName}
-            role="region"
-            aria-label="Calendario de check-ins"
-            tabIndex={0}
-            onScroll={handleCalendarScroll}
-            style={calendarScrollerStyle}
-          >
-            <table className="admin-calendar-table">
-              <thead>
-                <tr>
-                  <th scope="col">Jugador</th>
-                  {weekDays.map((date, index) => (
-                    <th scope="col" key={date}>
-                      <span>{weekDayLabels[index]}</span>
-                      <small>{formatShortDate(date)}</small>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {participants.map((participant) => (
-                  <tr key={participant.id}>
-                    <th scope="row">{participant.displayName}</th>
-                    {weekDays.map((date) => (
-                      <td key={date}>{renderCalendarCell(participant, date)}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <WeeklyMarkingsCalendar
+          participants={participants}
+          events={adminCalendarEvents}
+          calendarWeekStart={calendarWeekStart}
+          onCalendarWeekChange={onCalendarWeekChange}
+          busyActionId={busyAction}
+          labelledBy="admin-calendar-title"
+          onInvalidateCheckIn={(event) =>
+            runAdminAction(
+              event.id,
+              () => onInvalidateCheckIn(event.id, `Admin ${adminParticipantId}`),
+              'Check-in invalidado.'
+            )
+          }
+          onInvalidateToken={(event) =>
+            runAdminAction(
+              event.id,
+              () => onInvalidateToken(event.id, `Admin ${adminParticipantId}`),
+              'Coin devuelta al player.'
+            )
+          }
+        />
       ) : null}
 
       {activeSection === 'setup' ? (

@@ -8,6 +8,7 @@ import { AdminScreen } from '../screens/AdminScreen';
 import { CheckInScreen } from '../screens/CheckInScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { MarkingsScreen } from '../screens/MarkingsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { RankingScreen } from '../screens/RankingScreen';
 import type {
@@ -19,6 +20,7 @@ import type {
   Participant,
   ParticipantProfile,
   RankingRow,
+  WeeklyCalendarEvent,
   WeeklyRanking
 } from '../api/types';
 
@@ -222,6 +224,35 @@ const calendarCheckIns: AdminCheckIn[] = [
     durationMinutes: 0,
     notes: 'tarde anulada',
     createdAt: '2026-06-16T23:00:00Z'
+  }
+];
+
+const weeklyCalendarEvents: WeeklyCalendarEvent[] = [
+  {
+    id: 'calendar-valid-id',
+    participantId: 'rafa-id',
+    participantName: 'Rafa',
+    activityDate: '2026-06-15',
+    occurredAt: '2026-06-15T09:05:00Z',
+    kind: 0,
+    label: 'GymMorning',
+    status: 'Valid',
+    checkInType: 0,
+    coinType: null,
+    notes: '5am'
+  },
+  {
+    id: 'weekly-coin-id',
+    participantId: 'clari-id',
+    participantName: 'Clari',
+    activityDate: '2026-06-16',
+    occurredAt: null,
+    kind: 1,
+    label: 'Mandatory',
+    status: 'Applied',
+    checkInType: null,
+    coinType: 1,
+    notes: 'feriado'
   }
 ];
 
@@ -496,6 +527,48 @@ test('app shell profile button uses the player avatar token in the header', () =
   expect(profileButton.querySelector('.profile-menu__avatar-gear')).not.toBeInTheDocument();
 });
 
+test('app shell exposes markings tab for players', () => {
+  const onTabChange = vi.fn();
+
+  render(
+    <AppShell
+      activeTab="dashboard"
+      identity={{ participantId: 'clari-id', mode: 'participant' }}
+      isAdmin={false}
+      participant={clari}
+      challengeName="Reto septiembre 2026"
+      onTabChange={onTabChange}
+      onChangeIdentity={() => undefined}
+    >
+      <div>Contenido</div>
+    </AppShell>
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: /marcaciones/i }));
+
+  expect(onTabChange).toHaveBeenCalledWith('markings');
+});
+
+test('markings screen renders a readonly weekly calendar with applied coins', () => {
+  render(
+    <MarkingsScreen
+      participants={[rafa, clari]}
+      calendarEvents={weeklyCalendarEvents}
+      calendarWeekStart="2026-06-15"
+      onCalendarWeekChange={() => undefined}
+    />
+  );
+
+  expect(screen.getByText('Marcaciones semanales')).toBeInTheDocument();
+  expect(screen.getByText('Semana 15/06 - 21/06')).toBeInTheDocument();
+  expect(screen.getByText('5AM')).toBeInTheDocument();
+  expect(screen.getByText('Commit coin')).toBeInTheDocument();
+  expect(screen.getByText('feriado')).toBeInTheDocument();
+  expect(screen.getByText('2 validos')).toBeInTheDocument();
+  expect(screen.getByLabelText('Estado')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /invalidar/i })).not.toBeInTheDocument();
+});
+
 test('player avatar renders configured sticker images for every seeded participant', () => {
   const { container } = render(
     <div>
@@ -657,6 +730,7 @@ test('admin screen renders recent check-ins and token sections', () => {
       participants={[rafa, clari]}
       couples={[couple]}
       recentCheckIns={recentCheckIns}
+      calendarEvents={weeklyCalendarEvents}
       calendarCheckIns={calendarCheckIns}
       calendarWeekStart="2026-06-15"
       recentTokens={recentTokens}
@@ -679,11 +753,14 @@ test('admin screen renders recent check-ins and token sections', () => {
 });
 
 test('admin screen shows weekly check-in calendar with rejected rows visible', () => {
+  const onInvalidateToken = vi.fn().mockResolvedValue(undefined);
+
   render(
     <AdminScreen
       participants={[rafa, clari]}
       couples={[couple]}
       recentCheckIns={recentCheckIns}
+      calendarEvents={weeklyCalendarEvents}
       calendarCheckIns={calendarCheckIns}
       calendarWeekStart="2026-06-15"
       recentTokens={recentTokens}
@@ -691,7 +768,7 @@ test('admin screen shows weekly check-in calendar with rejected rows visible', (
       onCreateParticipant={async () => undefined}
       onCreateCouple={async () => undefined}
       onInvalidateCheckIn={async () => undefined}
-      onInvalidateToken={async () => undefined}
+      onInvalidateToken={onInvalidateToken}
       onSetParticipantPin={async () => undefined}
       onCalendarWeekChange={() => undefined}
     />
@@ -702,6 +779,10 @@ test('admin screen shows weekly check-in calendar with rejected rows visible', (
   expect(screen.getByText('Rafa')).toBeInTheDocument();
   expect(screen.getByText('Clari')).toBeInTheDocument();
   expect(screen.getByText('5AM')).toBeInTheDocument();
+  expect(screen.getByText('Commit coin')).toBeInTheDocument();
+  expect(screen.getByText('2 validos')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /invalidar coin de clari/i }));
+  expect(onInvalidateToken).toHaveBeenCalledWith('weekly-coin-id', 'Admin rafa-id');
   expect(screen.queryByText('Rejected')).not.toBeInTheDocument();
 
   fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'all' } });
@@ -720,6 +801,7 @@ test('admin screen can reset a participant PIN', async () => {
       participants={[rafa, clari]}
       couples={[couple]}
       recentCheckIns={[]}
+      calendarEvents={[]}
       calendarCheckIns={[]}
       calendarWeekStart="2026-06-15"
       recentTokens={[]}

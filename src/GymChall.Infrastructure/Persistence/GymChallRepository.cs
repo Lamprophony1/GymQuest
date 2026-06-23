@@ -290,6 +290,88 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<WeeklyCalendarEventDto>> ListWeeklyCalendarEventsAsync(Guid challengeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        var checkIns = await db.CheckIns
+            .Where(x => x.ChallengeId == challengeId && x.ActivityDate >= from && x.ActivityDate <= to && x.Status == RecordStatus.Valid)
+            .Join(
+                db.Participants,
+                checkIn => checkIn.ParticipantId,
+                participant => participant.Id,
+                (checkIn, participant) => new { CheckIn = checkIn, Participant = participant })
+            .Select(x => new
+            {
+                x.CheckIn.Id,
+                x.CheckIn.ParticipantId,
+                ParticipantName = x.Participant.DisplayName,
+                x.CheckIn.ActivityDate,
+                x.CheckIn.OccurredAt,
+                x.CheckIn.Type,
+                x.CheckIn.Status,
+                x.CheckIn.Notes
+            })
+            .ToArrayAsync(cancellationToken);
+
+        var appliedTokens = await db.ExceptionTokens
+            .Where(x => x.ChallengeId == challengeId && x.TargetDate >= from && x.TargetDate <= to && x.Status == ExceptionTokenStatus.Applied)
+            .Join(
+                db.Participants,
+                token => token.ParticipantId,
+                participant => participant.Id,
+                (token, participant) => new { Token = token, Participant = participant })
+            .Select(x => new
+            {
+                x.Token.Id,
+                x.Token.ParticipantId,
+                ParticipantName = x.Participant.DisplayName,
+                x.Token.TargetDate,
+                x.Token.Type,
+                x.Token.Status,
+                x.Token.Notes
+            })
+            .ToArrayAsync(cancellationToken);
+
+        return checkIns
+            .Select(x =>
+            {
+                var type = ToDto(x.Type);
+                return new WeeklyCalendarEventDto(
+                    x.Id,
+                    x.ParticipantId,
+                    x.ParticipantName,
+                    x.ActivityDate,
+                    x.OccurredAt,
+                    WeeklyCalendarEventKindDto.CheckIn,
+                    type.ToString(),
+                    x.Status.ToString(),
+                    type,
+                    null,
+                    x.Notes);
+            })
+            .Concat(appliedTokens.Select(x =>
+            {
+                var type = ToDto(x.Type);
+                return new WeeklyCalendarEventDto(
+                    x.Id,
+                    x.ParticipantId,
+                    x.ParticipantName,
+                    x.TargetDate,
+                    null,
+                    WeeklyCalendarEventKindDto.Coin,
+                    type.ToString(),
+                    x.Status.ToString(),
+                    null,
+                    type,
+                    x.Notes);
+            }))
+            .OrderBy(x => x.ActivityDate)
+            .ThenBy(x => x.ParticipantName)
+            .ThenBy(x => x.Kind)
+            .ThenBy(x => x.OccurredAt ?? DateTimeOffset.MaxValue)
+            .ThenBy(x => x.Id)
+            .ToArray();
+    }
+
     public async Task<IReadOnlyList<AdminTokenSummaryDto>> ListRecentFullCoverageTokensAsync(Guid challengeId, int limit, CancellationToken cancellationToken = default)
     {
         var cappedLimit = Math.Clamp(limit, 1, 100);
@@ -450,7 +532,9 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
     {
         var token = await db.ExceptionTokens.SingleAsync(x => x.Id == tokenId, cancellationToken);
         var oldStatus = token.Status;
-        token.Status = ExceptionTokenStatus.Rejected;
+        token.Status = oldStatus == ExceptionTokenStatus.Applied
+            ? ExceptionTokenStatus.Available
+            : ExceptionTokenStatus.Rejected;
         token.UpdatedAt = DateTimeOffset.UtcNow;
 
         db.AuditLogs.Add(new AuditLogEntity

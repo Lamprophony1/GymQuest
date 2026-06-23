@@ -3,6 +3,7 @@ export type CheckInType = 0 | 1 | 2;
 export type ExceptionTokenType = 0 | 1 | 2;
 export type ExceptionTokenStatus = 0 | 1 | 2 | 3;
 export type ExceptionReasonCategory = 0 | 1 | 2 | 3 | 4;
+export type WeeklyCalendarEventKind = 0 | 1;
 
 export interface Challenge {
   id: string;
@@ -163,6 +164,20 @@ export interface AdminToken {
   status: string;
   notes?: string | null;
   createdAt: string;
+}
+
+export interface WeeklyCalendarEvent {
+  id: string;
+  participantId: string;
+  participantName: string;
+  activityDate: string;
+  occurredAt?: string | null;
+  kind: WeeklyCalendarEventKind;
+  label: string;
+  status: string;
+  checkInType?: CheckInType | null;
+  coinType?: ExceptionTokenType | null;
+  notes?: string | null;
 }
 
 export interface CreateParticipantRequest {

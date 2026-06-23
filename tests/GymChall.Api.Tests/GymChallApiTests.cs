@@ -282,6 +282,52 @@ public sealed class GymChallApiTests
     }
 
     [Fact]
+    public async Task Weekly_calendar_endpoint_returns_valid_checkins_and_applied_coins()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+        var participants = await client.GetFromJsonAsync<List<ParticipantRow>>("/api/participants");
+        Assert.NotNull(participants);
+        var rafa = Assert.Single(participants, x => x.Username == "rafa");
+        var clari = Assert.Single(participants, x => x.Username == "clari");
+
+        var checkIn = await client.PostAsJsonAsync("/api/check-ins", new
+        {
+            participantId = rafa.Id,
+            occurredAt = new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)),
+            createdByParticipantId = rafa.Id,
+            notes = "5am"
+        });
+        var checkInCreated = await checkIn.Content.ReadFromJsonAsync<CreatedRecord>();
+        await client.PostAsJsonAsync("/api/tokens/full-coverage", new
+        {
+            participantId = clari.Id,
+            targetDate = new DateOnly(2026, 6, 16),
+            reasonCategory = 3,
+            assignedByAdminId = rafa.Id,
+            notes = "feriado"
+        });
+
+        var rows = await client.GetFromJsonAsync<List<WeeklyCalendarEventRow>>("/api/calendar/weekly?from=2026-06-15&to=2026-06-21");
+
+        Assert.NotNull(rows);
+        Assert.Contains(rows, row =>
+            row.Id == checkInCreated!.Id &&
+            row.Kind == 0 &&
+            row.ParticipantName == "Rafa" &&
+            row.Status == "Valid" &&
+            row.CheckInType is not null &&
+            row.CoinType is null);
+        Assert.Contains(rows, row =>
+            row.Kind == 1 &&
+            row.ParticipantName == "Clari" &&
+            row.ActivityDate == new DateOnly(2026, 6, 16) &&
+            row.Status == "Applied" &&
+            row.CoinType == 0 &&
+            row.CheckInType is null);
+    }
+
+    [Fact]
     public async Task Admin_recent_tokens_endpoint_returns_recent_rows()
     {
         await using var app = CreateApp();
@@ -305,6 +351,40 @@ public sealed class GymChallApiTests
         var row = Assert.Single(rows);
         Assert.Equal("Rafa", row.ParticipantName);
         Assert.Equal("Applied", row.Status);
+    }
+
+    [Fact]
+    public async Task Admin_invalidate_applied_token_returns_it_to_available()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+        var participants = await client.GetFromJsonAsync<List<ParticipantRow>>("/api/participants");
+        Assert.NotNull(participants);
+        var rafa = Assert.Single(participants, x => x.Username == "rafa");
+        var clari = Assert.Single(participants, x => x.Username == "clari");
+
+        var create = await client.PostAsJsonAsync("/api/tokens/full-coverage", new
+        {
+            participantId = clari.Id,
+            targetDate = new DateOnly(2026, 6, 16),
+            reasonCategory = 3,
+            assignedByAdminId = rafa.Id,
+            notes = "feriado"
+        });
+        var created = await create.Content.ReadFromJsonAsync<CreatedRecord>();
+        var invalidate = await client.PostAsJsonAsync($"/api/admin/tokens/{created!.Id}/invalidate", new
+        {
+            actorParticipantId = rafa.Id,
+            reason = "se devuelve coin"
+        });
+        var snapshot = await client.GetFromJsonAsync<ChallengeSnapshotRow>("/api/challenge");
+        var calendarRows = await client.GetFromJsonAsync<List<WeeklyCalendarEventRow>>("/api/calendar/weekly?from=2026-06-15&to=2026-06-21");
+
+        Assert.Equal(HttpStatusCode.NoContent, invalidate.StatusCode);
+        Assert.NotNull(snapshot);
+        Assert.Contains(snapshot.FullCoverageTokens, token => token.Id == created.Id && token.Status == 1);
+        Assert.NotNull(calendarRows);
+        Assert.DoesNotContain(calendarRows, row => row.Id == created.Id);
     }
 
     [Fact]
@@ -336,6 +416,27 @@ public sealed class GymChallApiTests
 
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         Assert.Equal(HttpStatusCode.OK, challenge.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pin_login_allows_player_to_read_weekly_calendar()
+    {
+        await using var app = CreatePinLoginApp();
+        var adminClient = app.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var playerClient = app.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var options = await adminClient.GetFromJsonAsync<List<LoginOptionRow>>("/api/auth/login-options");
+        Assert.NotNull(options);
+        var rafa = Assert.Single(options, option => option.Username == "rafa");
+        var clari = Assert.Single(options, option => option.Username == "clari");
+
+        await adminClient.PostAsJsonAsync("/api/auth/login", new { participantId = rafa.Id, pin = "123456" });
+        var reset = await adminClient.PostAsJsonAsync($"/api/admin/participants/{clari.Id}/pin", new { pin = "2468" });
+        var login = await playerClient.PostAsJsonAsync("/api/auth/login", new { participantId = clari.Id, pin = "2468" });
+        var response = await playerClient.GetAsync("/api/calendar/weekly?from=2026-06-15&to=2026-06-21");
+
+        Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -425,8 +526,22 @@ public sealed class GymChallApiTests
     private sealed record WeeklyRanking(DateOnly WeekStartDate, DateOnly WeekEndDate, List<WeeklyRankingRow> Rows);
     private sealed record WeeklyRankingRow(Guid CoupleId, string CoupleName, decimal TotalPoints, string WeeklyBonusType);
     private sealed record CreatedRecord(Guid Id);
+    private sealed record ChallengeSnapshotRow(List<FullCoverageTokenRow> FullCoverageTokens);
+    private sealed record FullCoverageTokenRow(Guid Id, Guid ParticipantId, DateOnly TargetDate, int Status);
     private sealed record AdminCheckInRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly ActivityDate, string Status);
     private sealed record AdminTokenRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly TargetDate, string Status);
+    private sealed record WeeklyCalendarEventRow(
+        Guid Id,
+        Guid ParticipantId,
+        string ParticipantName,
+        DateOnly ActivityDate,
+        DateTimeOffset? OccurredAt,
+        int Kind,
+        string Label,
+        string Status,
+        int? CheckInType,
+        int? CoinType,
+        string? Notes);
     private sealed record LoginOptionRow(Guid Id, string DisplayName, string Username);
     private sealed record ParticipantProfileRow(Guid Id, string DisplayName, string Username, int Role, string? Gender, bool Active, double? WeightKg, double? HeightCm, double? BodyMassIndex);
 }

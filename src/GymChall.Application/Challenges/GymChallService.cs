@@ -243,6 +243,18 @@ public sealed class GymChallService(IGymChallRepository repository)
         return await repository.ListCalendarCheckInsAsync(challengeId, from, to, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<WeeklyCalendarEventDto>> ListWeeklyCalendarEventsAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        if (to < from)
+        {
+            throw new InvalidOperationException("El rango de calendario no es valido.");
+        }
+
+        var challengeId = await RequireActiveChallengeId(cancellationToken);
+        await EnsureMonthlyHealthTokensAsync(challengeId, cancellationToken);
+        return await repository.ListWeeklyCalendarEventsAsync(challengeId, from, to, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<AdminTokenSummaryDto>> ListRecentFullCoverageTokensAsync(int? limit, CancellationToken cancellationToken = default)
     {
         var challengeId = await RequireActiveChallengeId(cancellationToken);
