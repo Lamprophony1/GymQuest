@@ -1,7 +1,7 @@
 import { Delete, LogIn } from 'lucide-react';
 import { type FormEvent, type KeyboardEvent, useEffect, useState } from 'react';
 import type { LoginOption, LoginRequest } from '../api/types';
-import { BarbellMark } from '../components/BrandMark';
+import { BrandMark } from '../components/BrandMark';
 
 interface LoginScreenProps {
   options: LoginOption[];
@@ -71,7 +71,7 @@ export function LoginScreen({ options, loading, error, onLogin }: LoginScreenPro
     <main className="identity-screen login-screen">
       <section className="identity-card login-card" aria-labelledby="login-title">
         <div className="login-card__mark" aria-hidden="true">
-          <BarbellMark className="login-card__barbell" />
+          <BrandMark className="login-card__brand-image" />
         </div>
         <span className="eyebrow">Player select</span>
         <h1 id="login-title">Proyecto RM</h1>

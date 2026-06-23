@@ -36,8 +36,8 @@ describe('Doodle Fit visual system', () => {
     expect(styles).toContain('.app-header::before');
     expect(styles).toContain('position: fixed');
     expect(styles).toContain('.app-header__brand-mark');
-    expect(styles).toContain('.app-header__brand-mark svg');
-    expect(styles).toContain('.app-header__barbell');
+    expect(styles).toContain('.app-header__brand-image');
+    expect(styles).toContain('.quest-icon');
     expect(styles).toContain('.app-header__title-row');
     expect(styles).toContain('.app-header__meta-pill');
     expect(styles).toContain('background: var(--lime-soft)');
@@ -46,16 +46,39 @@ describe('Doodle Fit visual system', () => {
   });
 
   test('keeps the login brand mark aligned with the app header identity', () => {
-    expect(styles).toContain('.login-card__mark svg');
-    expect(styles).toContain('.login-card__barbell');
-    expect(styles).toContain('background: var(--fresh)');
+    expect(styles).toContain('.login-card__brand-image');
+    expect(styles).toContain('.app-header__brand-image');
+    expect(styles).toContain('background: transparent');
     expect(styles).not.toContain('background: linear-gradient(145deg, var(--accent), var(--aqua))');
+  });
+
+  test('keeps Quest Sticker Totems enlarged with an extra-prominent login brand', () => {
+    expect(styles).toContain('width: 128px');
+    expect(styles).toContain('height: 128px');
+    expect(styles).toContain('--header-brand-size: clamp(84px, 21vw, 96px)');
+    expect(styles).toContain('--header-brand-size: clamp(66px, 16vw, 72px)');
+    expect(styles).toMatch(/\.icon-button\.profile-menu__button--avatar\s*{\s*width: 78px;\s*height: 78px;/);
+    expect(styles).toMatch(/\.app-header--compact \.icon-button\.profile-menu__button--avatar\s*{\s*width: 64px;\s*height: 64px;/);
+    expect(styles).toMatch(/\.streak-score \.icon-frame--asset\s*{\s*width: 64px;\s*height: 64px;/);
+    expect(styles).toMatch(/\.icon-frame--asset\s*{\s*width: 72px;\s*height: 72px;/);
+    expect(styles).toMatch(/\.coin-mark--asset\s*{\s*width: 50px;\s*height: 50px;/);
+    expect(styles).toMatch(/\.calendar-entry--coin\s*{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 46px;/);
+    expect(styles).not.toMatch(/\.calendar-entry--coin\s*{[\s\S]*?min-height: 94px;/);
+    expect(styles).toMatch(/\.calendar-entry__coin-icon\s*{[\s\S]*?justify-self: center;[\s\S]*?width: 46px;\s*height: 46px;/);
+    expect(styles).toMatch(/\.badge--streak \.quest-icon\s*{\s*width: 1\.875rem;\s*height: 1\.875rem;/);
   });
 
   test('keeps mobile date-time inputs inside form cards', () => {
     expect(styles).toContain('.arcade-form input[type="datetime-local"]');
     expect(styles).toContain('max-inline-size: 100%');
     expect(styles).toContain('::-webkit-date-and-time-value');
+  });
+
+  test('keeps weekly calendar scroll affordances dimensionally stable', () => {
+    const yScrolledRule = styles.match(/\.admin-calendar__scroller--y-scrolled \.admin-calendar-table thead th\s*{(?<body>[\s\S]*?)}/);
+    expect(yScrolledRule?.groups?.body).toBeDefined();
+    expect(yScrolledRule?.groups?.body).not.toMatch(/padding|font-size|display/);
+    expect(styles).not.toMatch(/\.admin-calendar__scroller--y-scrolled \.admin-calendar-table thead th small\s*{[\s\S]*?display:\s*none/);
   });
 
   test('anchors the mobile bottom nav to the viewport edge with safe-area padding', () => {

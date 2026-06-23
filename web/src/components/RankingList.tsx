@@ -1,6 +1,6 @@
-import { Dumbbell, Flame } from 'lucide-react';
 import type { RankingRow } from '../api/types';
 import { formatCoupleName, formatPoints } from './format';
+import { QuestIcon } from './QuestIcon';
 
 interface RankingListProps {
   rows: RankingRow[];
@@ -27,11 +27,11 @@ export function RankingList({ rows, highlightCoupleId, compact = false }: Rankin
               <span className="ranking-row__name">{formatCoupleName(row.coupleName)}</span>
               <span className="ranking-row__badges">
                 <span className="badge badge--warning badge--streak" aria-label={`Perfect streak ${row.morningStreak}x`}>
-                  <Flame aria-hidden="true" />
+                  <QuestIcon name="streak-perfect" />
                   <strong>{row.morningStreak}x</strong>
                 </span>
                 <span className="badge badge--success badge--streak" aria-label={`Gym streak ${row.gymStreak}x`}>
-                  <Dumbbell aria-hidden="true" />
+                  <QuestIcon name="streak-gym" />
                   <strong>{row.gymStreak}x</strong>
                 </span>
               </span>

@@ -1,6 +1,7 @@
-import { AlertTriangle, BadgeCheck, Dumbbell, Flame, Route, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, ShieldCheck } from 'lucide-react';
 import type { ChallengeSnapshot, Couple, RankingRow, WeeklyRanking } from '../api/types';
 import { isWeeklyRedZone, latestWeeklyRanking, weeklyBonusStatus } from './format';
+import { QuestIcon } from './QuestIcon';
 
 interface StatusPanelProps {
   challenge: ChallengeSnapshot | null;
@@ -28,8 +29,8 @@ export function StatusPanel({
       </div>
       <div className="status-grid">
         <article className="status-card">
-          <span className="icon-frame icon-frame--warning" aria-hidden="true">
-            <Flame />
+          <span className="icon-frame icon-frame--warning icon-frame--asset" aria-hidden="true">
+            <QuestIcon name="streak-perfect" />
           </span>
           <div>
             <h3>Perfect streak</h3>
@@ -37,8 +38,8 @@ export function StatusPanel({
           </div>
         </article>
         <article className="status-card">
-          <span className="icon-frame icon-frame--success" aria-hidden="true">
-            <Dumbbell />
+          <span className="icon-frame icon-frame--success icon-frame--asset" aria-hidden="true">
+            <QuestIcon name="streak-gym" />
           </span>
           <div>
             <h3>Gym streak</h3>
@@ -55,8 +56,8 @@ export function StatusPanel({
           </div>
         </article>
         <article className="status-card status-card--soon">
-          <span className="icon-frame icon-frame--info" aria-hidden="true">
-            <Route />
+          <span className="icon-frame icon-frame--info icon-frame--asset" aria-hidden="true">
+            <QuestIcon name="side-quest" />
           </span>
           <div>
             <div className="status-card__title-row">

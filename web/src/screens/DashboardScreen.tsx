@@ -1,6 +1,7 @@
-import { CircleDollarSign, Clock3, Dumbbell, Flame, HeartPulse, ShieldAlert, ShieldCheck, Trophy } from 'lucide-react';
+import { Dumbbell, ShieldAlert, Trophy } from 'lucide-react';
 import type { AppTab } from '../components/AppShell';
 import { coinTone, coinTypes, formatCoupleName, formatPoints, tokenTypeLabel } from '../components/format';
+import { QuestIcon, questCoinIconName } from '../components/QuestIcon';
 import { ScorePanel } from '../components/ScorePanel';
 import { StatusPanel } from '../components/StatusPanel';
 import type { ChallengeSnapshot, Couple, ExceptionTokenType, Participant, RankingRow, WeeklyRanking } from '../api/types';
@@ -16,15 +17,7 @@ interface DashboardScreenProps {
 }
 
 function coinIcon(type: ExceptionTokenType) {
-  if (type === 0) {
-    return <HeartPulse aria-hidden="true" />;
-  }
-
-  if (type === 1) {
-    return <ShieldCheck aria-hidden="true" />;
-  }
-
-  return <Clock3 aria-hidden="true" />;
+  return <QuestIcon name={questCoinIconName(type)} />;
 }
 
 export function DashboardScreen({
@@ -77,21 +70,21 @@ export function DashboardScreen({
                 <span className="eyebrow">Rachas</span>
                 <h3>Streak board</h3>
               </div>
-              <span className="icon-frame icon-frame--warning" aria-hidden="true">
-                <Flame />
+              <span className="icon-frame icon-frame--warning icon-frame--asset" aria-hidden="true">
+                <QuestIcon name="streak-perfect" />
               </span>
             </div>
             <div className="streak-score-grid" aria-label="Rachas actuales">
               <div className="streak-score">
-                <span className="icon-frame icon-frame--warning" aria-hidden="true">
-                  <Flame />
+                <span className="icon-frame icon-frame--warning icon-frame--asset" aria-hidden="true">
+                  <QuestIcon name="streak-perfect" />
                 </span>
                 <strong>{ownRanking?.morningStreak ?? 0}x</strong>
                 <span>Perfect streak</span>
               </div>
               <div className="streak-score">
-                <span className="icon-frame icon-frame--success" aria-hidden="true">
-                  <Dumbbell />
+                <span className="icon-frame icon-frame--success icon-frame--asset" aria-hidden="true">
+                  <QuestIcon name="streak-gym" />
                 </span>
                 <strong>{ownRanking?.gymStreak ?? 0}x</strong>
                 <span>Gym streak</span>
@@ -113,14 +106,14 @@ export function DashboardScreen({
                 <span className="eyebrow">Power-up</span>
                 <h3>Coins</h3>
               </div>
-              <span className="icon-frame icon-frame--info" aria-hidden="true">
-                <CircleDollarSign />
+              <span className="icon-frame icon-frame--info icon-frame--asset" aria-hidden="true">
+                <QuestIcon name="coin-commit" />
               </span>
             </div>
             <div className="coin-list" aria-label="Coins disponibles">
               {coinTypes.map((type) => (
                 <span className={`coin-chip coin-chip--${coinTone(type)}`} key={type}>
-                  <span className="coin-mark" aria-hidden="true">
+                  <span className="coin-mark coin-mark--asset" aria-hidden="true">
                     {coinIcon(type)}
                   </span>
                   <span>{tokenTypeLabel(type)} x{coinCount(type)}</span>

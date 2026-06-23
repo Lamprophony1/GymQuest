@@ -126,6 +126,16 @@ svg {
   flex: 0 0 auto;
 }
 
+.quest-icon {
+  display: block;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .eyebrow {
   display: inline-flex;
   width: fit-content;
@@ -224,25 +234,18 @@ svg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 128px;
+  height: 128px;
   margin-bottom: 18px;
-  border: 2px solid var(--border);
-  border-radius: 18px;
-  background: var(--fresh);
-  color: var(--surface);
-  box-shadow: 2px 3px 0 var(--border);
-  font-size: 1.55rem;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-.login-card__mark svg {
-  width: 1.85rem;
-  height: 1.85rem;
-  stroke-width: 2.4;
-}
-
-.login-card__barbell {
-  display: block;
+.login-card__brand-image {
+  width: 128px;
+  height: 128px;
 }
 
 .login-form {
@@ -375,10 +378,11 @@ svg {
   width: min(100%, var(--app-width));
   min-height: 100vh;
   margin: 0 auto;
-  padding: 114px 16px calc(var(--bottom-nav-height) + 24px + var(--safe-area-bottom));
+  padding: 124px 16px calc(var(--bottom-nav-height) + 24px + var(--safe-area-bottom));
 }
 
 .app-header {
+  --header-brand-size: clamp(84px, 21vw, 96px);
   position: fixed;
   top: 0;
   left: 50%;
@@ -387,11 +391,11 @@ svg {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: min(100%, var(--app-width));
   min-height: 90px;
   margin: 0;
-  padding: 12px;
+  padding: 9px 10px;
   border: 2px solid var(--border);
   border-top: 0;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
@@ -421,13 +425,12 @@ svg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  background: var(--fresh);
-  color: var(--surface);
-  box-shadow: 2px 3px 0 var(--border);
+  width: var(--header-brand-size);
+  height: var(--header-brand-size);
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   flex-shrink: 0;
   font-family: "Space Grotesk", "Nunito", sans-serif;
   font-size: 0.9375rem;
@@ -436,25 +439,20 @@ svg {
   transition: width 180ms ease-out, height 180ms ease-out, border-radius 180ms ease-out, box-shadow 180ms ease-out, transform 180ms ease-out;
 }
 
-.app-header__brand-mark svg {
-  width: 1.7rem;
-  height: 1.7rem;
-  stroke-width: 2.4;
-}
-
-.app-header__barbell {
-  display: block;
+.app-header__brand-image {
+  width: var(--header-brand-size);
+  height: var(--header-brand-size);
 }
 
 .app-header__content {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
   align-self: stretch;
   align-content: center;
-  padding: 8px 10px;
+  padding: 5px 8px;
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -576,7 +574,7 @@ svg {
 .app-header h1 {
   min-width: 0;
   color: var(--ink);
-  font-size: clamp(1.7rem, 6.4vw, 2.12rem);
+  font-size: clamp(1.28rem, 5.2vw, 1.84rem);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -586,7 +584,9 @@ svg {
 
 .app-header__subtitle {
   color: var(--primary);
+  font-size: 0.9rem;
   font-weight: 800;
+  line-height: 1.18;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -618,24 +618,30 @@ svg {
 }
 
 .app-header--compact {
+  --header-brand-size: clamp(66px, 16vw, 72px);
   min-height: 68px;
-  gap: 10px;
-  padding: 6px 8px;
+  gap: 8px;
+  padding: 5px 8px;
   border-color: var(--border);
   background: var(--lime-soft);
   box-shadow: 2px 3px 0 var(--border);
 }
 
 .app-header--compact .app-header__brand-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
-  box-shadow: 2px 3px 0 var(--border);
+  width: var(--header-brand-size);
+  height: var(--header-brand-size);
+  border-radius: 0;
+  box-shadow: none;
   font-size: 0.8125rem;
 }
 
+.app-header--compact .app-header__brand-image {
+  width: var(--header-brand-size);
+  height: var(--header-brand-size);
+}
+
 .app-header--compact .app-header__content {
-  padding: 7px 9px;
+  padding: 5px 7px;
   transform: translateY(0);
 }
 
@@ -644,7 +650,7 @@ svg {
 }
 
 .app-header--compact h1 {
-  font-size: clamp(0.98rem, 4.4vw, 1.08rem);
+  font-size: clamp(0.86rem, 3.8vw, 1rem);
   line-height: 1.05;
 }
 
@@ -831,6 +837,12 @@ svg {
   font-size: 1rem;
 }
 
+.streak-score .icon-frame--asset {
+  width: 64px;
+  height: 64px;
+  margin-bottom: -2px;
+}
+
 .streak-score strong {
   color: var(--primary);
   font-family: "Space Grotesk", "Nunito", sans-serif;
@@ -857,8 +869,8 @@ svg {
   width: fit-content;
   max-width: 100%;
   gap: 8px;
-  min-height: 44px;
-  padding: 6px 10px 6px 6px;
+  min-height: 58px;
+  padding: 4px 12px 4px 4px;
   border: 2px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
@@ -881,12 +893,6 @@ svg {
   box-shadow: 1px 2px 0 var(--border);
 }
 
-.coin-mark svg {
-  width: 1rem;
-  height: 1rem;
-  stroke-width: 2.6;
-}
-
 .coin-chip--health .coin-mark {
   background: var(--coin-health-soft);
   color: #065f3d;
@@ -900,6 +906,27 @@ svg {
 .coin-chip--flex .coin-mark {
   background: var(--coin-flex-soft);
   color: #07506b;
+}
+
+.coin-mark--asset {
+  width: 50px;
+  height: 50px;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.coin-chip--health .coin-mark--asset,
+.coin-chip--commit .coin-mark--asset,
+.coin-chip--flex .coin-mark--asset {
+  background: transparent;
+  color: inherit;
+}
+
+.coin-mark--asset .quest-icon {
+  width: 100%;
+  height: 100%;
 }
 
 .quick-actions {
@@ -1077,6 +1104,22 @@ svg {
   color: var(--ink);
 }
 
+.icon-frame--asset {
+  width: 72px;
+  height: 72px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+
+.icon-frame--asset .quest-icon {
+  width: 100%;
+  height: 100%;
+}
+
 .ranking-list {
   display: grid;
   gap: 16px;
@@ -1184,9 +1227,10 @@ svg {
   padding: 4px 8px;
 }
 
-.badge--streak svg {
-  width: 1.15rem;
-  height: 1.15rem;
+.badge--streak .quest-icon {
+  width: 1.875rem;
+  height: 1.875rem;
+  margin-left: -2px;
 }
 
 .badge--streak strong {
@@ -1277,11 +1321,6 @@ svg {
   font-size: 0.875rem;
   font-weight: 700;
   line-height: 1.25;
-}
-
-.icon-frame--warning .lucide-flame,
-.badge--warning .lucide-flame {
-  color: #cf3d17;
 }
 
 .mini-stat {
@@ -1559,13 +1598,7 @@ svg {
 }
 
 .admin-calendar__scroller--y-scrolled .admin-calendar-table thead th {
-  padding-top: 6px;
-  padding-bottom: 6px;
-  font-size: 0.8125rem;
-}
-
-.admin-calendar__scroller--y-scrolled .admin-calendar-table thead th small {
-  display: none;
+  box-shadow: 0 3px 0 rgba(32, 58, 45, 0.12);
 }
 
 .admin-calendar-table tbody tr:last-child th,
@@ -1604,6 +1637,17 @@ svg {
   box-shadow: 1px 2px 0 var(--border);
 }
 
+.calendar-entry--coin {
+  grid-template-columns: minmax(0, 1fr) 46px;
+  align-items: center;
+  gap: 8px;
+}
+
+.calendar-entry--coin-actionable {
+  grid-template-columns: minmax(0, 1fr) 34px 46px;
+  gap: 6px;
+}
+
 .calendar-entry + .calendar-entry {
   margin-top: 8px;
 }
@@ -1618,6 +1662,26 @@ svg {
 
 .calendar-entry--danger {
   background: var(--danger-soft);
+}
+
+.calendar-entry__coin-icon {
+  display: inline-flex;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: 46px;
+  height: 46px;
+  overflow: visible;
+}
+
+.calendar-entry--coin-actionable .calendar-entry__coin-icon {
+  grid-column: 3;
+}
+
+.calendar-entry__coin-icon .quest-icon {
+  width: 100%;
+  height: 100%;
 }
 
 .calendar-entry__main {
@@ -1667,7 +1731,7 @@ svg {
 }
 
 .calendar-entry__action {
-  grid-column: 2;
+  grid-column: -2;
   grid-row: 1 / 3;
   align-self: center;
   justify-self: end;
@@ -1675,6 +1739,18 @@ svg {
   height: 44px;
   border-radius: 12px;
   box-shadow: 1px 2px 0 var(--border);
+}
+
+.calendar-entry--coin .calendar-entry__action {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  box-shadow: 1px 1px 0 var(--border);
 }
 
 .weekly-board {
@@ -2183,15 +2259,15 @@ svg {
 
 @media (min-width: 900px) {
   .app-shell {
-    padding: 122px 24px calc(var(--bottom-nav-height) + 32px + var(--safe-area-bottom));
+    padding: 132px 24px calc(var(--bottom-nav-height) + 32px + var(--safe-area-bottom));
   }
 
   .app-header {
-    padding: 14px 16px;
+    padding: 10px 14px;
   }
 
   .app-header--compact {
-    padding: 8px 12px;
+    padding: 6px 10px;
   }
 
   .dashboard-hero,

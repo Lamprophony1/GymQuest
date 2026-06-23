@@ -2,6 +2,7 @@ import { Ban, ChevronLeft, ChevronRight } from 'lucide-react';
 import { type CSSProperties, type UIEvent, useMemo, useState } from 'react';
 import type { CheckInType, Participant, WeeklyCalendarEvent } from '../api/types';
 import { checkInTypeLabel, formatShortDate, statusTone, tokenTypeLabel } from './format';
+import { QuestIcon, questCoinIconName } from './QuestIcon';
 import { addDaysToDateOnly, buildWeekDays, startOfWeekMonday } from '../utils/date';
 
 type CalendarStatusFilter = 'all' | 'valid' | 'rejected';
@@ -165,6 +166,42 @@ export function WeeklyMarkingsCalendar({
       const canInvalidateToken = !readOnly && !isCheckIn && event.status.toLowerCase() === 'applied' && onInvalidateToken;
       const canInvalidate = canInvalidateCheckIn || canInvalidateToken;
 
+      if (!isCheckIn) {
+        const coinIconName = event.coinType === null || event.coinType === undefined ? 'coin-commit' : questCoinIconName(event.coinType);
+        const coinLabel = formatEventLabel(event);
+        const coinAccessibleLabel = `${coinLabel} usada por ${event.participantName} el ${formatShortDate(event.activityDate)}${
+          event.notes ? `. ${event.notes}` : ''
+        }`;
+
+        return (
+          <div
+            className={`calendar-entry calendar-entry--${tone} calendar-entry--coin${readOnly ? '' : ' calendar-entry--coin-actionable'}`}
+            key={event.id}
+            aria-label={coinAccessibleLabel}
+            title={coinAccessibleLabel}
+          >
+            <div className="calendar-entry__main">
+              <strong>{coinLabel}</strong>
+              <span>aplicada</span>
+            </div>
+            <span className="calendar-entry__coin-icon" aria-hidden="true">
+              <QuestIcon name={coinIconName} />
+            </span>
+            {readOnly ? null : (
+              <button
+                className="icon-button icon-button--danger calendar-entry__action"
+                type="button"
+                aria-label={`Invalidar coin de ${event.participantName}`}
+                disabled={busyActionId === event.id || !canInvalidate}
+                onClick={() => onInvalidateToken?.(event)}
+              >
+                <Ban aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        );
+      }
+
       return (
         <div className={`calendar-entry calendar-entry--${tone}`} key={event.id}>
           <div className="calendar-entry__main">
@@ -180,12 +217,7 @@ export function WeeklyMarkingsCalendar({
               aria-label={`Invalidar ${isCheckIn ? 'check-in' : 'coin'} de ${event.participantName}`}
               disabled={busyActionId === event.id || !canInvalidate}
               onClick={() => {
-                if (isCheckIn) {
-                  onInvalidateCheckIn?.(event);
-                  return;
-                }
-
-                onInvalidateToken?.(event);
+                onInvalidateCheckIn?.(event);
               }}
             >
               <Ban aria-hidden="true" />

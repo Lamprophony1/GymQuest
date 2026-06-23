@@ -2,7 +2,7 @@ import { CalendarDays, CircleDollarSign, Dumbbell, LayoutDashboard, Settings, Sh
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Participant } from '../api/types';
 import type { SelectedIdentity } from '../state/useSelectedIdentity';
-import { BarbellMark } from './BrandMark';
+import { BrandMark } from './BrandMark';
 import { PlayerAvatar } from './PlayerAvatar';
 
 export type AppTab = 'dashboard' | 'ranking' | 'checkin' | 'markings' | 'token' | 'admin' | 'profile';
@@ -99,7 +99,7 @@ export function AppShell({
     <div className="app-shell">
       <header className={headerClassName}>
         <span className="app-header__brand-mark" aria-hidden="true">
-          <BarbellMark className="app-header__barbell" />
+          <BrandMark className="app-header__brand-image" />
         </span>
         <div className="app-header__content">
           <div className="app-header__title-row">

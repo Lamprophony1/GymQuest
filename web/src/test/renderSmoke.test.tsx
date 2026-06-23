@@ -279,7 +279,7 @@ test('login screen uses participant select and custom numeric keypad', () => {
   const onLogin = vi.fn();
   const { container } = render(<LoginScreen options={loginOptions} loading={false} error={null} onLogin={onLogin} />);
 
-  expect(container.querySelector('.login-card__mark .login-card__barbell')).toBeInTheDocument();
+  expect(container.querySelector('.login-card__mark .login-card__brand-image')).toBeInTheDocument();
 
   fireEvent.change(screen.getByLabelText('Participante'), { target: { value: 'clari-id' } });
   fireEvent.click(screen.getByRole('button', { name: '1' }));
@@ -489,7 +489,7 @@ test('app shell compacts header into a polished scorebar without player mode chr
 
   expect(screen.queryByText('Player mode')).not.toBeInTheDocument();
   expect(screen.queryByText('RM')).not.toBeInTheDocument();
-  expect(container.querySelector('.app-header__brand-mark .app-header__barbell')).toBeInTheDocument();
+  expect(container.querySelector('.app-header__brand-mark .app-header__brand-image')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Proyecto RM' })).toBeInTheDocument();
   expect(screen.getByText('Rafa · Reto septiembre 2026')).toBeInTheDocument();
 
@@ -550,7 +550,7 @@ test('app shell exposes markings tab for players', () => {
 });
 
 test('markings screen renders a readonly weekly calendar with applied coins', () => {
-  render(
+  const { container } = render(
     <MarkingsScreen
       participants={[rafa, clari]}
       calendarEvents={weeklyCalendarEvents}
@@ -562,8 +562,15 @@ test('markings screen renders a readonly weekly calendar with applied coins', ()
   expect(screen.getByText('Marcaciones semanales')).toBeInTheDocument();
   expect(screen.getByText('Semana 15/06 - 21/06')).toBeInTheDocument();
   expect(screen.getByText('5AM')).toBeInTheDocument();
+  const coinEntry = container.querySelector('.calendar-entry--coin');
+  expect(coinEntry).toHaveAttribute('aria-label', expect.stringContaining('Commit coin'));
+  expect(coinEntry?.querySelector('.calendar-entry__main strong')).toHaveTextContent('Commit coin');
+  expect(coinEntry?.querySelector('.calendar-entry__main span')).toHaveTextContent('aplicada');
+  expect(coinEntry?.querySelector('.calendar-entry__coin-icon .quest-icon--coin-commit')).toBeInTheDocument();
+  expect(coinEntry?.querySelector('.badge')).not.toBeInTheDocument();
   expect(screen.getByText('Commit coin')).toBeInTheDocument();
-  expect(screen.getByText('feriado')).toBeInTheDocument();
+  expect(screen.getByText('aplicada')).toBeInTheDocument();
+  expect(screen.queryByText('feriado')).not.toBeInTheDocument();
   expect(screen.getByText('2 validos')).toBeInTheDocument();
   expect(screen.getByLabelText('Estado')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /invalidar/i })).not.toBeInTheDocument();
@@ -780,6 +787,7 @@ test('admin screen shows weekly check-in calendar with rejected rows visible', (
   expect(screen.getByText('Clari')).toBeInTheDocument();
   expect(screen.getByText('5AM')).toBeInTheDocument();
   expect(screen.getByText('Commit coin')).toBeInTheDocument();
+  expect(screen.getByText('aplicada')).toBeInTheDocument();
   expect(screen.getByText('2 validos')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /invalidar coin de clari/i }));
   expect(onInvalidateToken).toHaveBeenCalledWith('weekly-coin-id', 'Admin rafa-id');
