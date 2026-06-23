@@ -1,4 +1,4 @@
-import { Dumbbell, ShieldAlert, Trophy } from 'lucide-react';
+import { Dumbbell, Trophy } from 'lucide-react';
 import type { AppTab } from '../components/AppShell';
 import { coinTone, coinTypes, formatCoupleName, formatPoints, tokenTypeLabel } from '../components/format';
 import { QuestIcon, questCoinIconName } from '../components/QuestIcon';
@@ -62,7 +62,8 @@ export function DashboardScreen({
             value={leaders.length ? '#1' : '-'}
             meta={leadMeta}
             tone="success"
-            icon={<ShieldAlert />}
+            icon={<QuestIcon name="lead" />}
+            iconFrameClassName="icon-frame icon-frame--asset"
           />
           <article className="score-panel score-panel--warning score-panel--streaks">
             <div className="score-panel__topline">

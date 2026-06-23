@@ -84,6 +84,11 @@ public sealed class GymChallServiceAdminTests
             return Task.FromResult<IReadOnlyList<AdminCheckInSummaryDto>>(Array.Empty<AdminCheckInSummaryDto>());
         }
 
+        public Task<IReadOnlyList<WeeklyCalendarEventDto>> ListWeeklyCalendarEventsAsync(Guid challengeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<WeeklyCalendarEventDto>>(Array.Empty<WeeklyCalendarEventDto>());
+        }
+
         public Task<IReadOnlyList<AdminTokenSummaryDto>> ListRecentFullCoverageTokensAsync(Guid challengeId, int limit, CancellationToken cancellationToken = default)
         {
             LastTokenListChallengeId = challengeId;

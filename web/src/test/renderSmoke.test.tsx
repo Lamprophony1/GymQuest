@@ -324,6 +324,10 @@ test('dashboard renders the scoreboard, own couple, and quick actions', () => {
   expect(screen.getByText('Cardio opcional en desarrollo')).toBeInTheDocument();
   expect(screen.queryByText('Arcade ladder')).not.toBeInTheDocument();
   expect(screen.queryByText(/lago/i)).not.toBeInTheDocument();
+  const leadIcon = container.querySelector('.score-grid .score-panel:first-child .quest-icon--lead');
+  expect(leadIcon).toBeInTheDocument();
+  expect(leadIcon?.closest('.icon-frame')).toHaveClass('icon-frame--asset');
+  expect(container.querySelector('.score-grid .score-panel:first-child .lucide-shield-alert')).not.toBeInTheDocument();
 
   const scoreHeadings = [...container.querySelectorAll('.score-grid .score-panel h3')].map(
     (heading) => heading.textContent

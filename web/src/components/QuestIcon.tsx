@@ -2,6 +2,7 @@ import type { ExceptionTokenType } from '../api/types';
 import coinCommit from '../assets/quest-icons/coin-commit.png';
 import coinFlex from '../assets/quest-icons/coin-flex.png';
 import coinHealth from '../assets/quest-icons/coin-health.png';
+import lead from '../assets/quest-icons/lead.png';
 import logoMain from '../assets/quest-icons/logo-main.png';
 import sideQuest from '../assets/quest-icons/side-quest.png';
 import streakGym from '../assets/quest-icons/streak-gym.png';
@@ -12,6 +13,7 @@ export type QuestIconName =
   | 'coin-health'
   | 'coin-commit'
   | 'coin-flex'
+  | 'lead'
   | 'streak-perfect'
   | 'streak-gym'
   | 'side-quest';
@@ -21,6 +23,7 @@ const questIconSources: Record<QuestIconName, string> = {
   'coin-health': coinHealth,
   'coin-commit': coinCommit,
   'coin-flex': coinFlex,
+  lead,
   'streak-perfect': streakPerfect,
   'streak-gym': streakGym,
   'side-quest': sideQuest

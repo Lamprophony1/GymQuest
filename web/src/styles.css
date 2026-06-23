@@ -1120,6 +1120,11 @@ svg {
   height: 100%;
 }
 
+.icon-frame--asset .quest-icon--lead {
+  transform: scale(1.12);
+  transform-origin: center;
+}
+
 .ranking-list {
   display: grid;
   gap: 16px;
