@@ -17,16 +17,17 @@ function publicFileExists(publicPath: string): boolean {
 test('index exposes installable PWA metadata for iOS and Android', () => {
   const index = readWebFile('index.html');
 
-  expect(index).toContain('<link rel="manifest" href="/manifest.webmanifest"');
+  expect(index).toContain('<link rel="manifest" href="/manifest-v2.webmanifest"');
   expect(index).toContain('<meta name="theme-color" content="#f6efe1"');
   expect(index).toContain('<meta name="apple-mobile-web-app-capable" content="yes"');
   expect(index).toContain('<meta name="apple-mobile-web-app-title" content="Proyecto RM"');
-  expect(index).toContain('<link rel="icon" type="image/png" href="/icons/pwa-192.png"');
-  expect(index).toContain('<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"');
+  expect(index).toContain('<link rel="icon" type="image/png" href="/icons/pwa-192-v2.png"');
+  expect(index).toContain('<link rel="apple-touch-icon" href="/icons/apple-touch-icon-v2.png"');
+  expect(index).not.toContain('/icons/apple-touch-icon.png"');
 });
 
 test('manifest describes Proyecto RM as a standalone mobile app with required icons', () => {
-  const manifestPath = path.join(publicRoot, 'manifest.webmanifest');
+  const manifestPath = path.join(publicRoot, 'manifest-v2.webmanifest');
 
   expect(existsSync(manifestPath)).toBe(true);
 
@@ -53,9 +54,9 @@ test('manifest describes Proyecto RM as a standalone mobile app with required ic
 
   expect(manifest.icons).toEqual(
     expect.arrayContaining([
-      expect.objectContaining({ src: '/icons/pwa-192.png', sizes: '192x192', type: 'image/png' }),
-      expect.objectContaining({ src: '/icons/pwa-512.png', sizes: '512x512', type: 'image/png' }),
-      expect.objectContaining({ src: '/icons/pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' })
+      expect.objectContaining({ src: '/icons/pwa-192-v2.png', sizes: '192x192', type: 'image/png' }),
+      expect.objectContaining({ src: '/icons/pwa-512-v2.png', sizes: '512x512', type: 'image/png' }),
+      expect.objectContaining({ src: '/icons/pwa-maskable-512-v2.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' })
     ])
   );
 
@@ -65,23 +66,29 @@ test('manifest describes Proyecto RM as a standalone mobile app with required ic
 });
 
 test('service worker caches the app shell without intercepting api requests', () => {
-  const serviceWorkerPath = path.join(publicRoot, 'sw.js');
+  const serviceWorkerPath = path.join(publicRoot, 'sw-v2.js');
 
   expect(existsSync(serviceWorkerPath)).toBe(true);
 
   const serviceWorker = readFileSync(serviceWorkerPath, 'utf8');
 
-  expect(serviceWorker).toContain('gymchall-pwa-shell');
+  expect(serviceWorker).toContain('gymchall-pwa-shell-v2');
   expect(serviceWorker).toContain("self.addEventListener('install'");
   expect(serviceWorker).toContain("self.addEventListener('activate'");
   expect(serviceWorker).toContain("self.addEventListener('fetch'");
   expect(serviceWorker).toContain("url.pathname.startsWith('/api/')");
-  expect(serviceWorker).toContain('/manifest.webmanifest');
+  expect(serviceWorker).toContain('/manifest-v2.webmanifest');
+  expect(serviceWorker).toContain('/icons/apple-touch-icon-v2.png');
+  expect(serviceWorker).toContain('/icons/pwa-192-v2.png');
+  expect(serviceWorker).not.toContain('gymchall-pwa-shell-v1');
+  expect(serviceWorker).not.toContain('/icons/apple-touch-icon.png');
 });
 
 test('React entrypoint registers the service worker', () => {
+  const registration = readWebFile('src/pwa/registerServiceWorker.ts');
   const main = readWebFile('src/main.tsx');
 
+  expect(registration).toContain("navigator.serviceWorker.register('/sw-v2.js'");
   expect(main).toContain("import { registerServiceWorker } from './pwa/registerServiceWorker';");
   expect(main).toContain('registerServiceWorker();');
 });
