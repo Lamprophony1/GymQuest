@@ -62,6 +62,11 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
   - anulacion directa de coins aplicadas, que vuelven a quedar disponibles para el player.
 - Auditoria basica por invalidaciones administrativas.
 - Seed inicial del reto y participantes.
+- PWA instalable en iOS/Android:
+  - manifest con modo standalone;
+  - iconos 192/512, maskable y Apple touch icon;
+  - service worker con cache liviano del shell y assets estaticos;
+  - `/api/*` y `/health` quedan fuera del cache para preservar datos live.
 - Publicacion CI/CD:
   - GitHub Actions;
   - GHCR;
@@ -81,6 +86,7 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
 - Avatares por participante quedaron cargados como assets estaticos.
 - El frontend dejo de enviar `throughDate` para rankings normales; el backend calcula rankings live segun `America/Asuncion`.
 - Perfect streak y Gym streak tienen ventanas de vencimiento diferenciadas.
+- La app ya expone metadata PWA e instalacion desde navegadores moviles compatibles.
 - El deploy directo a `main` dispara CI/CD y publica si todas las pruebas pasan.
 
 ## Scoring implementado
@@ -191,7 +197,7 @@ Si no se envia ningun parametro, el backend usa la hora actual convertida al tim
 5. Evidencias opcionales.
 6. Premios y cierre del reto.
 7. Exportaciones o resumen para compartir.
-8. Mejoras PWA/mobile: icono instalable, manifest, cache control y feedback offline.
+8. Mejoras offline avanzadas: feedback explicito sin conexion y estrategia de refresh de version.
 
 ## Specs y planes
 

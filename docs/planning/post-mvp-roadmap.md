@@ -14,6 +14,7 @@ El MVP esta publicado en `https://rm.crg-dev.com` y ya cubre el uso diario del r
 - vista `Marcaciones` semanal readonly para players;
 - admin calendario con check-ins, coins aplicadas e invalidacion administrativa;
 - perfil privado, cambio de PIN, avatares e iconos Quest Sticker Totems;
+- PWA instalable en iOS/Android con manifest, iconos y service worker de shell;
 - rachas live con timezone `America/Asuncion`;
 - deploy CI/CD hacia VM + Cloudflare Tunnel.
 
