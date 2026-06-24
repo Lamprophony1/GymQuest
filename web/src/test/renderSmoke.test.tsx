@@ -275,20 +275,107 @@ const loginOptions: LoginOption[] = [
   { id: 'clari-id', displayName: 'Clari', username: 'clari' }
 ];
 
-test('login screen uses participant select and custom numeric keypad', () => {
+test('login screen uses participant select and custom numeric keypad', async () => {
   const onLogin = vi.fn();
   const { container } = render(<LoginScreen options={loginOptions} loading={false} error={null} onLogin={onLogin} />);
 
   expect(container.querySelector('.login-card__mark .login-card__brand-image')).toBeInTheDocument();
+  expect(screen.getByText('sept-26')).toBeInTheDocument();
+  expect(screen.getByLabelText('player select')).toBeInTheDocument();
+  expect(screen.queryByLabelText('player login')).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Proyecto RM' })).not.toBeInTheDocument();
+  expect(screen.queryByText('Reto septiembre 2026')).not.toBeInTheDocument();
 
-  fireEvent.change(screen.getByLabelText('Participante'), { target: { value: 'clari-id' } });
+  fireEvent.change(screen.getByLabelText('player select'), { target: { value: 'clari-id' } });
   fireEvent.click(screen.getByRole('button', { name: '1' }));
   fireEvent.click(screen.getByRole('button', { name: '2' }));
   fireEvent.click(screen.getByRole('button', { name: '3' }));
   fireEvent.click(screen.getByRole('button', { name: '4' }));
+
+  expect(onLogin).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
-  expect(onLogin).toHaveBeenCalledWith({ participantId: 'clari-id', pin: '1234' });
+  await waitFor(() => {
+    expect(onLogin).toHaveBeenCalledWith({ participantId: 'clari-id', pin: '1234' });
+  });
+});
+
+test('login screen submits automatically when the sixth PIN digit is entered', async () => {
+  const onLogin = vi.fn().mockResolvedValue(undefined);
+  render(<LoginScreen options={loginOptions} loading={false} error={null} onLogin={onLogin} />);
+
+  fireEvent.change(screen.getByLabelText('player select'), { target: { value: 'clari-id' } });
+  fireEvent.click(screen.getByRole('button', { name: '1' }));
+  fireEvent.click(screen.getByRole('button', { name: '2' }));
+  fireEvent.click(screen.getByRole('button', { name: '3' }));
+  fireEvent.click(screen.getByRole('button', { name: '4' }));
+  fireEvent.click(screen.getByRole('button', { name: '5' }));
+  fireEvent.click(screen.getByRole('button', { name: '6' }));
+
+  await waitFor(() => {
+    expect(onLogin).toHaveBeenCalledWith({ participantId: 'clari-id', pin: '123456' });
+  });
+  expect(onLogin).toHaveBeenCalledTimes(1);
+});
+
+test('login screen clears the PIN when the selected player changes', () => {
+  const onLogin = vi.fn();
+  render(<LoginScreen options={loginOptions} loading={false} error={null} onLogin={onLogin} />);
+
+  fireEvent.click(screen.getByRole('button', { name: '1' }));
+  fireEvent.click(screen.getByRole('button', { name: '2' }));
+  fireEvent.click(screen.getByRole('button', { name: '3' }));
+
+  expect(screen.getByLabelText('3 digitos ingresados')).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText('player select'), { target: { value: 'clari-id' } });
+
+  expect(screen.getByLabelText('0 digitos ingresados')).toBeInTheDocument();
+});
+
+test('login screen clears the PIN after a failed login error', () => {
+  const onLogin = vi.fn();
+  const { rerender } = render(<LoginScreen options={loginOptions} loading={false} error={null} onLogin={onLogin} />);
+
+  fireEvent.click(screen.getByRole('button', { name: '1' }));
+  fireEvent.click(screen.getByRole('button', { name: '2' }));
+  fireEvent.click(screen.getByRole('button', { name: '3' }));
+
+  expect(screen.getByLabelText('3 digitos ingresados')).toBeInTheDocument();
+
+  rerender(<LoginScreen options={loginOptions} loading={true} error={null} onLogin={onLogin} />);
+  rerender(<LoginScreen options={loginOptions} loading={false} error="PIN incorrecto." onLogin={onLogin} />);
+
+  expect(screen.getByLabelText('0 digitos ingresados')).toBeInTheDocument();
+});
+
+test('login screen does not retry automatically when a failed login error arrives', async () => {
+  const onLogin = vi.fn().mockResolvedValue(undefined);
+  const { rerender } = render(<LoginScreen options={loginOptions} loading={false} error={null} onLogin={onLogin} />);
+
+  fireEvent.change(screen.getByLabelText('player select'), { target: { value: 'clari-id' } });
+  fireEvent.click(screen.getByRole('button', { name: '1' }));
+  fireEvent.click(screen.getByRole('button', { name: '2' }));
+  fireEvent.click(screen.getByRole('button', { name: '3' }));
+  fireEvent.click(screen.getByRole('button', { name: '4' }));
+  fireEvent.click(screen.getByRole('button', { name: '5' }));
+  fireEvent.click(screen.getByRole('button', { name: '6' }));
+
+  await waitFor(() => {
+    expect(onLogin).toHaveBeenCalledTimes(1);
+  });
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: /entrar/i })).not.toBeDisabled();
+  });
+
+  rerender(<LoginScreen options={loginOptions} loading={true} error={null} onLogin={onLogin} />);
+  expect(screen.getByRole('button', { name: /entrando/i })).toBeDisabled();
+  rerender(<LoginScreen options={loginOptions} loading={false} error="PIN incorrecto." onLogin={onLogin} />);
+
+  await waitFor(() => {
+    expect(screen.getByLabelText('0 digitos ingresados')).toBeInTheDocument();
+  });
+  expect(onLogin).toHaveBeenCalledTimes(1);
 });
 
 test('identity selector renders participants and admin entry', () => {

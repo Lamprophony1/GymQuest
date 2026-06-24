@@ -18,7 +18,13 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
 
 ## Funcionalidades implementadas
 
-- Login por participante con PIN corto en produccion.
+- Login por participante con PIN numerico de 4 a 6 digitos en produccion.
+- Pantalla de login compacta para mobile:
+  - logo centrado y objetivo `sept-26`;
+  - selector `player select`;
+  - boton `Entrar` habilitado desde 4 digitos;
+  - entrada automatica al completar 6 digitos;
+  - limpieza automatica del PIN al fallar o cambiar de player.
 - Selector de identidad por confianza disponible para desarrollo.
 - Cookie HttpOnly para sesion web.
 - Rafa entra como participante y puede cambiar entre modo participante y modo admin desde el icono de usuario.
@@ -87,6 +93,7 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
 - El frontend dejo de enviar `throughDate` para rankings normales; el backend calcula rankings live segun `America/Asuncion`.
 - Perfect streak y Gym streak tienen ventanas de vencimiento diferenciadas.
 - La app ya expone metadata PWA e instalacion desde navegadores moviles compatibles.
+- La pantalla de login fue compactada para evitar scroll innecesario en mobile y acelerar reintentos de PIN.
 - El deploy directo a `main` dispara CI/CD y publica si todas las pruebas pasan.
 
 ## Scoring implementado

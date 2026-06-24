@@ -52,9 +52,9 @@ describe('Doodle Fit visual system', () => {
     expect(styles).not.toContain('background: linear-gradient(145deg, var(--accent), var(--aqua))');
   });
 
-  test('keeps Quest Sticker Totems enlarged with an extra-prominent login brand', () => {
-    expect(styles).toContain('width: 128px');
-    expect(styles).toContain('height: 128px');
+  test('keeps Quest Sticker Totems compact on login while preserving app brand sizes', () => {
+    expect(styles).toContain('min-height: 100svh');
+    expect(styles).toMatch(/\.login-card__brand-image\s*{\s*width: 112px;\s*height: 112px;/);
     expect(styles).toContain('--header-brand-size: clamp(84px, 21vw, 96px)');
     expect(styles).toContain('--header-brand-size: clamp(66px, 16vw, 72px)');
     expect(styles).toMatch(/\.icon-button\.profile-menu__button--avatar\s*{\s*width: 78px;\s*height: 78px;/);

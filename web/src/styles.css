@@ -206,18 +206,22 @@ svg {
 }
 
 .login-screen {
-  align-items: start;
-  padding-top: 28px;
+  min-height: 100svh;
+  align-items: center;
+  padding: 12px 16px calc(12px + var(--safe-area-bottom));
 }
 
 .login-card {
   position: relative;
   display: grid;
   gap: 0;
+  width: min(100%, 420px);
+  padding: 16px;
   overflow: hidden;
 }
 
 .login-card::after {
+  display: none;
   position: absolute;
   top: 18px;
   right: -42px;
@@ -230,28 +234,44 @@ svg {
   transform: rotate(16deg);
 }
 
+.login-card__header {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
 .login-card__mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 128px;
-  height: 128px;
-  margin-bottom: 18px;
+  width: 112px;
+  height: 112px;
   overflow: visible;
   border: 0;
   background: transparent;
   box-shadow: none;
+  justify-self: center;
 }
 
 .login-card__brand-image {
-  width: 128px;
-  height: 128px;
+  width: 112px;
+  height: 112px;
+}
+
+.login-card__goal {
+  color: var(--primary);
+  font-family: "Space Grotesk", "Nunito", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
 }
 
 .login-form {
   display: grid;
-  gap: 14px;
-  margin-top: 24px;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .login-form label {
@@ -262,8 +282,8 @@ svg {
 
 .login-form select {
   width: 100%;
-  min-height: 52px;
-  padding: 12px 14px;
+  min-height: 48px;
+  padding: 10px 14px;
   border: 2px solid var(--input-border);
   border-radius: 16px;
   background: var(--surface);
@@ -279,15 +299,15 @@ svg {
 
 .pin-display {
   display: grid;
-  grid-template-columns: repeat(6, 34px);
+  grid-template-columns: repeat(6, 28px);
   justify-content: center;
   justify-self: center;
-  gap: 10px;
-  width: min(100%, 284px);
-  min-height: 64px;
-  padding: 10px 12px;
+  gap: 8px;
+  width: min(100%, 228px);
+  min-height: 52px;
+  padding: 8px 10px;
   border: 2px solid var(--border);
-  border-radius: 20px;
+  border-radius: 18px;
   background: var(--surface);
   box-shadow: inset 0 -4px 0 rgba(32, 58, 45, 0.08), var(--shadow-sticker-sm);
 }
@@ -296,10 +316,10 @@ svg {
   position: relative;
   align-self: center;
   justify-self: center;
-  width: 34px;
-  height: 40px;
+  width: 28px;
+  height: 32px;
   border: 2px solid var(--input-border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface-soft);
   box-shadow: inset 0 -2px 0 rgba(32, 58, 45, 0.08);
 }
@@ -313,8 +333,8 @@ svg {
 .pin-display__dot--filled::after {
   position: absolute;
   inset: 50% auto auto 50%;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 999px;
   background: var(--primary);
   box-shadow: 1px 2px 0 var(--border);
@@ -324,18 +344,21 @@ svg {
 
 .login-error {
   margin: 0;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  line-height: 1.2;
 }
 
 .pin-keypad {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .keypad-button {
-  min-height: 56px;
+  min-height: 48px;
   border: 2px solid var(--border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--surface);
   color: var(--ink);
   box-shadow: var(--shadow-sticker-sm);
@@ -350,6 +373,16 @@ svg {
 .keypad-button:active {
   transform: translate(2px, 3px);
   box-shadow: 1px 1px 0 var(--border);
+}
+
+.keypad-button:disabled,
+.keypad-button:disabled:active {
+  transform: none;
+  border-color: var(--border-soft);
+  background: var(--disabled);
+  color: var(--fg-disabled);
+  box-shadow: none;
+  cursor: default;
 }
 
 .keypad-button--utility {
@@ -370,8 +403,8 @@ svg {
 
 .login-submit {
   width: 100%;
-  min-height: 56px;
-  margin-top: 4px;
+  min-height: 52px;
+  margin-top: 2px;
 }
 
 .app-shell {

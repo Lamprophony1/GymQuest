@@ -25,7 +25,7 @@ Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo
 15. El bonus semanal no se suma por dias futuros cargados antes de tiempo.
 16. El reto funciona por confianza; no hace falta validacion administrativa normal.
 17. Las parejas no se planean cambiar durante el reto, pero el modelo permite agregar parejas nuevas.
-18. Produccion usa login por participante con PIN corto y cookie HttpOnly.
+18. Produccion usa login por participante con PIN numerico de 4 a 6 digitos y cookie HttpOnly.
 19. Rafa conserva rol admin, pero entra en modo participante y cambia a modo admin desde el icono de usuario.
 20. El calendario admin semanal es la vista principal para revisar marcas.
 21. La app publicada vive en `rm.crg-dev.com` mediante Cloudflare Tunnel y no toca el tunnel DoorLock.

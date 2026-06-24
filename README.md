@@ -30,7 +30,7 @@ Incluye:
 - Admin para crear participantes, crear parejas, otorgar coins e invalidar check-ins o coins.
 - Vista `Marcaciones` para players con calendario semanal readonly por participante, mostrando check-ins validos y coins aplicadas.
 - Admin con calendario semanal por participante, filtros por estado/tipo, columna de jugador fija y anulacion directa de check-ins validos y coins aplicadas.
-- Login por participante con PIN corto en modo produccion, cookie HttpOnly y switch participante/admin para Rafa.
+- Login por participante con PIN numerico de 4 a 6 digitos en modo produccion, cookie HttpOnly y switch participante/admin para Rafa.
 - Perfil privado desde el icono de usuario, con peso, altura, IMC calculado, categoria referencial y cambio de PIN propio.
 - Avatares sticker por participante en header y perfil, servidos como assets estaticos.
 - Iconos Quest Sticker Totems para logo principal, coins, rachas, Side quest y Lead.
@@ -117,7 +117,9 @@ $env:PATH = (Resolve-Path '..\.tools\node-v24.16.0-win-x64').Path + ';' + $env:P
 Auth frontend:
 
 - Desarrollo por defecto: selector local.
-- Produccion por defecto: pantalla de login PIN.
+- Produccion por defecto: pantalla de login PIN compacta y mobile-first.
+- UX de login: logo centrado, objetivo `sept-26`, selector `player select`, boton `Entrar` habilitado desde 4 digitos y entrada automatica al completar 6 digitos.
+- Si el PIN falla o se cambia de player, el PIN ingresado se limpia para permitir reintentar rapido.
 - Override: `VITE_AUTH_MODE=dev-selector` o `VITE_AUTH_MODE=pin-login`.
 
 URLs locales:

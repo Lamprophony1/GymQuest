@@ -3,7 +3,7 @@
 Fecha: 2026-06-17
 Estado: implementado en el MVP publicado
 
-> Estado actual: esta spec fue ejecutada. Produccion usa login por participante con PIN, cookie HttpOnly y switch participante/admin para Rafa. Para el estado completo, usar `docs/planning/mvp-current-state.md`.
+> Estado actual: esta spec fue ejecutada. Produccion usa login por participante con PIN numerico de 4 a 6 digitos, cookie HttpOnly y switch participante/admin para Rafa. Para el estado completo, usar `docs/planning/mvp-current-state.md`.
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ El login debe ser simple para el grupo, mobile-first, coherente con la UI Doodle
 - Produccion entra directo a una pantalla de login.
 - Login de produccion:
   - desplegable de participantes activos;
-  - PIN corto de 4 a 6 digitos;
+  - PIN numerico de 4 a 6 digitos;
   - teclado numerico custom adaptado a la UI;
   - soporte adicional para teclado fisico en desktop.
 - Desarrollo conserva el selector actual para moverse rapido entre usuarios.
@@ -61,20 +61,25 @@ Modo recomendado: `pin-login`.
 
 Pantalla:
 
-- Marca: `Proyecto RM`.
-- Subtexto: `Reto septiembre 2026`.
-- Campo select: participante activo.
+- Marca: logo principal centrado.
+- Objetivo visible: `sept-26`.
+- Campo select: participante activo, rotulado `player select`.
 - PIN visual: puntos grandes, por ejemplo `filled filled empty empty empty empty`.
 - Keypad custom:
   - 1 2 3
   - 4 5 6
   - 7 8 9
-  - borrar 0 entrar
+  - limpiar 0 borrar
 - El teclado del telefono no debe aparecer por defecto si se usa el keypad custom.
 - En desktop, tambien se aceptan teclas `0-9`, `Backspace`, `Enter`.
 - El boton Entrar se habilita desde 4 digitos y acepta hasta 6.
+- Al completar 6 digitos, el login se envia automaticamente.
+- Los PINs de 4 digitos se envian con el boton `Entrar` o la tecla `Enter`.
+- Si el PIN falla, el PIN ingresado se limpia para reintentar.
+- Al cambiar de participante, el PIN ingresado tambien se limpia.
 - Mensaje de error breve: `PIN incorrecto`.
 - Feedback visual de error sin mover demasiado la pantalla.
+- La vista debe entrar completa en mobile sin requerir scroll en condiciones normales.
 
 No se muestran textos largos de instrucciones dentro de la app. La pantalla debe sentirse como parte del sistema Doodle Fit: limpia, competitiva y con detalles game-like sobrios.
 
