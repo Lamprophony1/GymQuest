@@ -1,6 +1,6 @@
 # Roadmap post-MVP
 
-Actualizado: 2026-06-18.
+Actualizado: 2026-06-24.
 
 ## Estado de partida
 
@@ -13,6 +13,7 @@ El MVP esta publicado en `https://rm.crg-dev.com` y ya cubre el uso diario del r
 - coins;
 - admin calendario;
 - perfil privado, cambio de PIN y avatares;
+- PWA instalable en iOS/Android con manifest, iconos y service worker de shell;
 - rachas live con timezone `America/Asuncion`;
 - deploy CI/CD hacia VM + Cloudflare Tunnel.
 

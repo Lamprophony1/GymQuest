@@ -37,6 +37,7 @@ Incluye:
 - Rankings live calculados en `America/Asuncion`, con gracia de rachas: Perfect streak cae despues de 06:30 y Gym streak al dia siguiente.
 - Persistencia SQLite local y seed inicial.
 - Header, bottom nav e inputs ajustados para mobile Safari.
+- PWA instalable en iOS/Android con manifest, iconos, Apple touch icon y service worker de shell estatico.
 
 No incluye todavia:
 
