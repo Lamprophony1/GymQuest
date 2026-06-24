@@ -1,6 +1,6 @@
 # Decisiones cerradas y preguntas abiertas
 
-Actualizado: 2026-06-18.
+Actualizado: 2026-06-24.
 
 Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo queda como registro de decisiones y lista de pendientes futuros.
 
@@ -35,6 +35,10 @@ Las preguntas criticas iniciales fueron respondidas durante el MVP. Este archivo
 25. El perfil privado incluye peso, altura, IMC calculado y cambio de PIN propio.
 26. Los avatares actuales son assets estaticos por `username`, no datos persistidos.
 27. Todo push a `main` debe pasar CI/CD antes de publicar en la VM.
+28. Players tienen una vista `Marcaciones` semanal, readonly, con todos los participantes, check-ins validos y coins aplicadas.
+29. El calendario admin muestra check-ins validos, check-ins rechazados cuando se filtra por rechazados, y coins aplicadas dentro de `Validos`.
+30. Invalidar una coin aplicada desde admin la devuelve a `Available` para que vuelva al player; invalidar una coin disponible la marca `Rejected`.
+31. La familia visual de iconos vigente para logo, coins, rachas, Side quest y Lead es `Quest Sticker Totems`, servida como assets estaticos del frontend.
 
 ## Pendientes para decidir
 

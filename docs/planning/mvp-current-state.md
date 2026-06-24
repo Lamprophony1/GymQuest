@@ -34,6 +34,12 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
 - Dashboard con ranking resumido, pareja propia, puntos, rachas, coins y acciones rapidas.
 - Ranking general por pareja.
 - Ranking semanal por pareja, separado en base, bonus diario y bonus semanal.
+- Vista `Marcaciones` para players:
+  - calendario semanal por participante;
+  - solo lectura;
+  - muestra todos los players;
+  - muestra check-ins validos y coins aplicadas;
+  - no muestra acciones de invalidacion ni eventos rechazados.
 - Check-in con fecha/hora; default visual en 05:00 y fecha actual.
 - Clasificacion automatica:
   - 5am si cae dentro de la ventana configurada.
@@ -45,13 +51,15 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
   - `Flex coin`: valida entrenamiento fuera de horario o recuperacion como cobertura 5am.
 - Health coin automatica mensual para participantes con genero femenino, no acumulable.
 - Admin puede crear participantes, crear parejas, otorgar coins, invalidar check-ins, invalidar coins y asignar/resetear PINs.
-- Admin tiene calendario semanal de check-ins por participante:
+- Admin tiene calendario semanal por participante:
   - semana navegable;
   - filtro inicial `Validos`;
-  - filtro por tipo `5am`, `Recup. dia`, `Recup. finde`;
+  - filtro por tipo `5am`, `Recup. dia`, `Recup. finde` y `Coins`;
   - columna de jugador fija y compacta al scroll horizontal;
   - encabezado de dias fijo al scroll vertical;
-  - anulacion directa de check-ins validos.
+  - check-ins validos y coins aplicadas dentro del filtro `Validos`;
+  - anulacion directa de check-ins validos;
+  - anulacion directa de coins aplicadas, que vuelven a quedar disponibles para el player.
 - Auditoria basica por invalidaciones administrativas.
 - Seed inicial del reto y participantes.
 - Publicacion CI/CD:
@@ -65,6 +73,10 @@ Tambien esta publicado para uso real en `https://rm.crg-dev.com`, servido por un
 
 ## Cambios recientes incorporados
 
+- Vista `Marcaciones` readonly para players con calendario semanal.
+- Calendario semanal admin/player unificado para check-ins validos y coins aplicadas.
+- Invalidar una coin aplicada desde admin la devuelve al inventario del player.
+- Iconos Quest Sticker Totems para logo principal, coins, rachas, Side quest y Lead.
 - Perfil privado y cambio de PIN propio estan publicados.
 - Avatares por participante quedaron cargados como assets estaticos.
 - El frontend dejo de enviar `throughDate` para rankings normales; el backend calcula rankings live segun `America/Asuncion`.
@@ -140,11 +152,14 @@ POST /api/admin/tokens/{id}/invalidate
 POST /api/admin/participants/{id}/pin
 GET  /api/admin/check-ins?limit=50
 GET  /api/admin/check-ins/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD
+GET  /api/calendar/weekly?from=YYYY-MM-DD&to=YYYY-MM-DD
 GET  /api/admin/tokens?limit=50
 GET  /api/rankings/general
 GET  /api/rankings/weeks
 GET  /api/rankings/weeks/{weekStartDate}
 ```
+
+`GET /api/calendar/weekly` devuelve eventos semanales readonly para usuarios autenticados. Incluye check-ins validos y coins aplicadas dentro del rango. La vista admin lo combina con `GET /api/admin/check-ins/calendar` para conservar visibilidad de check-ins rechazados cuando se filtra por rechazados.
 
 Los rankings aceptan parametros opcionales:
 
@@ -184,5 +199,6 @@ Si no se envia ningun parametro, el backend usa la hora actual convertida al tim
 - Spec historica de UI Sega: `docs/superpowers/specs/2026-06-16-gymchall-ui-mvp-design.md`.
 - Spec historica/intermedia de check-in y fichas: `docs/superpowers/specs/2026-06-16-checkin-fichas-ui-rules.md`.
 - Spec de login PIN: `docs/superpowers/specs/2026-06-17-pin-login-auth-design.md`.
+- Spec de marcaciones semanales para players: `docs/superpowers/specs/2026-06-23-player-weekly-markings-design.md`.
 - Plan de esta consolidacion: `docs/superpowers/plans/2026-06-16-mvp-consolidation-docs.md`.
 - Roadmap post-MVP vigente: `docs/planning/post-mvp-roadmap.md`.

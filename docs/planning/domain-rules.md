@@ -71,6 +71,12 @@ Estados actuales:
 - `Corrected`: estado reservado para correcciones.
 - `Rejected`: coin invalidada.
 
+Correcciones administrativas:
+
+- Si el admin invalida una coin `Applied`, la coin vuelve a `Available`, deja de cubrir el dia y vuelve al inventario del player.
+- Si el admin invalida una coin `Available`, pasa a `Rejected`.
+- Toda invalidacion de coin genera auditoria.
+
 ## Health coin mensual
 
 - Se otorga automaticamente una Health coin por mes calendario a participantes con genero femenino.
@@ -155,7 +161,11 @@ Reglas objetivo para la fase futura:
 
 El reto funciona por confianza. Los registros cargados se consideran validos por defecto. No hace falta validacion administrativa normal.
 
-El admin puede invalidar registros si hay errores. La vista principal de revision es un calendario semanal de check-ins por participante, con filtro de validos/rechazados/tipo. Toda invalidacion queda en auditoria y permite recalcular puntajes desde hechos base.
+El admin puede invalidar registros si hay errores. La vista principal de revision es un calendario semanal por participante, con filtro de validos/rechazados/tipo. En `Validos` se ven check-ins validos y coins aplicadas; las coins aplicadas tambien pueden invalidarse desde ahi y vuelven a quedar disponibles para el player.
+
+Los players tienen una vista `Marcaciones` con el mismo calendario semanal en modo solo lectura. Esa vista muestra todos los participantes, solo check-ins validos y coins aplicadas, sin botones de invalidacion ni eventos rechazados.
+
+Toda invalidacion queda en auditoria y permite recalcular puntajes desde hechos base.
 
 La evidencia queda como dato opcional para fases futuras o para casos donde el grupo quiera adjuntar foto, comentario o captura.
 

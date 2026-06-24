@@ -1,6 +1,6 @@
 # Roadmap post-MVP
 
-Actualizado: 2026-06-18.
+Actualizado: 2026-06-24.
 
 ## Estado de partida
 
@@ -11,12 +11,13 @@ El MVP esta publicado en `https://rm.crg-dev.com` y ya cubre el uso diario del r
 - ranking general y semanal;
 - check-in;
 - coins;
-- admin calendario;
-- perfil privado, cambio de PIN y avatares;
+- vista `Marcaciones` semanal readonly para players;
+- admin calendario con check-ins, coins aplicadas e invalidacion administrativa;
+- perfil privado, cambio de PIN, avatares e iconos Quest Sticker Totems;
 - rachas live con timezone `America/Asuncion`;
 - deploy CI/CD hacia VM + Cloudflare Tunnel.
 
-El plan final cambio respecto al plan inicial: autenticacion, publicacion, calendario admin, perfiles privados, avatares y ajuste de rachas live ya estan implementados. El siguiente bloque deberia enfocarse en operar el MVP publicado y despues agregar funciones nuevas.
+El plan final cambio respecto al plan inicial: autenticacion, publicacion, calendario admin/player, perfiles privados, avatares, iconografia sticker y ajuste de rachas live ya estan implementados. El siguiente bloque deberia enfocarse en operar el MVP publicado y despues agregar funciones nuevas.
 
 ## Prioridad 1 - Operacion segura del MVP
 
@@ -29,7 +30,7 @@ Alcance recomendado:
 - Runbook de restore.
 - Health check externo simple.
 - Rotacion de PINs si algun PIN temporal quedo expuesto.
-- Mini guia para admin: revisar calendario, invalidar marcas, otorgar coins y resetear PIN.
+- Mini guia para admin: revisar calendario, invalidar marcas, devolver coins aplicadas, otorgar coins y resetear PIN.
 - Checklist de deploy: tests verdes, push a `main`, CI/CD success, `GET /health` externo.
 
 Resultado esperado: app usable con menor riesgo operativo.

@@ -172,6 +172,11 @@ Estados visibles:
 - `rejected` -> invalidada.
 - `corrected` -> reservado para una fase de correccion mas completa.
 
+Regla de invalidacion:
+
+- Invalidar una coin `applied` la devuelve a `available`, porque fue una aplicacion corregida y debe volver al inventario del player.
+- Invalidar una coin `available` la marca como `rejected`.
+
 ### AuditLog
 
 - id
@@ -186,11 +191,11 @@ Estados visibles:
 
 Actualmente se usa para invalidaciones administrativas.
 
-## Consultas administrativas implementadas
+## Consultas de calendario implementadas
 
-El MVP no persiste una entidad separada para calendario. La vista admin semanal se construye desde `CheckIn` y `Participant`.
+El MVP no persiste una entidad separada para calendario. Las vistas semanales se construyen desde `CheckIn`, `ExceptionToken` y `Participant`.
 
-Endpoint actual:
+Endpoint admin de check-ins:
 
 ```text
 GET /api/admin/check-ins/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD
@@ -206,7 +211,32 @@ Devuelve check-ins del rango solicitado, incluyendo validos y rechazados, con:
 - notas;
 - fecha de creacion.
 
-El frontend filtra por estado y tipo. El filtro inicial visible es `Validos`.
+Endpoint semanal readonly:
+
+```text
+GET /api/calendar/weekly?from=YYYY-MM-DD&to=YYYY-MM-DD
+```
+
+Devuelve eventos unificados del rango solicitado:
+
+- check-ins validos;
+- coins aplicadas.
+
+Cada evento semanal tiene:
+
+- id;
+- participantId;
+- participantName;
+- activityDate;
+- occurredAt nullable;
+- kind: check-in o coin;
+- label;
+- status;
+- checkInType nullable;
+- coinType nullable;
+- notes nullable.
+
+La vista `Marcaciones` de players usa solo el endpoint readonly y no permite modificar datos. El calendario admin combina los eventos readonly con el endpoint admin de check-ins para conservar visibilidad de check-ins rechazados cuando el filtro lo pide. El filtro inicial visible es `Validos`, donde aparecen check-ins validos y coins aplicadas.
 
 ## Entidades futuras
 

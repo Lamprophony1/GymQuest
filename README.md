@@ -28,10 +28,12 @@ Incluye:
   - `Flex coin`: valida entrenamiento fuera de horario o recuperacion como si fuera 5am.
 - Health coin mensual automatica para participantes con genero femenino, no acumulable.
 - Admin para crear participantes, crear parejas, otorgar coins e invalidar check-ins o coins.
-- Admin con calendario semanal de check-ins por participante, filtros por estado/tipo, columna de jugador fija y anulacion directa de marcas validas.
+- Vista `Marcaciones` para players con calendario semanal readonly por participante, mostrando check-ins validos y coins aplicadas.
+- Admin con calendario semanal por participante, filtros por estado/tipo, columna de jugador fija y anulacion directa de check-ins validos y coins aplicadas.
 - Login por participante con PIN corto en modo produccion, cookie HttpOnly y switch participante/admin para Rafa.
 - Perfil privado desde el icono de usuario, con peso, altura, IMC calculado, categoria referencial y cambio de PIN propio.
 - Avatares sticker por participante en header y perfil, servidos como assets estaticos.
+- Iconos Quest Sticker Totems para logo principal, coins, rachas, Side quest y Lead.
 - En desarrollo se puede conservar el selector de usuario con `VITE_AUTH_MODE=dev-selector`.
 - Motor de scoring con puntos base, bonus diario, bonus semanal, Perfect streak y Gym streak.
 - Rankings live calculados en `America/Asuncion`, con gracia de rachas: Perfect streak cae despues de 06:30 y Gym streak al dia siguiente.
@@ -172,6 +174,7 @@ POST /api/admin/tokens/{id}/invalidate
 POST /api/admin/participants/{id}/pin
 GET  /api/admin/check-ins?limit=50
 GET  /api/admin/check-ins/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD
+GET  /api/calendar/weekly?from=YYYY-MM-DD&to=YYYY-MM-DD
 GET  /api/admin/tokens?limit=50
 GET  /api/rankings/general
 GET  /api/rankings/weeks
@@ -179,6 +182,10 @@ GET  /api/rankings/weeks/{weekStartDate}
 ```
 
 `POST /api/tokens/full-coverage` se mantiene por compatibilidad con el primer MVP. El flujo actual preferido es otorgar coins con admin y aplicarlas con `POST /api/tokens/{id}/use`.
+
+`GET /api/calendar/weekly` devuelve eventos semanales readonly para usuarios autenticados: check-ins validos y coins aplicadas. El calendario admin combina esos eventos con el endpoint admin de check-ins para poder mostrar tambien rechazados cuando el filtro lo pide.
+
+Invalidar una coin aplicada desde admin la devuelve a `Available`, por lo que vuelve al inventario del player y deja de aparecer como coin aplicada en el calendario semanal. Invalidar una coin disponible la marca como `Rejected`.
 
 Los endpoints de ranking aceptan parametros opcionales:
 
@@ -194,5 +201,6 @@ Los endpoints de ranking aceptan parametros opcionales:
 - Modelo de datos: `docs/planning/data-model.md`
 - Despliegue CI/CD en VM + Cloudflare: `docs/deployment/github-cloudflare-vm.md`
 - Visual vigente: `docs/superpowers/specs/2026-06-16-gymchall-doodle-fit-visual-refresh.md`
+- Marcaciones semanales de players: `docs/superpowers/specs/2026-06-23-player-weekly-markings-design.md`
 - Check-in y coins: `docs/superpowers/specs/2026-06-16-checkin-fichas-ui-rules.md`
 - Login PIN: `docs/superpowers/specs/2026-06-17-pin-login-auth-design.md`

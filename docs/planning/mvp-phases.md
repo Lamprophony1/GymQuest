@@ -69,9 +69,12 @@ Incluye:
 - Rafa entra como participante y puede cambiar a modo admin desde usuario.
 - Perfil privado con peso, altura, IMC referencial y cambio de PIN propio.
 - Avatares sticker por participante en header y perfil.
+- Iconos Quest Sticker Totems para logo principal, coins, rachas, Side quest y Lead.
 - CI/CD con GitHub Actions, GHCR, self-hosted runner y Docker Compose.
 - Cloudflare Tunnel para `https://rm.crg-dev.com`.
-- Admin calendario semanal de check-ins por participante.
+- Vista `Marcaciones` semanal readonly para players.
+- Admin calendario semanal por participante con check-ins validos/rechazados y coins aplicadas.
+- Invalidacion de coins aplicadas desde calendario admin, devolviendolas al inventario del player.
 - Ajustes mobile reales: header fijo, bottom nav estable, safe area y datetime input contenido.
 - Rankings live en `America/Asuncion` con vencimiento de Perfect streak despues de 06:30 y Gym streak al dia siguiente.
 

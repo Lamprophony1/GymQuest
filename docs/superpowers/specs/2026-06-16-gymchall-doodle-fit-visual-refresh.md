@@ -78,6 +78,23 @@ Usage:
 
 ## Component Direction
 
+### Iconografia actual
+
+La familia vigente para iconos principales de juego es **Quest Sticker Totems**. Se sirven como PNG estaticos desde `web/src/assets/quest-icons` y se renderizan con `QuestIcon`.
+
+Set actual:
+
+- Logo principal de la app.
+- Health coin.
+- Commit coin.
+- Flex coin.
+- Perfect streak.
+- Gym streak.
+- Side quest.
+- Lead.
+
+Estos iconos reemplazan lucide en superficies donde la identidad visual del reto importa: logo, dashboard, rachas, inventario de coins, calendario semanal para coins y badge `Lead`. Lucide sigue siendo valido para acciones utilitarias, navegacion, formularios y controles admin.
+
 ### Dashboard
 
 - Debe ser la pantalla mas expresiva.
