@@ -21,6 +21,7 @@ test('index exposes installable PWA metadata for iOS and Android', () => {
   expect(index).toContain('<meta name="theme-color" content="#f6efe1"');
   expect(index).toContain('<meta name="apple-mobile-web-app-capable" content="yes"');
   expect(index).toContain('<meta name="apple-mobile-web-app-title" content="Proyecto RM"');
+  expect(index).toContain('<link rel="icon" type="image/png" href="/icons/pwa-192.png"');
   expect(index).toContain('<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"');
 });
 
