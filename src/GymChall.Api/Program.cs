@@ -63,6 +63,7 @@ using (var scope = app.Services.CreateScope())
     await db.Database.EnsureCreatedAsync();
     await DatabaseSchema.EnsureAuthSchemaAsync(db);
     await DatabaseSchema.EnsureParticipantProfileSchemaAsync(db);
+    await DatabaseSchema.EnsureExceptionTokenSpecialSchemaAsync(db);
     await SeedData.EnsureSeededAsync(db);
 
     if (!string.IsNullOrWhiteSpace(authSettings.BootstrapAdminPin))

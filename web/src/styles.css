@@ -17,6 +17,7 @@
   --coin-health-soft: #dcf8e7;
   --coin-flex: #127f9f;
   --coin-flex-soft: #d9f7ff;
+  --coin-albirroja-soft: #e8f1ff;
   --warning-soft: #fff6d8;
   --danger-soft: #fff0ed;
   --aqua-soft: #ebfbff;
@@ -941,6 +942,11 @@ svg {
   color: #07506b;
 }
 
+.coin-chip--albirroja .coin-mark {
+  background: var(--coin-albirroja-soft);
+  color: #063b8f;
+}
+
 .coin-mark--asset {
   width: 50px;
   height: 50px;
@@ -952,7 +958,8 @@ svg {
 
 .coin-chip--health .coin-mark--asset,
 .coin-chip--commit .coin-mark--asset,
-.coin-chip--flex .coin-mark--asset {
+.coin-chip--flex .coin-mark--asset,
+.coin-chip--albirroja .coin-mark--asset {
   background: transparent;
   color: inherit;
 }
@@ -1679,6 +1686,11 @@ svg {
   grid-template-columns: minmax(0, 1fr) 46px;
   align-items: center;
   gap: 8px;
+}
+
+.calendar-entry--coin:not(.calendar-entry--coin-actionable) {
+  gap: 12px;
+  padding: 8px 4px 8px 8px;
 }
 
 .calendar-entry--coin-actionable {

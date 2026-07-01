@@ -18,7 +18,7 @@ import type {
   ParticipantRole,
   WeeklyCalendarEvent
 } from '../api/types';
-import { checkInTypeLabel, formatShortDate, reasonCategoryLabel, statusTone, tokenTypeLabel } from '../components/format';
+import { checkInTypeLabel, formatShortDate, reasonCategoryLabel, statusTone, tokenDisplayLabel } from '../components/format';
 import { WeeklyMarkingsCalendar } from '../components/WeeklyMarkingsCalendar';
 
 type AdminSection = 'calendar' | 'records' | 'setup';
@@ -444,7 +444,7 @@ export function AdminScreen({
                       <span>
                         {token.status.toLowerCase() === 'available' ? 'Disponible' : formatShortDate(token.targetDate)}
                         {' - '}
-                        {tokenTypeLabel(token.type)}
+                        {tokenDisplayLabel(token)}
                         {' - '}
                         {reasonCategoryLabel(token.reasonCategory)}
                       </span>

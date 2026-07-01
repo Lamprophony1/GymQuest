@@ -327,7 +327,9 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
                 x.Token.TargetDate,
                 x.Token.Type,
                 x.Token.Status,
-                x.Token.Notes
+                x.Token.Notes,
+                x.Token.SpecialCode,
+                x.Token.SpecialLabel
             })
             .ToArrayAsync(cancellationToken);
 
@@ -351,6 +353,7 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             .Concat(appliedTokens.Select(x =>
             {
                 var type = ToDto(x.Type);
+                var label = x.SpecialLabel ?? type.ToString();
                 return new WeeklyCalendarEventDto(
                     x.Id,
                     x.ParticipantId,
@@ -358,11 +361,13 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
                     x.TargetDate,
                     null,
                     WeeklyCalendarEventKindDto.Coin,
-                    type.ToString(),
+                    label,
                     x.Status.ToString(),
                     null,
                     type,
-                    x.Notes);
+                    x.Notes,
+                    x.SpecialCode,
+                    x.SpecialLabel);
             }))
             .OrderBy(x => x.ActivityDate)
             .ThenBy(x => x.ParticipantName)
@@ -392,7 +397,9 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
                 x.Token.ReasonCategory,
                 x.Token.Status,
                 x.Token.Notes,
-                x.Token.CreatedAt
+                x.Token.CreatedAt,
+                x.Token.SpecialCode,
+                x.Token.SpecialLabel
             })
             .ToArrayAsync(cancellationToken);
 
@@ -409,7 +416,9 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
                 (ExceptionReasonCategoryDto)x.ReasonCategory,
                 x.Status.ToString(),
                 x.Notes,
-                x.CreatedAt))
+                x.CreatedAt,
+                x.SpecialCode,
+                x.SpecialLabel))
             .ToArray();
     }
 
@@ -443,7 +452,9 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             ReasonCategory = (ExceptionReasonCategory)token.ReasonCategory,
             Status = ToEntity(token.Status),
             AssignedByAdminId = token.AssignedByAdminId,
-            Notes = token.Notes
+            Notes = token.Notes,
+            SpecialCode = token.SpecialCode,
+            SpecialLabel = token.SpecialLabel
         });
 
         await db.SaveChangesAsync(cancellationToken);
@@ -502,7 +513,7 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
             participants.Select(x => new ParticipantDto(x.Id, x.DisplayName, x.Username, x.Role == ParticipantRole.Admin ? ParticipantRoleDto.Admin : ParticipantRoleDto.Participant, x.Gender, x.Active)).ToArray(),
             couples.Select(x => new CoupleDto(x.Id, x.ChallengeId, x.Name, x.Memberships.Select(m => m.ParticipantId).ToArray(), x.Active)).ToArray(),
             checkIns.Select(x => new CheckInDto(x.Id, x.ChallengeId, x.ParticipantId, x.ActivityDate, ToDto(x.Type), x.DurationMinutes)).ToArray(),
-            tokens.Select(x => new FullCoverageTokenDto(x.Id, x.ChallengeId, x.ParticipantId, x.TargetDate, ToDto(x.Type), (ExceptionReasonCategoryDto)x.ReasonCategory, ToDto(x.Status), x.Notes)).ToArray());
+            tokens.Select(x => new FullCoverageTokenDto(x.Id, x.ChallengeId, x.ParticipantId, x.TargetDate, ToDto(x.Type), (ExceptionReasonCategoryDto)x.ReasonCategory, ToDto(x.Status), x.Notes, x.SpecialCode, x.SpecialLabel)).ToArray());
     }
 
     public async Task InvalidateCheckInAsync(Guid checkInId, Guid actorParticipantId, string? reason, CancellationToken cancellationToken = default)

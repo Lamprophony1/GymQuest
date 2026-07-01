@@ -1,4 +1,5 @@
 import type { ExceptionTokenType } from '../api/types';
+import coinAlbirroja from '../assets/quest-icons/coin-albirroja.png';
 import coinCommit from '../assets/quest-icons/coin-commit.png';
 import coinFlex from '../assets/quest-icons/coin-flex.png';
 import coinHealth from '../assets/quest-icons/coin-health.png';
@@ -10,6 +11,7 @@ import streakPerfect from '../assets/quest-icons/streak-perfect.png';
 
 export type QuestIconName =
   | 'logo-main'
+  | 'coin-albirroja'
   | 'coin-health'
   | 'coin-commit'
   | 'coin-flex'
@@ -20,6 +22,7 @@ export type QuestIconName =
 
 const questIconSources: Record<QuestIconName, string> = {
   'logo-main': logoMain,
+  'coin-albirroja': coinAlbirroja,
   'coin-health': coinHealth,
   'coin-commit': coinCommit,
   'coin-flex': coinFlex,
@@ -35,7 +38,11 @@ interface QuestIconProps {
   alt?: string;
 }
 
-export function questCoinIconName(type: ExceptionTokenType): QuestIconName {
+export function questCoinIconName(type: ExceptionTokenType, specialCode?: string | null): QuestIconName {
+  if (specialCode === 'albirroja') {
+    return 'coin-albirroja';
+  }
+
   switch (type) {
     case 0:
       return 'coin-health';

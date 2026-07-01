@@ -63,6 +63,7 @@ describe('Doodle Fit visual system', () => {
     expect(styles).toMatch(/\.icon-frame--asset\s*{\s*width: 72px;\s*height: 72px;/);
     expect(styles).toMatch(/\.coin-mark--asset\s*{\s*width: 50px;\s*height: 50px;/);
     expect(styles).toMatch(/\.calendar-entry--coin\s*{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 46px;/);
+    expect(styles).toMatch(/\.calendar-entry--coin:not\(\.calendar-entry--coin-actionable\)\s*{[\s\S]*?gap: 12px;[\s\S]*?padding: 8px 4px 8px 8px;/);
     expect(styles).not.toMatch(/\.calendar-entry--coin\s*{[\s\S]*?min-height: 94px;/);
     expect(styles).toMatch(/\.calendar-entry__coin-icon\s*{[\s\S]*?justify-self: center;[\s\S]*?width: 46px;\s*height: 46px;/);
     expect(styles).toMatch(/\.badge--streak \.quest-icon\s*{\s*width: 1\.875rem;\s*height: 1\.875rem;/);

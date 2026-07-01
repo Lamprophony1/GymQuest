@@ -30,6 +30,12 @@ public static class DatabaseSchema
         await EnsureColumnAsync(db, "Participants", "HeightCm", "REAL NULL", cancellationToken);
     }
 
+    public static async Task EnsureExceptionTokenSpecialSchemaAsync(GymChallDbContext db, CancellationToken cancellationToken = default)
+    {
+        await EnsureColumnAsync(db, "ExceptionTokens", "SpecialCode", "TEXT NULL", cancellationToken);
+        await EnsureColumnAsync(db, "ExceptionTokens", "SpecialLabel", "TEXT NULL", cancellationToken);
+    }
+
     private static async Task EnsureColumnAsync(GymChallDbContext db, string tableName, string columnName, string columnDefinition, CancellationToken cancellationToken)
     {
         var connection = db.Database.GetDbConnection();

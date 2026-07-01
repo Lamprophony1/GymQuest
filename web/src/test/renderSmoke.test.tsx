@@ -11,6 +11,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { MarkingsScreen } from '../screens/MarkingsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { RankingScreen } from '../screens/RankingScreen';
+import { TokenScreen } from '../screens/TokenScreen';
 import type {
   AdminCheckIn,
   AdminToken,
@@ -101,6 +102,24 @@ const challengeWithCoins: ChallengeSnapshot = {
       reasonCategory: 4,
       status: 1,
       notes: null
+    }
+  ]
+};
+
+const challengeWithSpecialCoin: ChallengeSnapshot = {
+  ...challenge,
+  fullCoverageTokens: [
+    {
+      id: 'albirroja-coin-id',
+      challengeId: 'challenge-id',
+      participantId: 'rafa-id',
+      targetDate: '0001-01-01',
+      type: 1,
+      reasonCategory: 4,
+      status: 1,
+      notes: 'feriado Paraguay',
+      specialCode: 'albirroja',
+      specialLabel: 'Albirroja coin'
     }
   ]
 };
@@ -422,6 +441,36 @@ test('dashboard renders the scoreboard, own couple, and quick actions', () => {
   expect(scoreHeadings).toEqual(['Rafa y Clari', 'Streak board', 'Puntos', 'Coins']);
 });
 
+test('dashboard shows a special coin only when the player has one available', () => {
+  const { rerender } = render(
+    <DashboardScreen
+      challenge={challenge}
+      participants={[rafa, clari]}
+      couples={[couple]}
+      ranking={ranking}
+      weeklyRankings={weeklyRankings}
+      selectedParticipant={rafa}
+      onNavigate={() => undefined}
+    />
+  );
+
+  expect(screen.queryByText(/Albirroja coin/i)).not.toBeInTheDocument();
+
+  rerender(
+    <DashboardScreen
+      challenge={challengeWithSpecialCoin}
+      participants={[rafa, clari]}
+      couples={[couple]}
+      ranking={ranking}
+      weeklyRankings={weeklyRankings}
+      selectedParticipant={rafa}
+      onNavigate={() => undefined}
+    />
+  );
+
+  expect(screen.getByText('Albirroja coin x1')).toBeInTheDocument();
+});
+
 test('check-in duplicate warning appears only after submitting the covered date', () => {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   const coveredChallenge: ChallengeSnapshot = {
@@ -457,6 +506,19 @@ test('check-in duplicate warning appears only after submitting the covered date'
   expect(onSubmit).not.toHaveBeenCalled();
 });
 
+test('check-in token selector labels special coins by their special identity', () => {
+  render(
+    <CheckInScreen
+      challenge={challengeWithSpecialCoin}
+      selectedParticipant={rafa}
+      onSubmit={async () => undefined}
+      onUseToken={async () => undefined}
+    />
+  );
+
+  expect(screen.getByRole('option', { name: 'Albirroja coin' })).toBeInTheDocument();
+});
+
 test('dashboard uses readable streak and weekly bonus labels', () => {
   render(
     <DashboardScreen
@@ -478,6 +540,34 @@ test('dashboard uses readable streak and weekly bonus labels', () => {
   expect(screen.getByText('+12 pts ganados esta semana')).toBeInTheDocument();
   expect(screen.queryByText(/combo/i)).not.toBeInTheDocument();
   expect(screen.queryByText('Sin bonus')).not.toBeInTheDocument();
+});
+
+test('token screen submits albirroja as a special coin with commit defaults', async () => {
+  const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+  render(
+    <TokenScreen
+      participants={[rafa, clari]}
+      selectedParticipant={rafa}
+      adminParticipantId="rafa-id"
+      onSubmit={onSubmit}
+    />
+  );
+
+  fireEvent.change(screen.getByLabelText('Jugador'), { target: { value: 'clari-id' } });
+  fireEvent.change(screen.getByLabelText('Variante'), { target: { value: 'albirroja' } });
+  fireEvent.click(screen.getByRole('button', { name: /otorgar coin/i }));
+
+  await waitFor(() => {
+    expect(onSubmit).toHaveBeenCalledWith({
+      participantId: 'clari-id',
+      type: 1,
+      reasonCategory: 4,
+      assignedByAdminId: 'rafa-id',
+      notes: null,
+      specialCode: 'albirroja'
+    });
+  });
 });
 
 test('ranking streak tags stay compact and icon-led', () => {

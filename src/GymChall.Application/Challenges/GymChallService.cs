@@ -5,12 +5,14 @@ namespace GymChall.Application.Challenges;
 
 public sealed record RegisterCheckInRequest(Guid ParticipantId, DateTimeOffset OccurredAt, DateOnly? RecoveryTargetDate, Guid CreatedByParticipantId, string? Notes);
 public sealed record CreateFullCoverageTokenRequest(Guid ParticipantId, DateOnly TargetDate, ExceptionReasonCategoryDto ReasonCategory, Guid AssignedByAdminId, string? Notes);
-public sealed record GrantTokenRequest(Guid ParticipantId, ExceptionTokenTypeDto Type, ExceptionReasonCategoryDto ReasonCategory, Guid AssignedByAdminId, string? Notes);
+public sealed record GrantTokenRequest(Guid ParticipantId, ExceptionTokenTypeDto Type, ExceptionReasonCategoryDto ReasonCategory, Guid AssignedByAdminId, string? Notes, string? SpecialCode = null);
 public sealed record UseTokenRequest(Guid ParticipantId, DateOnly TargetDate, Guid UsedByParticipantId, DateTimeOffset? OccurredAt, DateOnly? RecoveryTargetDate, string? Notes);
 
 public sealed class GymChallService(IGymChallRepository repository)
 {
     private const string MonthlyHealthTokenNote = "Ficha salud mensual automatica";
+    private const string AlbirrojaSpecialCode = "albirroja";
+    private const string AlbirrojaSpecialLabel = "Albirroja coin";
 
     public async Task<Guid> RegisterCheckInAsync(RegisterCheckInRequest request, CancellationToken cancellationToken = default)
     {
@@ -38,6 +40,7 @@ public sealed class GymChallService(IGymChallRepository repository)
         var challengeId = await RequireActiveChallengeId(cancellationToken);
         var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
         EnsureAdmin(snapshot, request.AssignedByAdminId);
+        var tokenDefaults = ResolveTokenDefaults(request);
 
         var tokenId = Guid.NewGuid();
         await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
@@ -45,11 +48,13 @@ public sealed class GymChallService(IGymChallRepository repository)
             challengeId,
             request.ParticipantId,
             DateOnly.MinValue,
-            request.Type,
-            request.ReasonCategory,
+            tokenDefaults.Type,
+            tokenDefaults.ReasonCategory,
             ExceptionTokenStatusDto.Available,
             request.AssignedByAdminId,
-            request.Notes),
+            request.Notes,
+            tokenDefaults.SpecialCode,
+            tokenDefaults.SpecialLabel),
             cancellationToken);
 
         return tokenId;
@@ -346,6 +351,28 @@ public sealed class GymChallService(IGymChallRepository repository)
         }
     }
 
+    private static TokenGrantDefaults ResolveTokenDefaults(GrantTokenRequest request)
+    {
+        var specialCode = NormalizeSpecialCode(request.SpecialCode);
+        if (specialCode == AlbirrojaSpecialCode)
+        {
+            return new TokenGrantDefaults(
+                ExceptionTokenTypeDto.Mandatory,
+                ExceptionReasonCategoryDto.OtherApproved,
+                AlbirrojaSpecialCode,
+                AlbirrojaSpecialLabel);
+        }
+
+        return new TokenGrantDefaults(request.Type, request.ReasonCategory, specialCode, null);
+    }
+
+    private static string? NormalizeSpecialCode(string? specialCode)
+    {
+        return string.IsNullOrWhiteSpace(specialCode)
+            ? null
+            : specialCode.Trim().ToLowerInvariant();
+    }
+
     private static bool SameMonth(DateOnly first, DateOnly second)
     {
         return first.Year == second.Year && first.Month == second.Month;
@@ -398,4 +425,10 @@ public sealed class GymChallService(IGymChallRepository repository)
             return DateOnly.FromDateTime(now.UtcDateTime);
         }
     }
+
+    private sealed record TokenGrantDefaults(
+        ExceptionTokenTypeDto Type,
+        ExceptionReasonCategoryDto ReasonCategory,
+        string? SpecialCode,
+        string? SpecialLabel);
 }

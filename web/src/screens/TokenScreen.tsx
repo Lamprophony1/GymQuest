@@ -6,7 +6,7 @@ import type {
   GrantTokenRequest,
   Participant
 } from '../api/types';
-import { reasonCategoryLabel, tokenTypeLabel } from '../components/format';
+import { reasonCategoryLabel, specialCoinOptions, tokenTypeLabel } from '../components/format';
 
 interface TokenScreenProps {
   participants: Participant[];
@@ -17,6 +17,7 @@ interface TokenScreenProps {
 
 const tokenTypeOptions: ExceptionTokenType[] = [0, 1, 2];
 const reasonOptions: ExceptionReasonCategory[] = [0, 1, 2, 3, 4];
+type TokenVariant = 'normal' | (typeof specialCoinOptions)[number]['code'];
 
 function defaultReasonForType(type: ExceptionTokenType): ExceptionReasonCategory {
   if (type === 0) {
@@ -35,6 +36,7 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
   const [participantId, setParticipantId] = useState(selectedParticipant?.id ?? activeParticipants[0]?.id ?? '');
   const [type, setType] = useState<ExceptionTokenType>(0);
   const [reasonCategory, setReasonCategory] = useState<ExceptionReasonCategory>(0);
+  const [variant, setVariant] = useState<TokenVariant>('normal');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -58,7 +60,8 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
         type,
         reasonCategory,
         assignedByAdminId: actorId,
-        notes: notes.trim() || null
+        notes: notes.trim() || null,
+        specialCode: variant === 'normal' ? null : variant
       });
       setMessage('Coin otorgada.');
       setNotes('');
@@ -85,10 +88,32 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
           ))}
         </select>
 
+        <label htmlFor="token-variant">Variante</label>
+        <select
+          id="token-variant"
+          value={variant}
+          onChange={(event) => {
+            const nextVariant = event.currentTarget.value as TokenVariant;
+            setVariant(nextVariant);
+            if (nextVariant === 'albirroja') {
+              setType(1);
+              setReasonCategory(4);
+            }
+          }}
+        >
+          <option value="normal">Normal</option>
+          {specialCoinOptions.map((option) => (
+            <option key={option.code} value={option.code}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
         <label htmlFor="token-type">Tipo</label>
         <select
           id="token-type"
           value={type}
+          disabled={variant !== 'normal'}
           onChange={(event) => {
             const nextType = Number(event.currentTarget.value) as ExceptionTokenType;
             setType(nextType);
@@ -106,6 +131,7 @@ export function TokenScreen({ participants, selectedParticipant, adminParticipan
         <select
           id="token-reason"
           value={reasonCategory}
+          disabled={variant !== 'normal'}
           onChange={(event) => setReasonCategory(Number(event.currentTarget.value) as ExceptionReasonCategory)}
         >
           {reasonOptions.map((option) => (

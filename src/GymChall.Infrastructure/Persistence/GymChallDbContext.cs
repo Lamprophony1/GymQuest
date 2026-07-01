@@ -65,6 +65,8 @@ public sealed class GymChallDbContext(DbContextOptions<GymChallDbContext> option
         modelBuilder.Entity<CheckInEntity>().HasIndex(x => new { x.ChallengeId, x.ParticipantId, x.ActivityDate, x.Type });
 
         modelBuilder.Entity<ExceptionTokenEntity>().HasKey(x => x.Id);
+        modelBuilder.Entity<ExceptionTokenEntity>().Property(x => x.SpecialCode).HasMaxLength(80);
+        modelBuilder.Entity<ExceptionTokenEntity>().Property(x => x.SpecialLabel).HasMaxLength(120);
         modelBuilder.Entity<ExceptionTokenEntity>().HasIndex(x => new { x.ChallengeId, x.ParticipantId, x.TargetDate, x.Type });
 
         modelBuilder.Entity<AuditLogEntity>().HasKey(x => x.Id);

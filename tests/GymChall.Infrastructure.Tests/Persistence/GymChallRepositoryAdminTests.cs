@@ -128,7 +128,9 @@ public sealed class GymChallRepositoryAdminTests
             ExceptionReasonCategoryDto.MandatoryTrip,
             ExceptionTokenStatusDto.Applied,
             SeedData.RafaId,
-            "feriado"));
+            "feriado",
+            "albirroja",
+            "Albirroja coin"));
 
         await repository.InvalidateFullCoverageTokenAsync(tokenId, SeedData.RafaId, "se devuelve coin");
 
@@ -140,6 +142,8 @@ public sealed class GymChallRepositoryAdminTests
             new DateOnly(2026, 6, 21));
 
         Assert.Equal(ExceptionTokenStatus.Available, token.Status);
+        Assert.Equal("albirroja", token.SpecialCode);
+        Assert.Equal("Albirroja coin", token.SpecialLabel);
         Assert.Equal("invalidate_token", audit.Action);
         Assert.Contains("Applied", audit.OldValueJson);
         Assert.Contains("Available", audit.NewValueJson);
@@ -276,7 +280,9 @@ public sealed class GymChallRepositoryAdminTests
             ExceptionReasonCategoryDto.MandatoryTrip,
             ExceptionTokenStatusDto.Applied,
             SeedData.RafaId,
-            "feriado"));
+            "feriado",
+            "albirroja",
+            "Albirroja coin"));
         await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
             availableTokenId,
             SeedData.ChallengeId,
@@ -308,7 +314,9 @@ public sealed class GymChallRepositoryAdminTests
             row.Status == "Applied" &&
             row.ActivityDate == new DateOnly(2026, 6, 16) &&
             row.CheckInType is null &&
-            row.CoinType == ExceptionTokenTypeDto.Mandatory);
+            row.CoinType == ExceptionTokenTypeDto.Mandatory &&
+            row.SpecialCode == "albirroja" &&
+            row.SpecialLabel == "Albirroja coin");
         Assert.DoesNotContain(rows, row => row.Id == rejectedCheckInId);
         Assert.DoesNotContain(rows, row => row.Id == availableTokenId);
     }
@@ -350,6 +358,34 @@ public sealed class GymChallRepositoryAdminTests
         Assert.Equal(ExceptionReasonCategoryDto.Period, row.ReasonCategory);
         Assert.Equal("Applied", row.Status);
         Assert.Equal("periodo", row.Notes);
+    }
+
+    [Fact]
+    public async Task Lists_recent_tokens_with_special_metadata()
+    {
+        await using var fixture = await DbFixture.CreateSeededAsync();
+        var repository = new GymChallRepository(fixture.Db);
+        var tokenId = Guid.Parse("40000000-0000-0000-0000-000000000005");
+
+        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
+            tokenId,
+            SeedData.ChallengeId,
+            SeedData.RafaId,
+            DateOnly.MinValue,
+            ExceptionTokenTypeDto.Mandatory,
+            ExceptionReasonCategoryDto.OtherApproved,
+            ExceptionTokenStatusDto.Available,
+            SeedData.RafaId,
+            "feriado Paraguay",
+            "albirroja",
+            "Albirroja coin"));
+
+        var rows = await repository.ListRecentFullCoverageTokensAsync(SeedData.ChallengeId, limit: 1);
+
+        var row = Assert.Single(rows);
+        Assert.Equal(tokenId, row.Id);
+        Assert.Equal("albirroja", row.SpecialCode);
+        Assert.Equal("Albirroja coin", row.SpecialLabel);
     }
 
     private sealed class DbFixture : IAsyncDisposable

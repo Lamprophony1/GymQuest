@@ -112,6 +112,8 @@ export interface FullCoverageToken {
   reasonCategory: ExceptionReasonCategory;
   status: ExceptionTokenStatus;
   notes?: string | null;
+  specialCode?: string | null;
+  specialLabel?: string | null;
 }
 
 export interface RankingRow {
@@ -164,6 +166,8 @@ export interface AdminToken {
   status: string;
   notes?: string | null;
   createdAt: string;
+  specialCode?: string | null;
+  specialLabel?: string | null;
 }
 
 export interface WeeklyCalendarEvent {
@@ -178,6 +182,8 @@ export interface WeeklyCalendarEvent {
   checkInType?: CheckInType | null;
   coinType?: ExceptionTokenType | null;
   notes?: string | null;
+  specialCode?: string | null;
+  specialLabel?: string | null;
 }
 
 export interface CreateParticipantRequest {
@@ -221,6 +227,7 @@ export interface GrantTokenRequest {
   reasonCategory: ExceptionReasonCategory;
   assignedByAdminId: string;
   notes?: string | null;
+  specialCode?: string | null;
 }
 
 export interface UseTokenRequest {

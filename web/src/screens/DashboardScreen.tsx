@@ -1,10 +1,18 @@
 import { Dumbbell, Trophy } from 'lucide-react';
 import type { AppTab } from '../components/AppShell';
-import { coinTone, coinTypes, formatCoupleName, formatPoints, tokenTypeLabel } from '../components/format';
+import {
+  coinDisplayTone,
+  coinTone,
+  coinTypes,
+  formatCoupleName,
+  formatPoints,
+  tokenDisplayLabel,
+  tokenTypeLabel
+} from '../components/format';
 import { QuestIcon, questCoinIconName } from '../components/QuestIcon';
 import { ScorePanel } from '../components/ScorePanel';
 import { StatusPanel } from '../components/StatusPanel';
-import type { ChallengeSnapshot, Couple, ExceptionTokenType, Participant, RankingRow, WeeklyRanking } from '../api/types';
+import type { ChallengeSnapshot, Couple, ExceptionTokenType, FullCoverageToken, Participant, RankingRow, WeeklyRanking } from '../api/types';
 
 interface DashboardScreenProps {
   challenge: ChallengeSnapshot | null;
@@ -16,8 +24,8 @@ interface DashboardScreenProps {
   onNavigate: (tab: AppTab) => void;
 }
 
-function coinIcon(type: ExceptionTokenType) {
-  return <QuestIcon name={questCoinIconName(type)} />;
+function coinIcon(type: ExceptionTokenType, specialCode?: string | null) {
+  return <QuestIcon name={questCoinIconName(type, specialCode)} />;
 }
 
 export function DashboardScreen({
@@ -45,9 +53,10 @@ export function DashboardScreen({
   const participantTokens =
     challenge?.fullCoverageTokens.filter((token) => token.participantId === selectedParticipant?.id && token.status === 1) ?? [];
   const tokenCount = participantTokens.length;
+  const specialTokenGroups = groupSpecialTokens(participantTokens);
 
   function coinCount(type: ExceptionTokenType): number {
-    return participantTokens.filter((token) => token.type === type).length;
+    return participantTokens.filter((token) => token.type === type && !token.specialCode).length;
   }
 
   return (
@@ -120,6 +129,14 @@ export function DashboardScreen({
                   <span>{tokenTypeLabel(type)} x{coinCount(type)}</span>
                 </span>
               ))}
+              {specialTokenGroups.map((group) => (
+                <span className={`coin-chip coin-chip--${coinDisplayTone(group.token)}`} key={group.key}>
+                  <span className="coin-mark coin-mark--asset" aria-hidden="true">
+                    {coinIcon(group.token.type, group.token.specialCode)}
+                  </span>
+                  <span>{tokenDisplayLabel(group.token)} x{group.count}</span>
+                </span>
+              ))}
             </div>
             <p className="score-panel__meta">{tokenCount ? `${tokenCount} disponibles` : 'Sin coins disponibles'}</p>
           </article>
@@ -140,4 +157,25 @@ export function DashboardScreen({
       />
     </div>
   );
+}
+
+function groupSpecialTokens(tokens: FullCoverageToken[]): Array<{ key: string; token: FullCoverageToken; count: number }> {
+  const groups = new Map<string, { key: string; token: FullCoverageToken; count: number }>();
+
+  for (const token of tokens) {
+    if (!token.specialCode) {
+      continue;
+    }
+
+    const key = `${token.specialCode}:${token.specialLabel ?? ''}:${token.type}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.count += 1;
+      continue;
+    }
+
+    groups.set(key, { key, token, count: 1 });
+  }
+
+  return [...groups.values()];
 }

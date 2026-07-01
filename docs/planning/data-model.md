@@ -156,6 +156,8 @@ Entidad tecnica para las coins visibles.
 - status: available | applied | corrected | rejected
 - assignedByAdminId
 - notes nullable
+- specialCode nullable
+- specialLabel nullable
 - createdAt
 - updatedAt
 
@@ -164,6 +166,13 @@ Mapeo visible:
 - `health` -> Health coin.
 - `mandatory` -> Commit coin.
 - `schedule_change` -> Flex coin.
+
+Variantes especiales:
+
+- `specialCode` identifica una coin simbolica, por ejemplo `albirroja`.
+- `specialLabel` guarda el nombre visible, por ejemplo `Albirroja coin`.
+- Estos campos no cambian la regla competitiva; el efecto se calcula por `type`.
+- Si una coin aplicada se invalida y vuelve a `available`, conserva `specialCode` y `specialLabel`.
 
 Estados visibles:
 

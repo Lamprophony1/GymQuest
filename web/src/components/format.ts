@@ -3,11 +3,17 @@ import type {
   CheckInType,
   ExceptionReasonCategory,
   ExceptionTokenType,
+  FullCoverageToken,
   WeeklyRanking,
   WeeklyRankingRow
 } from '../api/types';
 
 export const coinTypes: ExceptionTokenType[] = [0, 1, 2];
+export const specialCoinOptions = [
+  { code: 'albirroja', label: 'Albirroja coin' }
+] as const;
+
+export type CoinDisplayInput = Pick<FullCoverageToken, 'type' | 'specialCode' | 'specialLabel'>;
 
 export function formatPoints(value: number | null | undefined): string {
   if (value === null || value === undefined) {
@@ -131,6 +137,18 @@ export function tokenTypeLabel(type: ExceptionTokenType): string {
   }
 }
 
+export function tokenDisplayLabel(token: CoinDisplayInput): string {
+  if (token.specialLabel?.trim()) {
+    return token.specialLabel;
+  }
+
+  if (token.specialCode?.trim()) {
+    return specialCoinOptions.find((option) => option.code === token.specialCode)?.label ?? 'Coin especial';
+  }
+
+  return tokenTypeLabel(token.type);
+}
+
 export function coinTone(type: ExceptionTokenType): 'health' | 'commit' | 'flex' {
   switch (type) {
     case 0:
@@ -140,6 +158,14 @@ export function coinTone(type: ExceptionTokenType): 'health' | 'commit' | 'flex'
     default:
       return 'flex';
   }
+}
+
+export function coinDisplayTone(token: CoinDisplayInput): 'health' | 'commit' | 'flex' | 'albirroja' {
+  if (token.specialCode === 'albirroja') {
+    return 'albirroja';
+  }
+
+  return coinTone(token.type);
 }
 
 export function reasonCategoryLabel(category: ExceptionReasonCategory): string {

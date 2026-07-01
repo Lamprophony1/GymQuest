@@ -37,17 +37,19 @@ public sealed class GymChallRepositoryTests
         await repository.AddParticipantAsync(new ParticipantCreateDto(clariId, "Clari", "clari", ParticipantRoleDto.Participant, "female"));
         await repository.AddCoupleAsync(new CoupleCreateDto(Guid.Parse("44444444-4444-4444-4444-444444444444"), challengeId, "Rafa + Clari", rafaId, clariId));
         await repository.AddCheckInAsync(new CheckInCreateDto(Guid.Parse("55555555-5555-5555-5555-555555555555"), challengeId, rafaId, new DateTimeOffset(2026, 6, 15, 5, 5, 0, TimeSpan.FromHours(-4)), new DateOnly(2026, 6, 15), CheckInTypeDto.GymMorning, 45, rafaId, "5am"));
-        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(Guid.Parse("66666666-6666-6666-6666-666666666666"), challengeId, clariId, new DateOnly(2026, 6, 15), ExceptionTokenTypeDto.Health, ExceptionReasonCategoryDto.Health, ExceptionTokenStatusDto.Applied, rafaId, "salud"));
+        await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(Guid.Parse("66666666-6666-6666-6666-666666666666"), challengeId, clariId, new DateOnly(2026, 6, 15), ExceptionTokenTypeDto.Health, ExceptionReasonCategoryDto.Health, ExceptionTokenStatusDto.Applied, rafaId, "salud", "albirroja", "Albirroja coin"));
         await repository.UpdateParticipantProfileAsync(rafaId, 82.4, 178);
 
         var snapshot = await repository.GetChallengeSnapshotAsync(challengeId);
         var profile = await repository.GetParticipantProfileAsync(rafaId);
+        var token = Assert.Single(snapshot.FullCoverageTokens);
 
         Assert.Equal("Reto Parejas - Rumbo a Septiembre", snapshot.Challenge.Name);
         Assert.Equal(2, snapshot.Participants.Count);
         Assert.Single(snapshot.Couples);
         Assert.Single(snapshot.CheckIns);
-        Assert.Single(snapshot.FullCoverageTokens);
+        Assert.Equal("albirroja", token.SpecialCode);
+        Assert.Equal("Albirroja coin", token.SpecialLabel);
         Assert.NotNull(profile);
         Assert.Equal(82.4, profile.WeightKg);
         Assert.Equal(178, profile.HeightCm);

@@ -8,7 +8,7 @@ import type {
   RegisterCheckInRequest,
   UseTokenRequest
 } from '../api/types';
-import { tokenTypeLabel } from '../components/format';
+import { tokenDisplayLabel } from '../components/format';
 
 interface CheckInScreenProps {
   challenge: ChallengeSnapshot | null;
@@ -272,7 +272,7 @@ export function CheckInScreen({ challenge, selectedParticipant, onSubmit, onUseT
           >
             {availableTokens.map((token) => (
               <option key={token.id} value={token.id}>
-                {tokenTypeLabel(token.type)}
+                {tokenDisplayLabel(token)}
               </option>
             ))}
           </select>

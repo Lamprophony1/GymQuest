@@ -64,6 +64,16 @@ Nombres internos:
 - `Mandatory` -> Commit coin.
 - `ScheduleChange` -> Flex coin.
 
+Coins especiales:
+
+- Una coin especial es una variante simbolica de una coin funcional existente.
+- El efecto competitivo sigue dependiendo del tipo interno (`Health`, `Mandatory` o `ScheduleChange`).
+- La identidad especial se guarda como `specialCode` y `specialLabel`.
+- Las especiales solo se muestran en el dashboard cuando el player tiene al menos una disponible.
+- Para crear una nueva coin especial, se define codigo, nombre visible, icono y tipo funcional base.
+- `Albirroja coin` usa `specialCode = albirroja`, `specialLabel = Albirroja coin`, `type = Mandatory` y `reasonCategory = OtherApproved`.
+- No tiene restriccion dura de fecha; el grupo la usa en el dia acordado.
+
 Estados actuales:
 
 - `Available`: coin otorgada y pendiente de uso.
@@ -141,6 +151,7 @@ Reglas:
 - Check-in 5am cuenta para ambas rachas.
 - Health coin y Commit coin salvan la cobertura del dia y preservan la racha.
 - Flex coin preserva ambas rachas cuando se usa con entrenamiento fuera de horario o recuperacion valida.
+- Una coin especial preserva rachas segun su tipo funcional. `Albirroja coin` preserva ambas rachas como una Commit coin.
 - Recuperacion del mismo dia sin coin cuenta para Gym streak, pero no para Perfect streak.
 - Recuperacion de fin de semana sin coin completa semana, pero no preserva la racha del dia perdido.
 

@@ -52,6 +52,32 @@ public sealed class GymChallServiceAdminTests
         Assert.Equal(50, repository.LastTokenListLimit);
     }
 
+    [Fact]
+    public async Task Grant_albirroja_coin_creates_available_commit_coin_with_special_metadata()
+    {
+        var challengeId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var repository = new FakeRepository(challengeId);
+        var service = new GymChallService(repository);
+        var participantId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+        var adminId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
+        await service.GrantTokenAsync(new GrantTokenRequest(
+            participantId,
+            ExceptionTokenTypeDto.Health,
+            ExceptionReasonCategoryDto.Health,
+            adminId,
+            null,
+            SpecialCode: "albirroja"));
+
+        Assert.NotNull(repository.LastToken);
+        Assert.Equal(participantId, repository.LastToken.ParticipantId);
+        Assert.Equal(ExceptionTokenTypeDto.Mandatory, repository.LastToken.Type);
+        Assert.Equal(ExceptionReasonCategoryDto.OtherApproved, repository.LastToken.ReasonCategory);
+        Assert.Equal(ExceptionTokenStatusDto.Available, repository.LastToken.Status);
+        Assert.Equal("albirroja", repository.LastToken.SpecialCode);
+        Assert.Equal("Albirroja coin", repository.LastToken.SpecialLabel);
+    }
+
     private sealed class FakeRepository(Guid activeChallengeId) : IGymChallRepository
     {
         public CoupleCreateDto? LastCouple { get; private set; }
@@ -60,11 +86,16 @@ public sealed class GymChallServiceAdminTests
         public int? LastCheckInListLimit { get; private set; }
         public Guid? LastTokenListChallengeId { get; private set; }
         public int? LastTokenListLimit { get; private set; }
+        public FullCoverageTokenCreateDto? LastToken { get; private set; }
 
         public Task CreateChallengeAsync(ChallengeCreateDto challenge, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task AddParticipantAsync(ParticipantCreateDto participant, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task AddCheckInAsync(CheckInCreateDto checkIn, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task AddFullCoverageTokenAsync(FullCoverageTokenCreateDto token, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task AddFullCoverageTokenAsync(FullCoverageTokenCreateDto token, CancellationToken cancellationToken = default)
+        {
+            LastToken = token;
+            return Task.CompletedTask;
+        }
         public Task ApplyFullCoverageTokenAsync(Guid tokenId, Guid participantId, DateOnly targetDate, Guid actorParticipantId, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<AuthCredentialDto?> GetAuthCredentialAsync(Guid participantId, CancellationToken cancellationToken = default) => Task.FromResult<AuthCredentialDto?>(null);
         public Task UpsertAuthCredentialAsync(AuthCredentialDto credential, CancellationToken cancellationToken = default) => Task.CompletedTask;

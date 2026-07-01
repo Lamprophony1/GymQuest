@@ -1,7 +1,7 @@
 import { Ban, ChevronLeft, ChevronRight } from 'lucide-react';
 import { type CSSProperties, type UIEvent, useMemo, useState } from 'react';
 import type { CheckInType, Participant, WeeklyCalendarEvent } from '../api/types';
-import { checkInTypeLabel, formatShortDate, statusTone, tokenTypeLabel } from './format';
+import { checkInTypeLabel, formatShortDate, statusTone, tokenDisplayLabel } from './format';
 import { QuestIcon, questCoinIconName } from './QuestIcon';
 import { addDaysToDateOnly, buildWeekDays, startOfWeekMonday } from '../utils/date';
 
@@ -51,8 +51,14 @@ function formatEventTime(event: WeeklyCalendarEvent): string {
 
 function formatEventLabel(event: WeeklyCalendarEvent): string {
   if (event.kind === 1) {
-    return event.coinType === null || event.coinType === undefined ? event.label || 'Coin' : tokenTypeLabel(event.coinType);
-  }
+  return event.coinType === null || event.coinType === undefined
+    ? event.label || 'Coin'
+    : tokenDisplayLabel({
+        type: event.coinType,
+        specialCode: event.specialCode,
+        specialLabel: event.specialLabel
+      });
+}
 
   return event.checkInType === null || event.checkInType === undefined
     ? event.label || 'Check-in'
@@ -167,7 +173,10 @@ export function WeeklyMarkingsCalendar({
       const canInvalidate = canInvalidateCheckIn || canInvalidateToken;
 
       if (!isCheckIn) {
-        const coinIconName = event.coinType === null || event.coinType === undefined ? 'coin-commit' : questCoinIconName(event.coinType);
+        const coinIconName =
+          event.coinType === null || event.coinType === undefined
+            ? 'coin-commit'
+            : questCoinIconName(event.coinType, event.specialCode);
         const coinLabel = formatEventLabel(event);
         const coinAccessibleLabel = `${coinLabel} usada por ${event.participantName} el ${formatShortDate(event.activityDate)}${
           event.notes ? `. ${event.notes}` : ''
