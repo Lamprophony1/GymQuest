@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import { AppShell } from '../components/AppShell';
 import { IdentitySelector } from '../components/IdentitySelector';
@@ -102,6 +102,32 @@ const challengeWithCoins: ChallengeSnapshot = {
       reasonCategory: 4,
       status: 1,
       notes: null
+    }
+  ]
+};
+
+const challengeWithMixedCoinStates: ChallengeSnapshot = {
+  ...challenge,
+  fullCoverageTokens: [
+    {
+      id: 'available-health-coin-id',
+      challengeId: 'challenge-id',
+      participantId: 'clari-id',
+      targetDate: '2026-07-01',
+      type: 0,
+      reasonCategory: 0,
+      status: 1,
+      notes: 'mensual'
+    },
+    {
+      id: 'applied-flex-coin-id',
+      challengeId: 'challenge-id',
+      participantId: 'clari-id',
+      targetDate: '2026-07-02',
+      type: 2,
+      reasonCategory: 4,
+      status: 0,
+      notes: 'usada'
     }
   ]
 };
@@ -547,16 +573,22 @@ test('token screen submits albirroja as a special coin with commit defaults', as
 
   render(
     <TokenScreen
+      challenge={challengeWithSpecialCoin}
       participants={[rafa, clari]}
       selectedParticipant={rafa}
       adminParticipantId="rafa-id"
       onSubmit={onSubmit}
+      onInvalidateToken={async () => undefined}
     />
   );
 
-  fireEvent.change(screen.getByLabelText('Jugador'), { target: { value: 'clari-id' } });
+  fireEvent.click(screen.getByRole('button', { name: /asignar coin a clari/i }));
+  const assignDialog = screen.getByRole('dialog', { name: /asignar coin/i });
+  expect(assignDialog).toBeInTheDocument();
+  expect(within(assignDialog).getByText('Clari')).toBeInTheDocument();
+
   fireEvent.change(screen.getByLabelText('Variante'), { target: { value: 'albirroja' } });
-  fireEvent.click(screen.getByRole('button', { name: /otorgar coin/i }));
+  fireEvent.click(screen.getByRole('button', { name: /confirmar asignacion/i }));
 
   await waitFor(() => {
     expect(onSubmit).toHaveBeenCalledWith({
@@ -568,6 +600,71 @@ test('token screen submits albirroja as a special coin with commit defaults', as
       specialCode: 'albirroja'
     });
   });
+});
+
+test('token screen shows coin inventory cards by player', () => {
+  render(
+    <TokenScreen
+      challenge={challengeWithCoins}
+      participants={[rafa, clari]}
+      selectedParticipant={rafa}
+      adminParticipantId="rafa-id"
+      onSubmit={async () => undefined}
+      onInvalidateToken={async () => undefined}
+    />
+  );
+
+  expect(screen.getByRole('heading', { name: 'Administrar coins' })).toBeInTheDocument();
+  const rafaCoins = screen.getByRole('article', { name: /coins de rafa/i });
+  expect(rafaCoins).toBeInTheDocument();
+  expect(screen.getByRole('article', { name: /coins de clari/i })).toBeInTheDocument();
+  expect(within(rafaCoins).getByText('Health coin x1')).toBeInTheDocument();
+  expect(within(rafaCoins).getByText('Commit coin x0')).toBeInTheDocument();
+  expect(within(rafaCoins).getByText('Flex coin x1')).toBeInTheDocument();
+  expect(screen.getAllByRole('button', { name: /asignar coin/i })).toHaveLength(2);
+});
+
+test('token screen removes an available coin only after confirmation', async () => {
+  const onInvalidateToken = vi.fn().mockResolvedValue(undefined);
+
+  render(
+    <TokenScreen
+      challenge={challengeWithMixedCoinStates}
+      participants={[rafa, clari]}
+      selectedParticipant={rafa}
+      adminParticipantId="rafa-id"
+      onSubmit={async () => undefined}
+      onInvalidateToken={onInvalidateToken}
+    />
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: /quitar health coin de clari/i }));
+
+  expect(screen.getByRole('dialog', { name: /quitar coin/i })).toBeInTheDocument();
+  expect(screen.getByText(/quitar health coin de clari/i)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /^quitar coin$/i }));
+
+  await waitFor(() => {
+    expect(onInvalidateToken).toHaveBeenCalledWith('available-health-coin-id', 'Admin rafa-id');
+  });
+});
+
+test('token screen does not expose remove actions for applied coins', () => {
+  render(
+    <TokenScreen
+      challenge={challengeWithMixedCoinStates}
+      participants={[rafa, clari]}
+      selectedParticipant={rafa}
+      adminParticipantId="rafa-id"
+      onSubmit={async () => undefined}
+      onInvalidateToken={async () => undefined}
+    />
+  );
+
+  expect(screen.queryByRole('button', { name: /quitar flex coin de clari/i })).not.toBeInTheDocument();
+  const clariCoins = screen.getByRole('article', { name: /coins de clari/i });
+  expect(within(clariCoins).getByText('Flex coin x0')).toBeInTheDocument();
 });
 
 test('ranking streak tags stay compact and icon-led', () => {

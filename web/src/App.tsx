@@ -186,11 +186,19 @@ export function App() {
       ) : null}
       {visibleTab === 'token' ? (
         <TokenScreen
+          challenge={data.challenge}
           participants={data.participants}
           selectedParticipant={selectedParticipant}
           adminParticipantId={data.challenge?.challenge.adminParticipantId}
           onSubmit={async (request) => {
             await gymChallApi.grantToken(request);
+            await data.refresh();
+          }}
+          onInvalidateToken={async (id, reason) => {
+            await gymChallApi.invalidateToken(id, {
+              actorParticipantId: selectedParticipant.id,
+              reason: reason ?? 'Panel coins'
+            });
             await data.refresh();
           }}
         />

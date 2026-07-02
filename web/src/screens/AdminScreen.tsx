@@ -401,37 +401,39 @@ export function AdminScreen({
           <div className="admin-lists">
             <article className="admin-list">
               <h3>Check-ins</h3>
-              {recentCheckIns.length ? (
-                recentCheckIns.map((checkIn) => (
-                  <div className="record-row" key={checkIn.id}>
-                    <div>
-                      <strong>{checkIn.participantName}</strong>
-                      <span>
-                        {formatShortDate(checkIn.activityDate)} - {checkInTypeLabel(checkIn.type)}
-                      </span>
-                      {checkIn.notes ? <small>{checkIn.notes}</small> : null}
+              <div className="admin-list__scroller" tabIndex={0} aria-label="Check-ins recientes">
+                {recentCheckIns.length ? (
+                  recentCheckIns.map((checkIn) => (
+                    <div className="record-row" key={checkIn.id}>
+                      <div>
+                        <strong>{checkIn.participantName}</strong>
+                        <span>
+                          {formatShortDate(checkIn.activityDate)} - {checkInTypeLabel(checkIn.type)}
+                        </span>
+                        {checkIn.notes ? <small>{checkIn.notes}</small> : null}
+                      </div>
+                      <span className={`badge badge--${statusTone(checkIn.status)}`}>{checkIn.status}</span>
+                      <button
+                        className="icon-button icon-button--danger"
+                        type="button"
+                        aria-label={`Invalidar check-in de ${checkIn.participantName}`}
+                        disabled={busyAction === checkIn.id || checkIn.status.toLowerCase() !== 'valid'}
+                        onClick={() =>
+                          runAdminAction(
+                            checkIn.id,
+                            () => onInvalidateCheckIn(checkIn.id, `Admin ${adminParticipantId}`),
+                            'Check-in invalidado.'
+                          )
+                        }
+                      >
+                        <Ban aria-hidden="true" />
+                      </button>
                     </div>
-                    <span className={`badge badge--${statusTone(checkIn.status)}`}>{checkIn.status}</span>
-                    <button
-                      className="icon-button icon-button--danger"
-                      type="button"
-                      aria-label={`Invalidar check-in de ${checkIn.participantName}`}
-                      disabled={busyAction === checkIn.id || checkIn.status.toLowerCase() !== 'valid'}
-                      onClick={() =>
-                        runAdminAction(
-                          checkIn.id,
-                          () => onInvalidateCheckIn(checkIn.id, `Admin ${adminParticipantId}`),
-                          'Check-in invalidado.'
-                        )
-                      }
-                    >
-                      <Ban aria-hidden="true" />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="empty-state">Sin check-ins recientes.</p>
-              )}
+                  ))
+                ) : (
+                  <p className="empty-state">Sin check-ins recientes.</p>
+                )}
+              </div>
             </article>
 
             <article className="admin-list">

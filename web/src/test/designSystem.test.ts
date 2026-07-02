@@ -82,6 +82,11 @@ describe('Doodle Fit visual system', () => {
     expect(styles).not.toMatch(/\.admin-calendar__scroller--y-scrolled \.admin-calendar-table thead th small\s*{[\s\S]*?display:\s*none/);
   });
 
+  test('admin records check-ins list has its own scroller', () => {
+    expect(styles).toMatch(/\.admin-list__scroller\s*{[\s\S]*?max-height:\s*min\(54vh,\s*420px\);[\s\S]*?overflow:\s*auto;/);
+    expect(styles).toMatch(/\.admin-list__scroller:focus-visible\s*{[\s\S]*?outline:\s*3px solid var\(--focus\);/);
+  });
+
   test('anchors the mobile bottom nav to the viewport edge with safe-area padding', () => {
     expect(styles).toContain('--safe-area-bottom: env(safe-area-inset-bottom, 0px)');
     expect(styles).toContain('padding: 8px 8px calc(8px + var(--safe-area-bottom))');

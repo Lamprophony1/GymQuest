@@ -969,6 +969,212 @@ svg {
   height: 100%;
 }
 
+.coin-admin-screen {
+  background: var(--surface-soft);
+}
+
+.coin-admin-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.coin-admin-summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 1px 2px 0 var(--border);
+}
+
+.coin-admin-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.player-coin-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sticker-sm);
+}
+
+.player-coin-card__header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.player-coin-card__header .player-avatar {
+  width: 64px;
+  height: 64px;
+}
+
+.player-coin-card__header h3,
+.player-coin-card__header span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-coin-card__header span {
+  margin-top: 3px;
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.player-coin-card__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.player-coin-card__counts .coin-chip {
+  min-height: 38px;
+  padding: 7px 10px;
+}
+
+.player-coin-card__available {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 2px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+
+.player-coin-card__available > strong {
+  color: var(--ink);
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.player-coin-token-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid var(--border-soft);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.player-coin-token-row > span {
+  min-width: 0;
+  color: var(--ink);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.player-coin-token-row .button {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(20, 22, 21, 0.48);
+}
+
+.dialog-panel {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 480px);
+  max-height: min(88vh, 720px);
+  overflow: auto;
+  padding: 18px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sticker);
+}
+
+.dialog-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dialog-panel__header h3:focus {
+  outline: none;
+}
+
+.dialog-player-lock {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--lime-soft);
+  box-shadow: 2px 3px 0 var(--border);
+}
+
+.dialog-player-lock strong {
+  color: var(--ink);
+  font-family: "Space Grotesk", "Nunito", sans-serif;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.dialog-player-lock span,
+.dialog-note {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.dialog-copy {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.dialog-note {
+  padding: 12px;
+  border: 2px dashed var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dialog-actions .button {
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+  white-space: normal;
+}
+
 .quick-actions {
   display: grid;
   gap: 14px;
@@ -2204,6 +2410,20 @@ svg {
   border-bottom: 2px solid var(--border-soft);
 }
 
+.admin-list__scroller {
+  display: grid;
+  gap: 16px;
+  max-height: min(54vh, 420px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.admin-list__scroller:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
 .record-row {
   grid-template-columns: minmax(0, 1fr) auto auto;
   box-shadow: none;
@@ -2280,7 +2500,8 @@ svg {
   .status-grid,
   .admin-stats,
   .admin-forms,
-  .admin-lists {
+  .admin-lists,
+  .coin-admin-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
