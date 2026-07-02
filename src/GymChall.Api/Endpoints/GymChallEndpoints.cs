@@ -110,14 +110,21 @@ public static class GymChallEndpoints
 
         app.MapPost("/api/tokens/{id:guid}/use", async (Guid id, UseTokenRequest request, ClaimsPrincipal user, GymChallService service, CancellationToken cancellationToken) =>
         {
-            var actorParticipantId = CurrentParticipantIdOr(request.UsedByParticipantId, user, authSettings);
-            request = request with
+            try
             {
-                ParticipantId = CurrentParticipantIdOr(request.ParticipantId, user, authSettings),
-                UsedByParticipantId = actorParticipantId
-            };
-            await service.UseTokenAsync(id, request, cancellationToken);
-            return Results.NoContent();
+                var actorParticipantId = CurrentParticipantIdOr(request.UsedByParticipantId, user, authSettings);
+                request = request with
+                {
+                    ParticipantId = CurrentParticipantIdOr(request.ParticipantId, user, authSettings),
+                    UsedByParticipantId = actorParticipantId
+                };
+                await service.UseTokenAsync(id, request, cancellationToken);
+                return Results.NoContent();
+            }
+            catch (InvalidOperationException exception)
+            {
+                return Results.BadRequest(new { message = exception.Message });
+            }
         }).RequireAuthIfPin(authSettings);
 
         app.MapPost("/api/admin/check-ins/{id:guid}/invalidate", async (Guid id, InvalidateRecordRequest request, ClaimsPrincipal user, GymChallService service, CancellationToken cancellationToken) =>

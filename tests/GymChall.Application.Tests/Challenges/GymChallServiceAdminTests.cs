@@ -97,6 +97,7 @@ public sealed class GymChallServiceAdminTests
             return Task.CompletedTask;
         }
         public Task ApplyFullCoverageTokenAsync(Guid tokenId, Guid participantId, DateOnly targetDate, Guid actorParticipantId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RejectDuplicateMonthlyHealthTokensAsync(Guid challengeId, string monthlyTokenNote, Guid actorParticipantId, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<AuthCredentialDto?> GetAuthCredentialAsync(Guid participantId, CancellationToken cancellationToken = default) => Task.FromResult<AuthCredentialDto?>(null);
         public Task UpsertAuthCredentialAsync(AuthCredentialDto credential, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<ParticipantProfileDto?> GetParticipantProfileAsync(Guid participantId, CancellationToken cancellationToken = default) => Task.FromResult<ParticipantProfileDto?>(null);

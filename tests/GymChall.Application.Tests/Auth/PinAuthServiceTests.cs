@@ -150,6 +150,7 @@ public sealed class PinAuthServiceTests
         public Task AddCheckInAsync(CheckInCreateDto checkIn, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task AddFullCoverageTokenAsync(FullCoverageTokenCreateDto token, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task ApplyFullCoverageTokenAsync(Guid tokenId, Guid participantId, DateOnly targetDate, Guid actorParticipantId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RejectDuplicateMonthlyHealthTokensAsync(Guid challengeId, string monthlyTokenNote, Guid actorParticipantId, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<IReadOnlyList<CoupleSummaryDto>> ListCouplesAsync(Guid challengeId, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<CoupleSummaryDto>>(Array.Empty<CoupleSummaryDto>());
         public Task<IReadOnlyList<AdminCheckInSummaryDto>> ListRecentCheckInsAsync(Guid challengeId, int limit, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<AdminCheckInSummaryDto>>(Array.Empty<AdminCheckInSummaryDto>());
         public Task<IReadOnlyList<AdminCheckInSummaryDto>> ListCalendarCheckInsAsync(Guid challengeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<AdminCheckInSummaryDto>>(Array.Empty<AdminCheckInSummaryDto>());

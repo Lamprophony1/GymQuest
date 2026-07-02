@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
 using System.Net;
 using System.Net.Http.Json;
+using GymChall.Infrastructure.Persistence;
+using GymChall.Infrastructure.Persistence.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GymChall.Api.Tests;
 
@@ -29,6 +33,85 @@ public sealed class GymChallApiTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
         Assert.Contains("Reto septiembre 2026", body);
+    }
+
+    [Fact]
+    public async Task Concurrent_initial_reads_create_only_one_monthly_health_coin_per_girl()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+
+        var requests = Enumerable.Range(0, 3)
+            .SelectMany(_ => new[]
+            {
+                client.GetAsync("/api/challenge"),
+                client.GetAsync("/api/rankings/general"),
+                client.GetAsync("/api/rankings/weeks"),
+                client.GetAsync("/api/calendar/weekly?from=2026-07-01&to=2026-07-07")
+            })
+            .ToArray();
+
+        var responses = await Task.WhenAll(requests);
+        var snapshot = await client.GetFromJsonAsync<ChallengeSnapshotRow>("/api/challenge");
+        var currentMonth = DateOnly.FromDateTime(DateTimeOffset.UtcNow.DateTime);
+
+        Assert.All(responses, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+        Assert.NotNull(snapshot);
+        var femaleParticipants = snapshot.Participants.Where(participant => participant.Gender == "female").ToArray();
+        Assert.NotEmpty(femaleParticipants);
+        foreach (var participant in femaleParticipants)
+        {
+            var monthlyTokens = snapshot.FullCoverageTokens.Where(token =>
+                token.ParticipantId == participant.Id &&
+                token.Type == 0 &&
+                token.ReasonCategory == 0 &&
+                token.Notes == "Ficha salud mensual automatica" &&
+                token.TargetDate.Year == currentMonth.Year &&
+                token.TargetDate.Month == currentMonth.Month &&
+                token.Status != 3);
+
+            Assert.Single(monthlyTokens);
+        }
+    }
+
+    [Fact]
+    public async Task Challenge_load_rejects_duplicate_monthly_health_coins_already_in_database()
+    {
+        await using var app = CreateApp();
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<GymChallDbContext>();
+        var challenge = await db.Challenges.SingleAsync();
+        var clari = await db.Participants.SingleAsync(participant => participant.Username == "clari");
+        var monthStart = new DateOnly(DateTimeOffset.UtcNow.Year, DateTimeOffset.UtcNow.Month, 1);
+
+        db.ExceptionTokens.AddRange(
+            CreateMonthlyHealthToken(challenge.Id, challenge.AdminParticipantId, clari.Id, monthStart),
+            CreateMonthlyHealthToken(challenge.Id, challenge.AdminParticipantId, clari.Id, monthStart),
+            CreateMonthlyHealthToken(challenge.Id, challenge.AdminParticipantId, clari.Id, monthStart));
+        await db.SaveChangesAsync();
+
+        using var client = app.CreateClient();
+        var snapshot = await client.GetFromJsonAsync<ChallengeSnapshotRow>("/api/challenge");
+        var remainingTokens = await db.ExceptionTokens
+            .Where(token =>
+                token.ChallengeId == challenge.Id &&
+                token.ParticipantId == clari.Id &&
+                token.Type == GymChall.Infrastructure.Persistence.ExceptionTokenType.Health &&
+                token.ReasonCategory == GymChall.Infrastructure.Persistence.ExceptionReasonCategory.Health &&
+                token.Notes == "Ficha salud mensual automatica" &&
+                token.TargetDate.Year == monthStart.Year &&
+                token.TargetDate.Month == monthStart.Month &&
+                token.Status != GymChall.Infrastructure.Persistence.ExceptionTokenStatus.Rejected)
+            .ToArrayAsync();
+
+        Assert.NotNull(snapshot);
+        Assert.Single(snapshot.FullCoverageTokens, token =>
+            token.ParticipantId == clari.Id &&
+            token.Notes == "Ficha salud mensual automatica" &&
+            token.TargetDate.Year == monthStart.Year &&
+            token.TargetDate.Month == monthStart.Month &&
+            token.Status != 3);
+        Assert.Single(remainingTokens);
     }
 
     [Fact]
@@ -388,6 +471,40 @@ public sealed class GymChallApiTests
     }
 
     [Fact]
+    public async Task Use_token_rule_errors_return_bad_request_instead_of_api_500()
+    {
+        await using var app = CreateApp();
+        using var client = app.CreateClient();
+        var participants = await client.GetFromJsonAsync<List<ParticipantRow>>("/api/participants");
+        Assert.NotNull(participants);
+        var rafa = Assert.Single(participants, x => x.Username == "rafa");
+        var clari = Assert.Single(participants, x => x.Username == "clari");
+
+        var grant = await client.PostAsJsonAsync("/api/admin/tokens", new
+        {
+            participantId = clari.Id,
+            type = 0,
+            reasonCategory = 0,
+            assignedByAdminId = rafa.Id,
+            notes = "salud"
+        });
+        var granted = await grant.Content.ReadFromJsonAsync<CreatedRecord>();
+
+        var use = await client.PostAsJsonAsync($"/api/tokens/{granted!.Id}/use", new
+        {
+            participantId = clari.Id,
+            targetDate = new DateOnly(2026, 7, 4),
+            usedByParticipantId = clari.Id,
+            notes = "finde"
+        });
+        var body = await use.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.Created, grant.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, use.StatusCode);
+        Assert.Contains("dia habil", body);
+    }
+
+    [Fact]
     public async Task Pin_login_mode_requires_auth_for_challenge()
     {
         await using var app = CreatePinLoginApp();
@@ -519,6 +636,22 @@ public sealed class GymChallApiTests
             });
     }
 
+    private static ExceptionTokenEntity CreateMonthlyHealthToken(Guid challengeId, Guid adminParticipantId, Guid participantId, DateOnly monthStart)
+    {
+        return new ExceptionTokenEntity
+        {
+            Id = Guid.NewGuid(),
+            ChallengeId = challengeId,
+            ParticipantId = participantId,
+            TargetDate = monthStart,
+            Type = GymChall.Infrastructure.Persistence.ExceptionTokenType.Health,
+            ReasonCategory = GymChall.Infrastructure.Persistence.ExceptionReasonCategory.Health,
+            Status = GymChall.Infrastructure.Persistence.ExceptionTokenStatus.Available,
+            AssignedByAdminId = adminParticipantId,
+            Notes = "Ficha salud mensual automatica"
+        };
+    }
+
     private sealed record RankingRow(Guid CoupleId, string CoupleName, decimal TotalPoints, int MorningStreak, int GymStreak);
     private sealed record ParticipantRow(Guid Id, string DisplayName, string Username, int Role, string? Gender, bool Active);
     private sealed record CoupleRow(Guid Id, string Name, List<ParticipantRow> Participants, bool Active);
@@ -526,8 +659,8 @@ public sealed class GymChallApiTests
     private sealed record WeeklyRanking(DateOnly WeekStartDate, DateOnly WeekEndDate, List<WeeklyRankingRow> Rows);
     private sealed record WeeklyRankingRow(Guid CoupleId, string CoupleName, decimal TotalPoints, string WeeklyBonusType);
     private sealed record CreatedRecord(Guid Id);
-    private sealed record ChallengeSnapshotRow(List<FullCoverageTokenRow> FullCoverageTokens);
-    private sealed record FullCoverageTokenRow(Guid Id, Guid ParticipantId, DateOnly TargetDate, int Status);
+    private sealed record ChallengeSnapshotRow(List<ParticipantRow> Participants, List<FullCoverageTokenRow> FullCoverageTokens);
+    private sealed record FullCoverageTokenRow(Guid Id, Guid ParticipantId, DateOnly TargetDate, int Type, int ReasonCategory, int Status, string? Notes);
     private sealed record AdminCheckInRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly ActivityDate, string Status);
     private sealed record AdminTokenRow(Guid Id, Guid ParticipantId, string ParticipantName, DateOnly TargetDate, string Status);
     private sealed record WeeklyCalendarEventRow(

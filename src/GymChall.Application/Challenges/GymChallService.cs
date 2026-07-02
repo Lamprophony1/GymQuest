@@ -13,6 +13,7 @@ public sealed class GymChallService(IGymChallRepository repository)
     private const string MonthlyHealthTokenNote = "Ficha salud mensual automatica";
     private const string AlbirrojaSpecialCode = "albirroja";
     private const string AlbirrojaSpecialLabel = "Albirroja coin";
+    private static readonly SemaphoreSlim MonthlyHealthTokenGate = new(1, 1);
 
     public async Task<Guid> RegisterCheckInAsync(RegisterCheckInRequest request, CancellationToken cancellationToken = default)
     {
@@ -294,36 +295,46 @@ public sealed class GymChallService(IGymChallRepository repository)
 
     private async Task EnsureMonthlyHealthTokensAsync(Guid challengeId, CancellationToken cancellationToken)
     {
-        var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
-        var today = TodayInTimezone(snapshot.Challenge.Timezone);
-        var monthStart = new DateOnly(today.Year, today.Month, 1);
-
-        foreach (var participant in snapshot.Participants.Where(x => x.Active && string.Equals(x.Gender, "female", StringComparison.OrdinalIgnoreCase)))
+        await MonthlyHealthTokenGate.WaitAsync(cancellationToken);
+        try
         {
-            var alreadyGranted = snapshot.FullCoverageTokens.Any(token =>
-                token.ParticipantId == participant.Id &&
-                token.Type == ExceptionTokenTypeDto.Health &&
-                token.ReasonCategory == ExceptionReasonCategoryDto.Health &&
-                token.Notes == MonthlyHealthTokenNote &&
-                token.Status != ExceptionTokenStatusDto.Rejected &&
-                SameMonth(token.TargetDate, monthStart));
+            var snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
+            await repository.RejectDuplicateMonthlyHealthTokensAsync(challengeId, MonthlyHealthTokenNote, snapshot.Challenge.AdminParticipantId, cancellationToken);
+            snapshot = await repository.GetChallengeSnapshotAsync(challengeId, cancellationToken);
+            var today = TodayInTimezone(snapshot.Challenge.Timezone);
+            var monthStart = new DateOnly(today.Year, today.Month, 1);
 
-            if (alreadyGranted)
+            foreach (var participant in snapshot.Participants.Where(x => x.Active && string.Equals(x.Gender, "female", StringComparison.OrdinalIgnoreCase)))
             {
-                continue;
-            }
+                var alreadyGranted = snapshot.FullCoverageTokens.Any(token =>
+                    token.ParticipantId == participant.Id &&
+                    token.Type == ExceptionTokenTypeDto.Health &&
+                    token.ReasonCategory == ExceptionReasonCategoryDto.Health &&
+                    token.Notes == MonthlyHealthTokenNote &&
+                    token.Status != ExceptionTokenStatusDto.Rejected &&
+                    SameMonth(token.TargetDate, monthStart));
 
-            await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
-                Guid.NewGuid(),
-                challengeId,
-                participant.Id,
-                monthStart,
-                ExceptionTokenTypeDto.Health,
-                ExceptionReasonCategoryDto.Health,
-                ExceptionTokenStatusDto.Available,
-                snapshot.Challenge.AdminParticipantId,
-                MonthlyHealthTokenNote),
-                cancellationToken);
+                if (alreadyGranted)
+                {
+                    continue;
+                }
+
+                await repository.AddFullCoverageTokenAsync(new FullCoverageTokenCreateDto(
+                    Guid.NewGuid(),
+                    challengeId,
+                    participant.Id,
+                    monthStart,
+                    ExceptionTokenTypeDto.Health,
+                    ExceptionReasonCategoryDto.Health,
+                    ExceptionTokenStatusDto.Available,
+                    snapshot.Challenge.AdminParticipantId,
+                    MonthlyHealthTokenNote),
+                    cancellationToken);
+            }
+        }
+        finally
+        {
+            MonthlyHealthTokenGate.Release();
         }
     }
 

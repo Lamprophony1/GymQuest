@@ -11,6 +11,7 @@ public interface IGymChallRepository
     Task AddCheckInAsync(CheckInCreateDto checkIn, CancellationToken cancellationToken = default);
     Task AddFullCoverageTokenAsync(FullCoverageTokenCreateDto token, CancellationToken cancellationToken = default);
     Task ApplyFullCoverageTokenAsync(Guid tokenId, Guid participantId, DateOnly targetDate, Guid actorParticipantId, CancellationToken cancellationToken = default);
+    Task RejectDuplicateMonthlyHealthTokensAsync(Guid challengeId, string monthlyTokenNote, Guid actorParticipantId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ParticipantSummaryDto>> ListParticipantsAsync(CancellationToken cancellationToken = default);
     Task<AuthCredentialDto?> GetAuthCredentialAsync(Guid participantId, CancellationToken cancellationToken = default);
     Task UpsertAuthCredentialAsync(AuthCredentialDto credential, CancellationToken cancellationToken = default);

@@ -489,6 +489,53 @@ public sealed class GymChallRepository(GymChallDbContext db) : IGymChallReposito
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task RejectDuplicateMonthlyHealthTokensAsync(Guid challengeId, string monthlyTokenNote, Guid actorParticipantId, CancellationToken cancellationToken = default)
+    {
+        var tokens = await db.ExceptionTokens
+            .Where(x =>
+                x.ChallengeId == challengeId &&
+                x.Type == ExceptionTokenType.Health &&
+                x.ReasonCategory == ExceptionReasonCategory.Health &&
+                x.Notes == monthlyTokenNote &&
+                x.Status != ExceptionTokenStatus.Rejected)
+            .ToArrayAsync(cancellationToken);
+
+        var duplicates = tokens
+            .GroupBy(x => new { x.ParticipantId, x.TargetDate.Year, x.TargetDate.Month })
+            .SelectMany(group => group
+                .OrderBy(x => x.Status == ExceptionTokenStatus.Applied ? 0 : 1)
+                .ThenBy(x => x.CreatedAt)
+                .ThenBy(x => x.Id)
+                .Skip(1))
+            .ToArray();
+
+        if (duplicates.Length == 0)
+        {
+            return;
+        }
+
+        foreach (var token in duplicates)
+        {
+            var oldStatus = token.Status;
+            token.Status = ExceptionTokenStatus.Rejected;
+            token.UpdatedAt = DateTimeOffset.UtcNow;
+
+            db.AuditLogs.Add(new AuditLogEntity
+            {
+                Id = Guid.NewGuid(),
+                ChallengeId = token.ChallengeId,
+                ActorParticipantId = actorParticipantId,
+                Action = "reject_duplicate_monthly_health_token",
+                EntityType = "ExceptionToken",
+                EntityId = token.Id,
+                OldValueJson = JsonSerializer.Serialize(new { Status = oldStatus.ToString() }),
+                NewValueJson = JsonSerializer.Serialize(new { Status = token.Status.ToString(), Reason = "duplicate_monthly_health_token" })
+            });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<Guid?> GetActiveChallengeIdAsync(CancellationToken cancellationToken = default)
     {
         return await db.Challenges
