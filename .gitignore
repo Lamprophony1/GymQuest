@@ -40,6 +40,8 @@ storage/
 
 # Generated artifacts
 .artifacts/
+.artifacts/production-db/
+*.partial
 .tools/
 .superpowers/
 

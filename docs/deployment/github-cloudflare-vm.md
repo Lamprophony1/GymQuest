@@ -241,6 +241,20 @@ Las llaves de cookie viven en:
 
 Respaldar ambos directorios. Sin las llaves, los usuarios pueden tener que volver a iniciar sesion despues de restaurar.
 
+La copia de produccion para reproducir errores en desarrollo es un flujo separado y no sustituye estos backups. El runbook esta en:
+
+```text
+docs/deployment/production-database-local-replica.md
+```
+
+Ese flujo crea un backup SQLite online temporal, lo valida y reemplaza deliberadamente el `gymchall.db` local; nunca restaura datos hacia la VM.
+
+La primera validacion completa del flujo esta documentada en:
+
+```text
+docs/deployment/production-database-local-replica-validation-2026-07-13.md
+```
+
 ## Pendientes operativos
 
 - Automatizar backup de `/opt/gymquest/data/gymchall.db`.

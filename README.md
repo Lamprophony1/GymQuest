@@ -128,6 +128,21 @@ URLs locales:
 - Backend API: `http://127.0.0.1:5020`
 - Health check: `GET http://127.0.0.1:5020/health`
 
+### Sincronizar La Base De Produccion
+
+Con la API local detenida:
+
+```powershell
+.\scripts\sync-production-db.ps1 -PreflightOnly
+.\scripts\sync-production-db.ps1
+```
+
+El script usa `gc@10.4.28.21` como target SSH predeterminado. La segunda operacion reemplaza siempre el `gymchall.db` local y descarta sus datos anteriores. La transferencia usa un backup online de SQLite, valida integridad/checksum y no detiene produccion.
+
+Runbook completo: `docs/deployment/production-database-local-replica.md`.
+
+Informe de implementacion y validacion: `docs/deployment/production-database-local-replica-validation-2026-07-13.md`.
+
 ## Verificacion
 
 Backend:
@@ -203,6 +218,8 @@ Los endpoints de ranking aceptan parametros opcionales:
 - Motor de puntajes: `docs/planning/scoring-engine.md`
 - Modelo de datos: `docs/planning/data-model.md`
 - Despliegue CI/CD en VM + Cloudflare: `docs/deployment/github-cloudflare-vm.md`
+- Sincronizacion de la base productiva: `docs/deployment/production-database-local-replica.md`
+- Validacion de la replica productiva: `docs/deployment/production-database-local-replica-validation-2026-07-13.md`
 - Visual vigente: `docs/superpowers/specs/2026-06-16-gymchall-doodle-fit-visual-refresh.md`
 - Marcaciones semanales de players: `docs/superpowers/specs/2026-06-23-player-weekly-markings-design.md`
 - Check-in y coins: `docs/superpowers/specs/2026-06-16-checkin-fichas-ui-rules.md`
